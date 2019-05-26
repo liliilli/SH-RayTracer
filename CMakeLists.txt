@@ -7,6 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_VERBOSE_MAKEFILE true)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+add_subdirectory(DyUtils)
+
 set(SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 set(SOURCE
     "${SOURCE_DIRECTORY}/Main.cc"
@@ -16,11 +18,22 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Include")
 add_executable(${CMAKE_PROJECT_NAME}
     ${SOURCE}
 )
+target_include_directories(${CMAKE_PROJECT_NAME}
+PRIVATE
+    ${CMAKE_SOURCE_DIR}/DyUtils/DyExpression/Include
+    ${CMAKE_SOURCE_DIR}/DyUtils/DyStringUtil/Include
+    ${CMAKE_SOURCE_DIR}/DyUtils/DyMath/Include
+)
+target_link_libraries(${CMAKE_PROJECT_NAME}
+    DyStringUtil
+    DyMath
+)
 add_definitions(-lstdc++fs)
 
 # INSTALL SETTINGS
 set_target_properties(${CMAKE_PROJECT_NAME}
     PROPERTIES
+    LINKER_LANGUAGE CXX
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib/${CMAKE_BUILD_TYPE}"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib/${CMAKE_BUILD_TYPE}"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}"
