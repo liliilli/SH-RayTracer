@@ -16,6 +16,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Include")
 add_executable(${CMAKE_PROJECT_NAME}
     ${SOURCE}
 )
+add_definitions(-lstdc++fs)
 
 # INSTALL SETTINGS
 set_target_properties(${CMAKE_PROJECT_NAME}

@@ -1,0 +1,21 @@
+{
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "g++-8 build active file",
+      "command": "/bin/g++-8",
+      "args": [
+        "-std=c++17",
+        "-lstdc++fs",
+        "-g",
+        "${file}",
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}"
+      ],
+      "options": {
+        "cwd": "/bin"
+      }
+    }
+  ],
+  "version": "2.0.0"
+}
