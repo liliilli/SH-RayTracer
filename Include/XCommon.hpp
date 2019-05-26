@@ -13,6 +13,7 @@
 ///
 
 #include <Math/Common/TGlobalTypes.h>
+#include <Math/Type/Math/DVector2.h>
 #include <Math/Type/Math/DVector3.h>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
 
@@ -22,6 +23,8 @@ namespace ray
 {
 
 using DVec3 = DVector3<TReal>;
+using DIVec2 = DVector2<TI32>;
+using DUVec2 = DVector2<TU32>;
 using DIVec3 = DVector3<TI32>;
   
 /// @brief Create image ppm with grid2d container.
