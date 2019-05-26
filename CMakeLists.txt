@@ -19,6 +19,9 @@ add_executable(${CMAKE_PROJECT_NAME}
     ${SOURCE}
 )
 target_include_directories(${CMAKE_PROJECT_NAME}
+PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/Include
+
 PRIVATE
     ${CMAKE_SOURCE_DIR}/DyUtils/DyExpression/Include
     ${CMAKE_SOURCE_DIR}/DyUtils/DyStringUtil/Include

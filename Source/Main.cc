@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <vector>
+
+#include <DRay.hpp>
+#include <Math/Type/Micellanous/DDynamicGrid2D.h>
 
 /// @brief PPM Example sample function.
 bool OutputSampleImage1(const char* const path)
@@ -26,17 +30,37 @@ R"(P3
   return true;
 }
 
-bool CreateSampleImage(const char* const path, unsigned nx, unsigned ny)
+bool CreateImagePpm(const char* const path, DDynamicGrid2D<DVector3<TI32>>& container)
 {
+  // Open file
   FILE* fd = std::fopen(path, "w");
   if (fd == nullptr)
   {
     std::printf("Failed to open / create file, %s.\n", path);
     return false;
   }
+
+  // Insert value.
   // Header 
-  std::fprintf(fd, "P3\n%u %u\n255\n", nx, ny);
+  std::fprintf(fd, "P3\n%u %u\n255\n", (TU32)container.GetColumnSize(), (TU32)container.GetRowSize());
   // Data
+  for (auto& row : container)
+  {
+    for (auto& col : row)
+    {
+      std::fprintf(fd, "%d %d %d\n", col[0], col[1], col[2]);
+    }
+  }
+
+  std::fclose(fd);
+  return true;
+}
+
+bool CreateSampleImage(const char* const path, unsigned nx, unsigned ny)
+{
+  // Insert Data
+  DDynamicGrid2D<DVector3<TI32>> container = {200, 100};
+
   for (auto y = ny; y > 0; --y)
   {
     for (auto x = 0u; x < nx; ++x)
@@ -49,12 +73,12 @@ bool CreateSampleImage(const char* const path, unsigned nx, unsigned ny)
       int ig = int(255.99f * g);
       int ib = int(255.99f * b);
 
-      std::fprintf(fd, "%d %d %d\n", ir, ig, ib);
+      container.Set(x, ny - y, {ir, ig, ib});
     }
   }
 
-  std::fclose(fd);
-  return true;
+  const auto flag = CreateImagePpm(path, container);
+  return flag;
 }
 
 int main(int argc, char* argv[])
