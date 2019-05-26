@@ -11,7 +11,9 @@ add_subdirectory(DyUtils)
 
 set(SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 set(SOURCE
-    "${SOURCE_DIRECTORY}/Main.cc"
+    "${SOURCE_DIRECTORY}/XMain.cc"
+    "${SOURCE_DIRECTORY}/XCommon.cc"
+    "${SOURCE_DIRECTORY}/XSamples.cc"
 )
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Include")
