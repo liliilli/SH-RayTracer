@@ -83,6 +83,11 @@ std::vector<DRay<TReal>> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
   return rayList;
 }
 
+void FCamera::SetSamples(TU32 sample)
+{
+  this->mSamples = sample;
+}
+
 TU32 FCamera::GetSamples() const noexcept
 {
   return this->mSamples;

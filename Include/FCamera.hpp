@@ -35,6 +35,8 @@ public:
   /// @brief Get ray calculated by [x, y] of Image size and eye / forward.
   std::vector<DRay<TReal>> CreateRay(TIndex x, TIndex y) const noexcept;
 
+  /// @brief Set sample value of pixel. (1, 2, 4)
+  void SetSamples(TU32 sample);
   /// @brief Get rendering samples of each pixel.
   TU32 GetSamples() const noexcept;
 

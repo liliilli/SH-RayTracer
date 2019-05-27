@@ -21,6 +21,7 @@
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
 #include <Math/Utility/XLinearMath.h>
 #include <Math/Utility/XGraphicsMath.h>
+#include <Expr/FCmdArguments.h>
 
 ray::DVec3 GetBackgroundFColor(const DRay<TReal>& ray)
 {
@@ -49,15 +50,24 @@ int main(int argc, char* argv[])
 {
   using namespace ray;
 
+  ::dy::expr::FCmdArguments arguments{};
+  {
+    const auto flag = arguments.Add<TU32>('s', "sample", 1);
+    assert(flag == true);
+  }
+  arguments.Parse(argc, argv);
+
   const TU32 width = 1280u;
   const TU32 height = 720u;
   const TReal ratio = TReal(width) / height;
 
-  FCamera cam = {
-    DVec3{0, 0, 1}, DVec3{0, 0, -1}, 
-    width, height,
-    2.0f * ratio, 2.0f
-  };
+  FCamera cam = {DVec3{0, 0, 1}, DVec3{0, 0, -1}, width, height, 2.0f * ratio, 2.0f};
+  auto* pSamples = arguments.GetArgument('s');
+  {
+    const auto sampleValue = std::any_cast<TU32>(pSamples->GetValue());
+    cam.SetSamples(sampleValue);
+  }
+
   const auto size = cam.GetImageSize();
   DDynamicGrid2D<DIVec3> container = {size.X, size.Y};
 
