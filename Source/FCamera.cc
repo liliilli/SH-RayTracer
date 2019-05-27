@@ -41,17 +41,51 @@ const DUVec2& FCamera::GetImageSize() const noexcept
   return this->mScreenSize;
 }
 
-DRay<TReal> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
+std::vector<DRay<TReal>> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
 {
   assert(x < this->mScreenSize[0] && y < this->mScreenSize[1]);
   
-  const auto pos = 
+  auto pos = 
       this->mLowLeftCorner 
     + (this->mCellRight * TReal(x)) 
     + (this->mCellUp * TReal(y));
-  const auto dir = (pos - this->mOrigin).Normalize();
 
-  return {pos, dir};
+  std::vector<DVec3> offsets;
+  std::vector<DRay<TReal>> rayList;
+  if (this->mSamples == 1)
+  {
+    offsets = { this->mCellRight * .5f + this->mCellUp * .5f };
+  }
+  else if (this->mSamples == 2)
+  {
+    offsets =
+    {
+      this->mCellRight * 0.25f + this->mCellUp * 0.25f,
+      this->mCellRight * 0.75f + this->mCellUp * 0.75f
+    };
+  }
+  else if (this->mSamples == 4)
+  {
+    offsets =
+    {
+      this->mCellRight * 1.f / 8.f + this->mCellUp * 5.f / 8.f,
+      this->mCellRight * 3.f / 8.f + this->mCellUp * 1.f / 8.f,
+      this->mCellRight * 5.f / 8.f + this->mCellUp * 7.f / 8.f,
+      this->mCellRight * 7.f / 8.f + this->mCellUp * 3.f / 8.f,
+    };
+  }
+
+  for (const auto& offset : offsets)
+  {
+    const auto dir = ((pos + offset) - this->mOrigin).Normalize();
+    rayList.emplace_back(pos, dir);
+  }
+  return rayList;
+}
+
+TU32 FCamera::GetSamples() const noexcept
+{
+  return this->mSamples;
 }
 
 } /// ::ray namespace 

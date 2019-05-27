@@ -12,6 +12,7 @@
 /// SOFTWARE.
 ///
 
+#include <vector>
 #include <XCommon.hpp>
 #include <Math/Type/Shape/DRay.h>
 
@@ -32,7 +33,10 @@ public:
   const DUVec2& GetImageSize() const noexcept;
 
   /// @brief Get ray calculated by [x, y] of Image size and eye / forward.
-  DRay<TReal> CreateRay(TIndex x, TIndex y) const noexcept;
+  std::vector<DRay<TReal>> CreateRay(TIndex x, TIndex y) const noexcept;
+
+  /// @brief Get rendering samples of each pixel.
+  TU32 GetSamples() const noexcept;
 
 private:
   DVec3 mOrigin;
@@ -43,6 +47,8 @@ private:
   DVec3 mLowLeftCorner;
   DVec3 mCellRight, mCellUp;
   DUVec2 mScreenSize;
+
+  TU32 mSamples = 4;
 };
 
 } /// ::ray namespace

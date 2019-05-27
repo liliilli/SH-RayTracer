@@ -49,10 +49,14 @@ int main(int argc, char* argv[])
 {
   using namespace ray;
 
+  const TU32 width = 1280u;
+  const TU32 height = 720u;
+  const TReal ratio = TReal(width) / height;
+
   FCamera cam = {
     DVec3{0, 0, 1}, DVec3{0, 0, -1}, 
-    800u, 480u, 
-    2.0f * (800.0f / 480.0f), 2.0f
+    width, height,
+    2.0f * ratio, 2.0f
   };
   const auto size = cam.GetImageSize();
   DDynamicGrid2D<DIVec3> container = {size.X, size.Y};
@@ -61,17 +65,23 @@ int main(int argc, char* argv[])
   {
     for (auto x = 0; x < size.X; ++x)
     {
-      auto ray = cam.CreateRay(x, y - 1);
-      DVec3 col = GetBackgroundFColor(ray);
+      auto rayList = cam.CreateRay(x, y - 1);
 
-      int ir = int(255.99f * col[0]);
-      int ig = int(255.99f * col[1]);
-      int ib = int(255.99f * col[2]);
+      DVec3 colorSum = {0};
+      for (const auto& ray : rayList) { colorSum += GetBackgroundFColor(ray); }
+      colorSum /= TU32(rayList.size());
+
+      int ir = int(255.99f * colorSum[0]);
+      int ig = int(255.99f * colorSum[1]);
+      int ib = int(255.99f * colorSum[2]);
       container.Set(x, size.Y - y, {ir, ig, ib});
     }
   }
 
-  const auto flag = ray::CreateImagePpm("./SphereTest.ppm", container);
+  char fileName[256] = {0};
+  std::sprintf(fileName, "./SphereTest_Samples%u.ppm", cam.GetSamples());
+
+  const auto flag = ray::CreateImagePpm(fileName, container);
   if (flag == false) { std::printf("Failed to execute program.\n"); }
   return 0;
 }
