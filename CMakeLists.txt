@@ -12,6 +12,7 @@ add_subdirectory(DyUtils)
 set(SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 set(SOURCE
     "${SOURCE_DIRECTORY}/FCamera.cc"
+    "${SOURCE_DIRECTORY}/FRenderWorker.cc"
     "${SOURCE_DIRECTORY}/XMain.cc"
     "${SOURCE_DIRECTORY}/XCommon.cc"
     "${SOURCE_DIRECTORY}/XSamples.cc"
