@@ -19,7 +19,7 @@ namespace ray
 
 std::unique_ptr<::dy::expr::FCmdArguments> sArguments = nullptr;
 
-bool CreateImagePpm(const char* const path, DDynamicGrid2D<DVector3<TI32>>& container)
+bool CreateImagePpm(const char* const path, DDynamicGrid2D<DIVec3>& container)
 {
   // Open file
   FILE* fd = std::fopen(path, "w");

@@ -60,7 +60,7 @@ const DUVec2& FCamera::GetImageSize() const noexcept
   return this->mScreenSize;
 }
 
-std::vector<DRay<TReal>> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
+std::vector<DRay> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
 {
   assert(x < this->mScreenSize[0] && y < this->mScreenSize[1]);
   
@@ -70,7 +70,7 @@ std::vector<DRay<TReal>> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
     + (this->mCellUp * TReal(y));
 
   std::vector<DVec3> offsets;
-  std::vector<DRay<TReal>> rayList;
+  std::vector<DRay> rayList;
   if (this->mSamples == 1)
   {
     offsets = { this->mCellRight * .5f + this->mCellUp * .5f };

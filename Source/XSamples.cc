@@ -43,7 +43,7 @@ R"(P3
 bool CreateSampleImage(const char* const path, unsigned nx, unsigned ny)
 {
   // Insert Data
-  DDynamicGrid2D<DVector3<TI32>> container = {200, 100};
+  DDynamicGrid2D<DIVec3> container = {200, 100};
 
   for (auto y = ny; y > 0; --y)
   {
