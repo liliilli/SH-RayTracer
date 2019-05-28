@@ -32,12 +32,21 @@ PRIVATE
     ${CMAKE_SOURCE_DIR}/DyUtils/DyStringUtil/Include
     ${CMAKE_SOURCE_DIR}/DyUtils/DyMath/Include
 )
-target_link_libraries(${CMAKE_PROJECT_NAME}
-    DyStringUtil
-    DyMath
-    pthread
-)
-add_definitions(-lstdc++fs -lpthread)
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	target_link_libraries(${CMAKE_PROJECT_NAME}
+		DyStringUtil
+		DyMath
+		pthread
+	)
+	add_definitions(-lstdc++fs -lpthread)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	target_link_libraries(${CMAKE_PROJECT_NAME}
+		DyStringUtil
+		DyMath
+	)
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS -DUNICODE)
+endif()
 
 # INSTALL SETTINGS
 set_target_properties(${CMAKE_PROJECT_NAME}
