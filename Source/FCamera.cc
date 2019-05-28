@@ -13,43 +13,46 @@
 
 #include <FCamera.hpp>
 #include <Math/Utility/XLinearMath.h>
+#include <XCommon.hpp>
+#include <iostream>
 
 namespace ray
 {
 
 FCamera::FCamera(
     const DVec3& origin, const DVec3& forwardTo, 
-    TU32 imgWidth, TU32 imgHeight,
-    TReal scrWidth, TReal scrHeight)
+    DUVec2 imgSize, TReal scrWidth, TReal scrHeight,
+    TU32 samples)
   : mOrigin{ origin },
     mForward{ (forwardTo - origin).Normalize() },
     mSide{ Cross(this->mForward, decltype(mForward){0, 1, 0}) },
     mUp{ Cross(this->mSide, this->mForward) },
-    mScreenSize{ imgWidth, imgHeight }
+    mScreenSize{ imgSize },
+    mSamples{ samples }
 {
   constexpr TReal zoom = TReal(1.0);
 
   this->mLowLeftCorner = 
     this->mOrigin + this->mForward * zoom + 
     this->mSide * (-scrWidth / 2.0f) + this->mUp * (-scrHeight / 2.0f); 
+
+  this->mCellRight = mSide * (scrWidth / TReal(this->mScreenSize.X) );
+  this->mCellUp = mUp * (scrHeight / TReal(this->mScreenSize.Y) );
+
+  RAY_IF_VERBOSE_MODE()
   {
-    auto& pos = this->mLowLeftCorner;
-    std::printf("%f, %f, %f\n", pos.X, pos.Y, pos.Z);
+    std::cout << "* Camera Information\n";
+    std::cout << "  Origin : " << this->mOrigin << '\n';
+    std::cout << "  Forward : " << this->mForward << '\n';
+    std::cout << "  Side : " << this->mSide << '\n';
+    std::cout << "  Up : " << this->mUp << '\n';
+
+    std::cout << "  LowLeftCorner : " << this->mLowLeftCorner << '\n';
+    std::cout << "  CellRight : " << this->mCellRight << '\n';
+    std::cout << "  CellUp : " << this->mCellUp << '\n';
+
+    std::cout << "  ScreenSize : " << this->mScreenSize << '\n';
   }
-  {
-    auto& pos = this->mForward;
-    std::printf("%f, %f, %f\n", pos.X, pos.Y, pos.Z);
-  }
-  {
-    auto& pos = this->mSide;
-    std::printf("%f, %f, %f\n", pos.X, pos.Y, pos.Z);
-  }
-  {
-    auto& pos = this->mUp;
-    std::printf("%f, %f, %f\n", pos.X, pos.Y, pos.Z);
-  }
-  this->mCellRight = mSide * (scrWidth / imgWidth);
-  this->mCellUp = mUp * (scrHeight / imgHeight);
 }
 
 const DUVec2& FCamera::GetImageSize() const noexcept

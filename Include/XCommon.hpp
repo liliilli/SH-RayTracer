@@ -16,8 +16,14 @@
 #include <Math/Type/Math/DVector2.h>
 #include <Math/Type/Math/DVector3.h>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
+#include <Expr/FCmdArguments.h>
 
 using namespace dy::math;
+
+/// @def RAY_IF_VERBOSE_MODE
+/// @define Check application is verbose mode on runtime.
+#define RAY_IF_VERBOSE_MODE() \
+  if (ray::sArguments->GetValueFrom<bool>('v') == true)
 
 namespace ray
 {
@@ -26,7 +32,9 @@ using DVec3 = DVector3<TReal>;
 using DIVec2 = DVector2<TI32>;
 using DUVec2 = DVector2<TU32>;
 using DIVec3 = DVector3<TI32>;
-  
+
+extern std::unique_ptr<::dy::expr::FCmdArguments> sArguments;
+
 /// @brief Create image ppm with grid2d container.
 /// @return If successful, return true. Otherwise, return false.
 bool CreateImagePpm(const char* const path, DDynamicGrid2D<DVector3<TI32>>& container);

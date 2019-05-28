@@ -12,9 +12,12 @@
 ///
 
 #include <XCommon.hpp>
+#include <memory>
 
 namespace ray
 {
+
+std::unique_ptr<::dy::expr::FCmdArguments> sArguments = nullptr;
 
 bool CreateImagePpm(const char* const path, DDynamicGrid2D<DVector3<TI32>>& container)
 {

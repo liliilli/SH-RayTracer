@@ -26,8 +26,8 @@ class FCamera final
 public:
   FCamera(
     const DVec3& origin, const DVec3& forwardTo, 
-    TU32 imgWidth, TU32 imgHeight,
-    TReal scrWidth, TReal scrHeight);
+    DUVec2 imgSize, TReal scrWidth, TReal scrHeight,
+    TU32 samples);
 
   /// @brief Get image size.
   const DUVec2& GetImageSize() const noexcept;
