@@ -7,10 +7,12 @@
       "args": [
         "-std=c++17",
         "-lstdc++fs",
-        "-g",
-        "${file}",
-        "-o",
-        "${fileDirname}/${fileBasenameNoExtension}"
+        "-g", "${file}",
+        "${workspaceRoot}/Source/*.cc",
+        "-o", "${fileDirname}/${fileBasenameNoExtension}",
+        "-I", "${workspaceRoot}/Include",
+        "-I", "${workspaceRoot}/DyUtils/DyMath/Include",
+        "-I", "${workspaceRoot}/DyUtils/DyExpression/Include"
       ],
       "options": {
         "cwd": "/bin"

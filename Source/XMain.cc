@@ -26,7 +26,7 @@
 ray::DVec3 GetBackgroundFColor(const DRay<TReal>& ray)
 {
   using namespace ray;
-  const DSphere<TReal> sphere = {DVec3{0, 0, -2}, 0.5f};
+  const DSphere<TReal> sphere = {DVec3{0, 0, -1}, 1.0f};
   if (IsRayIntersected(ray, sphere) == true)
   {
     const auto normal = GetNormalOf(ray, sphere);
@@ -34,7 +34,7 @@ ray::DVec3 GetBackgroundFColor(const DRay<TReal>& ray)
     return (*normal + DVec3{1.0f}) * 0.5f;
   }
 
-  const DSphere<TReal> sphere2 = {DVec3{0, -2.0f, -5}, 4.0f};
+  const DSphere<TReal> sphere2 = {DVec3{0, -100.0f, -40.f}, 100.0f};
   if (IsRayIntersected(ray, sphere2) == true)
   {
     const auto normal = GetNormalOf(ray, sphere2);
@@ -52,8 +52,7 @@ int main(int argc, char* argv[])
 
   ::dy::expr::FCmdArguments arguments{};
   {
-    const auto flag = arguments.Add<TU32>('s', "sample", 1);
-    assert(flag == true);
+    arguments.Add<TU32>('s', "sample", 1);
   }
   arguments.Parse(argc, argv);
 
@@ -75,6 +74,7 @@ int main(int argc, char* argv[])
   {
     for (auto x = 0; x < size.X; ++x)
     {
+      //std::printf("[%u, %u]\n", x, y);
       auto rayList = cam.CreateRay(x, y - 1);
 
       DVec3 colorSum = {0};
