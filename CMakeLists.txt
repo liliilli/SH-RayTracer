@@ -3,7 +3,7 @@ project(ShRayTracer CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_VERBOSE_MAKEFILE true)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -17,6 +17,7 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/XSamples.cc"
 )
 
+find_package(Threads REQUIRED)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Include")
 add_executable(${CMAKE_PROJECT_NAME}
     ${SOURCE}
@@ -33,8 +34,9 @@ PRIVATE
 target_link_libraries(${CMAKE_PROJECT_NAME}
     DyStringUtil
     DyMath
+    pthread
 )
-add_definitions(-lstdc++fs)
+add_definitions(-lstdc++fs -lpthread)
 
 # INSTALL SETTINGS
 set_target_properties(${CMAKE_PROJECT_NAME}

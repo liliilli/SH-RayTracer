@@ -12,7 +12,9 @@
 ///
 
 #include <cstdio>
+#include <iostream>
 #include <vector>
+#include <thread>
 
 #include <XCommon.hpp>
 #include <XSamples.hpp>
@@ -34,7 +36,7 @@ ray::DVec3 GetBackgroundFColor(const DRay<TReal>& ray)
     return (*normal + DVec3{1.0f}) * 0.5f;
   }
 
-  const DSphere<TReal> sphere2 = {DVec3{0, -100.0f, -40.f}, 100.0f};
+  const DSphere<TReal> sphere2 = {DVec3{0, -101.0f, -40.f}, 100.0f};
   if (IsRayIntersected(ray, sphere2) == true)
   {
     const auto normal = GetNormalOf(ray, sphere2);
@@ -48,46 +50,103 @@ ray::DVec3 GetBackgroundFColor(const DRay<TReal>& ray)
 
 int main(int argc, char* argv[])
 {
+  // Arguments setup
   using namespace ray;
-
-  ::dy::expr::FCmdArguments arguments{};
+  ray::sArguments = std::make_unique<decltype(ray::sArguments)::element_type>();
+  ray::sArguments->Add<TU32>('s', "sample", 1);
+  ray::sArguments->Add<bool>('v', "verbose");
+  ray::sArguments->Add<TU32>('t', "thread", 1);
+  ray::sArguments->Add<TU32>('w', "width", 800);
+  ray::sArguments->Add<TU32>('h', "height", 480);
+  if (ray::sArguments->Parse(argc, argv) == false)
   {
-    arguments.Add<TU32>('s', "sample", 1);
-  }
-  arguments.Parse(argc, argv);
-
-  const TU32 width = 1280u;
-  const TU32 height = 720u;
-  const TReal ratio = TReal(width) / height;
-
-  FCamera cam = {DVec3{0, 0, 1}, DVec3{0, 0, -1}, width, height, 2.0f * ratio, 2.0f};
-  auto* pSamples = arguments.GetArgument('s');
-  {
-    const auto sampleValue = std::any_cast<TU32>(pSamples->GetValue());
-    cam.SetSamples(sampleValue);
+    std::cerr << "Failed to execute application.\n";
+    return 1;
   }
 
-  const auto size = cam.GetImageSize();
-  DDynamicGrid2D<DIVec3> container = {size.X, size.Y};
-
-  for (auto y = size.Y; y > 0; --y)
+  const auto imgSize = DUVec2
   {
-    for (auto x = 0; x < size.X; ++x)
+    *ray::sArguments->GetValueFrom<TU32>('w'),
+    *ray::sArguments->GetValueFrom<TU32>('h'),
+  };
+  const TReal ratio = TReal(imgSize.X) / imgSize.Y;
+  auto numSamples = *ray::sArguments->GetValueFrom<TU32>('s');
+  auto numThreads = 
+      *ray::sArguments->GetValueFrom<TU32>('t') > std::thread::hardware_concurrency() 
+    ? std::thread::hardware_concurrency()
+    : *ray::sArguments->GetValueFrom<TU32>('t');
+  const auto indexCount = imgSize.X * imgSize.Y;
+  const auto workCount = indexCount / numThreads;
+  RAY_IF_VERBOSE_MODE() // Print Overall Information.
+  {
+    std::cout << "* Overall Information [Verbose Mode]\n";
+    std::cout << "  ScreenSize : " << imgSize << '\n';
+    std::cout << "  Screen Ratio (x/y) : " << ratio << '\n';
+    std::cout << "  Pixel Samples : " << numSamples << '\n';
+    std::cout << "  Running Thread Number : " << numThreads << '\n';
+    std::cout << "  Pixel Count : " << indexCount << '\n';
+    std::cout << "  Work Count For Each Thread : " << workCount << '\n'; 
+  }
+
+  FCamera cam = { DVec3{0, 0, 1}, DVec3{0, 0, -1}, imgSize, 2.0f * ratio, 2.0f, numSamples };
+
+  DDynamicGrid2D<DIVec3> container = {imgSize.X, imgSize.Y};
+
+  std::vector<std::vector<DUVec2>> indexes(numThreads);
+  for (auto y = imgSize.Y, t = 0u, c = 0u; y > 0; --y)
+  {
+    for (auto x = 0; x < imgSize.X; ++x)
     {
-      //std::printf("[%u, %u]\n", x, y);
-      auto rayList = cam.CreateRay(x, y - 1);
-
-      DVec3 colorSum = {0};
-      for (const auto& ray : rayList) { colorSum += GetBackgroundFColor(ray); }
-      colorSum /= TU32(rayList.size());
-
-      int ir = int(255.99f * colorSum[0]);
-      int ig = int(255.99f * colorSum[1]);
-      int ib = int(255.99f * colorSum[2]);
-      container.Set(x, size.Y - y, {ir, ig, ib});
+      indexes[t].emplace_back(x, y);     
+      // Next thread index list.
+      if (++c; c >= workCount && t + 1 < numThreads) { ++t; c = 0; }
+    }
+  }
+  RAY_IF_VERBOSE_MODE() // Print Thread Work list.
+  {
+    std::cout << "* Thread Work List\n";
+    for (TIndex i = 0; i < numThreads; ++i)
+    {
+      std::cout 
+        << "  Thread [" << i << "] : " 
+        << "Count : " << indexes[i].size() << ' '
+        << indexes[i].front() << " ~ " << indexes[i].back() << '\n';
     }
   }
 
+  std::vector<std::thread> threads(numThreads);
+  for (TIndex i = 0; i < numThreads; ++i)
+  {
+    threads[i] = std::thread{[](
+      const FCamera& cam,
+      const std::vector<DUVec2>& list, 
+      const DUVec2 imgSize, 
+      DDynamicGrid2D<DIVec3>& container)
+    {
+      for (const auto& index : list)
+      {
+        auto rayList = cam.CreateRay(index.X, index.Y - 1);
+
+        DVec3 colorSum = {0};
+        for (const auto& ray : rayList) { colorSum += GetBackgroundFColor(ray); }
+        colorSum /= TU32(rayList.size());
+
+        int ir = int(255.99f * colorSum[0]);
+        int ig = int(255.99f * colorSum[1]);
+        int ib = int(255.99f * colorSum[2]);
+        container.Set(index.X, imgSize.Y - index.Y, {ir, ig, ib});
+      }
+    },
+    std::cref(cam),
+    std::cref(indexes[i]), imgSize, std::ref(container)};
+  }
+  for (auto& thread : threads) 
+  { 
+    assert(thread.joinable() == true);
+    thread.join(); 
+  }
+
+  // After process...
   char fileName[256] = {0};
   std::sprintf(fileName, "./SphereTest_Samples%u.ppm", cam.GetSamples());
 
