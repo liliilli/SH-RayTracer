@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
   sArguments->Add<TU32>('t', "thread", 1);
   sArguments->Add<TU32>('w', "width", 800);
   sArguments->Add<TU32>('h', "height", 480);
+  sArguments->Add<float>('f', "gamma", 2.2f);
   sArguments->Add<std::string>('o', "output");
   if (sArguments->Parse(argc, argv) == false)
   {
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
   if (outputName.empty() == true) 
   {
     char fileName[256] = {0};
-    std::sprintf(fileName, "./SphereTest_Samples%u.ppm", numSamples);
+    std::sprintf(fileName, "./SphereTest_Samples%u_Diffuse.ppm", numSamples);
     outputName = fileName;
   }
 
@@ -80,8 +81,11 @@ int main(int argc, char* argv[])
     [[maybe_unused]] const auto flag = scene.Initialize();
     assert(flag == ESuccess::DY_SUCCESS);
   }
-  scene.AddHitableObject<FSphere>(DVec3{0, 0, -1}, 1.0f);
-  scene.AddHitableObject<FSphere>(DVec3{0, -101.0f, -40.f}, 100.0f);
+  //scene.AddHitableObject<FSphere>(DVec3{0, 0, -2.0}, 1.0f);
+  //scene.AddHitableObject<FSphere>(DVec3{1.1, -0.2, -1.0}, 0.8f);
+  //scene.AddHitableObject<FSphere>(DVec3{-1.7, 0, -2.5}, 1.0f);
+  scene.AddHitableObject<FSphere>(DVec3{0, 0, -1.0}, 1.0f);
+  scene.AddHitableObject<FSphere>(DVec3{0, -101.0f, -1.f}, 100.0f);
 
   // Separate work list to each thread. (potential)
   std::vector<std::vector<DUVec2>> indexes(numThreads);

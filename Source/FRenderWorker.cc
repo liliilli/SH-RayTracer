@@ -13,6 +13,7 @@
 
 #include <FRenderWorker.hpp>
 #include <MScene.hpp>
+#include <XCommon.hpp>
 
 namespace ray
 {
@@ -30,9 +31,16 @@ void FRenderWorker::Execute(
     DVec3 colorSum = {0};
     for (const auto& ray : rayList) 
     { 
-      colorSum += EXPR_SGT(MScene).ProceedRay(ray);
+      colorSum += EXPR_SGT(MScene).ProceedRay(ray, 0, 32);
     }
     colorSum /= TReal(rayList.size());
+
+    // Encoding
+    auto encode = 1.0f / *sArguments->GetValueFrom<float>("gamma");
+    for (int i = 0; i < 3; ++i) { colorSum[i] = std::pow(colorSum[i], encode); }
+
+    // Clamping 
+    for (int i = 0; i < 3; ++i) { colorSum[i] = std::clamp(colorSum[i], TReal(0), TReal(1)); }
 
     int ir = int(255.99f * colorSum[0]);
     int ig = int(255.99f * colorSum[1]);

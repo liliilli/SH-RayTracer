@@ -46,7 +46,7 @@ public:
 
   /// @brief Proceed ray.
   /// @brief RGB Color that has range of [0, 1].
-  DVec3 ProceedRay(const DRay& ray);
+  DVec3 ProceedRay(const DRay& ray, TIndex t = 0, TIndex limit = 8);
 
 private:
   std::vector<std::unique_ptr<IHitable>> mObjects;
