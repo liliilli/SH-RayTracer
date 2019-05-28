@@ -30,8 +30,24 @@ FCamera::FCamera(
   constexpr TReal zoom = TReal(1.0);
 
   this->mLowLeftCorner = 
-    this->mForward * zoom + 
+    this->mOrigin + this->mForward * zoom + 
     this->mSide * (-scrWidth / 2.0f) + this->mUp * (-scrHeight / 2.0f); 
+  {
+    auto& pos = this->mLowLeftCorner;
+    std::printf("%f, %f, %f\n", pos.X, pos.Y, pos.Z);
+  }
+  {
+    auto& pos = this->mForward;
+    std::printf("%f, %f, %f\n", pos.X, pos.Y, pos.Z);
+  }
+  {
+    auto& pos = this->mSide;
+    std::printf("%f, %f, %f\n", pos.X, pos.Y, pos.Z);
+  }
+  {
+    auto& pos = this->mUp;
+    std::printf("%f, %f, %f\n", pos.X, pos.Y, pos.Z);
+  }
   this->mCellRight = mSide * (scrWidth / imgWidth);
   this->mCellUp = mUp * (scrHeight / imgHeight);
 }
@@ -77,8 +93,9 @@ std::vector<DRay<TReal>> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
 
   for (const auto& offset : offsets)
   {
-    const auto dir = ((pos + offset) - this->mOrigin).Normalize();
-    rayList.emplace_back(pos, dir);
+    const auto orig = pos + offset;
+    const auto dir = orig - this->mOrigin;
+    rayList.emplace_back(orig, dir);
   }
   return rayList;
 }
