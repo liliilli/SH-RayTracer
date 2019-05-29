@@ -40,8 +40,9 @@ int main(int argc, char* argv[])
   sArguments->Add<TU32>('t', "thread", 1);      // Thread count to process.
   sArguments->Add<TU32>('w', "width", 800);     // Image Width 
   sArguments->Add<TU32>('h', "height", 480);    // Image Heigth
-  sArguments->Add<float>('f', "gamma", 2.2f);   // Gamma correction.
+  sArguments->Add<float>('g', "gamma", 2.2f);   // Gamma correction.
   sArguments->Add<TU32>('r', "repeat", 1);      // Repeat count of each pixel. (Denoising)
+	sArguments->Add<std::string>('f', "file");		// Load scene file. (json)
   sArguments->Add<std::string>('o', "output");  // Customizable output path.
   if (sArguments->Parse(argc, argv) == false)
   {
