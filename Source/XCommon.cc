@@ -26,6 +26,7 @@
 	#undef STBIW_WINDOWS_UTF8
 	#undef STBI_MSC_SECURE_CRT
 #endif
+#include <nlohmann/json.hpp>
 
 namespace ray
 {
@@ -79,3 +80,22 @@ bool CreateImagePng(const char* const path, const DDynamicGrid2D<DIVec3>& contai
 }
 
 } /// ::ray namespace
+
+namespace dy::math
+{
+
+void to_json(nlohmann::json& j, const ray::DVec3& p)
+{
+  j = std::vector<ray::DVec3::TValueType>{p[0], p[1], p[2]};
+}
+
+void from_json(const nlohmann::json& j, ray::DVec3& p)
+{
+  using TValue = ray::DVec3::TValueType;
+  for (int i = 0; i < 3; ++i)
+  {
+    p[i] = j[i].get<TValue>();
+  }
+}
+
+}

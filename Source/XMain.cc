@@ -108,11 +108,14 @@ int main(int argc, char* argv[])
 	}
 	else 
 	{
-		std::cerr << "Customized input scene file is not supported yet.\n";
-
-    [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Release();
-    assert(flag == ESuccess::DY_SUCCESS);
-		return 1;
+    const auto flag = EXPR_SGT(MScene).LoadSceneFile(fileName);
+    if (flag == false)
+    {
+      std::cerr << "Failed to execute application.\n";
+      [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Release();
+      assert(flag == ESuccess::DY_SUCCESS);
+      return 1;
+    }
 	}
 
   // Separate work list to each thread. (potential)

@@ -15,8 +15,10 @@
 #include <memory>
 #include <vector>
 #include <type_traits>
-#include <XCommon.hpp>
+
 #include <Expr/ISingleton.h>
+
+#include <XCommon.hpp>
 #include <IHitable.hpp>
 
 namespace ray
@@ -46,6 +48,10 @@ public:
 
 	/// @brief Add sample objects into scene.
 	void AddSampleObjects();
+
+  /// @brief Load scene file.
+  /// If succeeded, return true. Otherwise, return false.
+  bool LoadSceneFile(const std::string& pathString);
 
   /// @brief Proceed ray.
   /// @brief RGB Color that has range of [0, 1].
