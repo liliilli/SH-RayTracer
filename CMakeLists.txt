@@ -17,12 +17,15 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/MScene.cc"
     "${SOURCE_DIRECTORY}/XMain.cc"
     "${SOURCE_DIRECTORY}/XCommon.cc"
+    "${SOURCE_DIRECTORY}/XHelperIO.cc"
+    "${SOURCE_DIRECTORY}/XHelperJson.cc"
     "${SOURCE_DIRECTORY}/XSamples.cc"
 )
 
 find_package(Threads REQUIRED)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty")
+add_library(sse4_1 INTERFACE IMPORTED)
 add_executable(${CMAKE_PROJECT_NAME}
     ${SOURCE}
 )
@@ -38,6 +41,7 @@ PRIVATE
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	target_compile_options(sse4_1 INTERFACE -msse4.1)
 	target_link_libraries(${CMAKE_PROJECT_NAME}
 		DyStringUtil
 		DyMath
@@ -45,6 +49,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	)
 	add_definitions(-lstdc++fs -lpthread)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    target_compile_options(sse4_1 INTERFACE /arch:SSE4.1)
 	target_link_libraries(${CMAKE_PROJECT_NAME}
 		DyStringUtil
 		DyMath

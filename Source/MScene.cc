@@ -12,12 +12,17 @@
 ///
 
 #include <MScene.hpp>
+
 #include <cmath>
-#include <EShapeType.hpp>
-#include <FSphere.hpp>
+#include <iostream>
+
 #include <Math/Utility/XLinearMath.h>
 #include <Math/Utility/XGraphicsMath.h>
 #include <Math/Utility/XRandom.h>
+#include <Expr/XStringSwitch.h>
+#include <EShapeType.hpp>
+#include <FSphere.hpp>
+#include <XHelperJson.hpp>
 
 namespace ray
 {
@@ -31,6 +36,56 @@ ESuccess MScene::pfRelease()
 {
   this->mObjects.clear();
   return ESuccess::DY_SUCCESS;
+}
+
+void MScene::AddSampleObjects()
+{
+  this->AddHitableObject<FSphere>(DVec3{0, 0, -2.0}, 1.0f);
+  this->AddHitableObject<FSphere>(DVec3{1.1, -0.2, -1.0}, 0.8f);
+  this->AddHitableObject<FSphere>(DVec3{-1.7, 0, -2.5}, 1.0f);
+  this->AddHitableObject<FSphere>(DVec3{0, -101.0f, -1.f}, 100.0f);
+}
+
+bool MScene::LoadSceneFile(const std::string& pathString)
+{
+  // Check
+  const std::filesystem::path path = pathString;
+  if (std::filesystem::exists(path) == false) 
+  { 
+    std::cerr << "Failed to read file, " << path << ". File is not exist on path.\n";
+    return false; 
+  }
+
+  // Load sequence.
+  const auto jsonAtlas = json::GetAtlasFromFile(path);
+  if (jsonAtlas.has_value() == false) { return false; }
+
+  for (const auto& item : *jsonAtlas)
+  {
+    if (json::HasJsonKey(item, "type") == false) { return false; }
+    if (json::HasJsonKey(item, "detail") == false) { return false; }
+    if (json::HasJsonKey(item, "material") == false) { return false; }
+
+    using ::dy::expr::string::Input;
+    using ::dy::expr::string::Case;
+
+    const auto& detail = item["detail"];
+    switch (Input(json::GetValueFrom<std::string>(item, "type")))
+    {
+    case Case("sphere"):
+    {
+      if (json::HasJsonKey(detail, "pos") == false) { return false; }
+      if (json::HasJsonKey(detail, "radius") == false) { return false; }
+
+      const DVec3 pos = json::GetValueFrom<DVec3>(detail, "pos");
+      const TReal radius = json::GetValueFrom<TReal>(detail, "radius");
+      this->AddHitableObject<FSphere>(pos, radius);
+    } break;
+    default: break;
+    }
+  }
+
+  return true;
 }
 
 DVec3 MScene::ProceedRay(const DRay& ray, TIndex t, TIndex limit)

@@ -52,16 +52,17 @@ int main(int argc, char* argv[])
 
   const auto imgSize = DUVec2 { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
   const TReal ratio = TReal(imgSize.X) / imgSize.Y;
-  auto numSamples = *sArguments->GetValueFrom<TU32>('s');
-  auto numThreads = 
+  const auto numSamples = *sArguments->GetValueFrom<TU32>('s');
+  const auto numThreads = 
       *sArguments->GetValueFrom<TU32>('t') > std::thread::hardware_concurrency() 
     ? std::thread::hardware_concurrency()
     : *sArguments->GetValueFrom<TU32>('t');
   const auto indexCount = imgSize.X * imgSize.Y;
   const auto workCount = indexCount / numThreads;
   
-  auto outputName = *sArguments->GetValueFrom<std::string>("output");
-	auto isPng = *sArguments->GetValueFrom<bool>("png"); 
+	const auto fileName = *sArguments->GetValueFrom<std::string>("file");
+  auto outputName	= *sArguments->GetValueFrom<std::string>("output");
+	const auto isPng = *sArguments->GetValueFrom<bool>("png"); 
   if (outputName.empty() == true) 
   {
     char fileName[256] = {0};
@@ -81,6 +82,7 @@ int main(int argc, char* argv[])
   RAY_IF_VERBOSE_MODE() // Print Overall Information.
   {
     std::cout << "* Overall Information [Verbose Mode]\n";
+		std::cout << "  Input Scene File : " << (fileName.empty() ? "Default (internal sample)" : fileName) << '\n';
     std::cout << "  Output File : " << outputName << '\n';
     std::cout << "  ScreenSize : " << imgSize << '\n';
     std::cout << "  Screen Ratio (x/y) : " << ratio << '\n';
@@ -94,17 +96,27 @@ int main(int argc, char* argv[])
 
   // Create camera & Scene.
   FCamera cam = { DVec3{0, 0, 1}, DVec3{0, 0, -1}, imgSize, 2.0f * ratio, 2.0f, numSamples };
-  MScene& scene = EXPR_SGT(MScene);
   // Initialization time...
   {
-    [[maybe_unused]] const auto flag = scene.Initialize();
+    [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Initialize();
     assert(flag == ESuccess::DY_SUCCESS);
   }
-  //scene.AddHitableObject<FSphere>(DVec3{0, 0, -2.0}, 1.0f);
-  //scene.AddHitableObject<FSphere>(DVec3{1.1, -0.2, -1.0}, 0.8f);
-  //scene.AddHitableObject<FSphere>(DVec3{-1.7, 0, -2.5}, 1.0f);
-  scene.AddHitableObject<FSphere>(DVec3{0, 0, -1.0}, 1.0f);
-  scene.AddHitableObject<FSphere>(DVec3{0, -101.0f, -1.f}, 100.0f);
+	// If input file name is empty (not specified), just add sample objects into manager.
+	if (fileName.empty() == true)
+	{
+		EXPR_SGT(MScene).AddSampleObjects();
+	}
+	else 
+	{
+    const auto flag = EXPR_SGT(MScene).LoadSceneFile(fileName);
+    if (flag == false)
+    {
+      std::cerr << "Failed to execute application.\n";
+      [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Release();
+      assert(flag == ESuccess::DY_SUCCESS);
+      return 1;
+    }
+	}
 
   // Separate work list to each thread. (potential)
   std::vector<std::vector<DUVec2>> indexes(numThreads);
@@ -151,7 +163,7 @@ int main(int argc, char* argv[])
 
   // Release time...
   { 
-    [[maybe_unused]] const auto flag = scene.Release();
+    [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Release();
     assert(flag == ESuccess::DY_SUCCESS);
   }
   // After process...

@@ -12,6 +12,7 @@
 /// SOFTWARE.
 ///
 
+#include <nlohmann/json_fwd.hpp>
 #include <Math/Common/TGlobalTypes.h>
 #include <Math/Type/Math/DVector2.h>
 #include <Math/Type/Math/DVector3.h>
@@ -55,3 +56,11 @@ bool CreateImagePpm(const char* const path, DDynamicGrid2D<DIVec3>& container);
 bool CreateImagePng(const char* const path, const DDynamicGrid2D<DIVec3>& container);
 
 } /// ::ray namespace
+
+namespace dy::math
+{
+
+void to_json(nlohmann::json& j, const ray::DVec3& p);
+void from_json(const nlohmann::json& j, ray::DVec3& p);
+
+} /// ::dy::math namespace
