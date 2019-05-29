@@ -88,8 +88,6 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex t, TIndex limit)
         {
           refDir = RandomVector3Length<TReal>(1.0f);
         }
-
-        assert(normal.has_value() == true);
         const auto nextTarget = nextPos + (normal + refDir);
 
         return 0.5f * this->ProceedRay(DRay{nextPos, nextTarget - nextPos}, t, limit);
