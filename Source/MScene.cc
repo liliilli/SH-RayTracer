@@ -33,6 +33,14 @@ ESuccess MScene::pfRelease()
   return ESuccess::DY_SUCCESS;
 }
 
+void MScene::AddSampleObjects()
+{
+  this->AddHitableObject<FSphere>(DVec3{0, 0, -2.0}, 1.0f);
+  this->AddHitableObject<FSphere>(DVec3{1.1, -0.2, -1.0}, 0.8f);
+  this->AddHitableObject<FSphere>(DVec3{-1.7, 0, -2.5}, 1.0f);
+  this->AddHitableObject<FSphere>(DVec3{0, -101.0f, -1.f}, 100.0f);
+}
+
 DVec3 MScene::ProceedRay(const DRay& ray, TIndex t, TIndex limit)
 {
   using ::dy::math::DSphere;

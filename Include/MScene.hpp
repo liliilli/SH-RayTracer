@@ -44,6 +44,9 @@ public:
     this->mObjects.emplace_back(obj.release());
   }
 
+	/// @brief Add sample objects into scene.
+	void AddSampleObjects();
+
   /// @brief Proceed ray.
   /// @brief RGB Color that has range of [0, 1].
   DVec3 ProceedRay(const DRay& ray, TIndex t = 0, TIndex limit = 8);
