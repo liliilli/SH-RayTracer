@@ -50,4 +50,8 @@ using ESuccess = ::dy::expr::EDySuccess;
 /// @return If successful, return true. Otherwise, return false.
 bool CreateImagePpm(const char* const path, DDynamicGrid2D<DIVec3>& container);
 
+/// @brief Create image png with grid2d container.
+/// @return If successful, return true. Otherwise, return false.
+bool CreateImagePng(const char* const path, const DDynamicGrid2D<DIVec3>& container);
+
 } /// ::ray namespace

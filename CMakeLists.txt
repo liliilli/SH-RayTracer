@@ -22,6 +22,7 @@ set(SOURCE
 
 find_package(Threads REQUIRED)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty")
 add_executable(${CMAKE_PROJECT_NAME}
     ${SOURCE}
 )
@@ -30,6 +31,7 @@ PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Include
 
 PRIVATE
+	${CMAKE_SOURCE_DIR}/ThirdParty
     ${CMAKE_SOURCE_DIR}/DyUtils/DyExpression/Include
     ${CMAKE_SOURCE_DIR}/DyUtils/DyStringUtil/Include
     ${CMAKE_SOURCE_DIR}/DyUtils/DyMath/Include

@@ -60,6 +60,7 @@ int main(int argc, char* argv[])
   const auto workCount = indexCount / numThreads;
   
   auto outputName = *sArguments->GetValueFrom<std::string>("output");
+	auto isPng = *sArguments->GetValueFrom<bool>("png"); 
   if (outputName.empty() == true) 
   {
     char fileName[256] = {0};
@@ -68,10 +69,11 @@ int main(int argc, char* argv[])
     std::stringstream timeStringStream;
     timeStringStream << std::put_time(std::localtime(&nowC), "%y%m%d-%H%M%S");
 
-    std::sprintf(fileName, "./SphereTest_s%u_r%u_%s.ppm", 
+    std::sprintf(fileName, "./SphereTest_s%u_r%u_%s.%s", 
       numSamples, 
       *sArguments->GetValueFrom<TU32>("repeat"),
-      timeStringStream.str().c_str());
+      timeStringStream.str().c_str(),
+			isPng ? "png" : "ppm");
     outputName = fileName;
   }
 
@@ -152,18 +154,26 @@ int main(int argc, char* argv[])
     assert(flag == ESuccess::DY_SUCCESS);
   }
   // After process...
-  const auto flag = ray::CreateImagePpm(outputName.c_str(), container);
-  if (flag == false) 
-  { 
-		std::printf("Failed to execute program.\n"); 
-		return 1;
-  }
+	// If --png (-p) is enabled, export result as `.png`, not `.ppm`.
+	if (isPng == true)
+	{
+		if (const auto flag = ray::CreateImagePng(outputName.c_str(), container); flag == false) 
+		{ 
+			std::printf("Failed to execute program.\n"); 
+			return 1;
+		}
+	}
 	else
 	{
-		using ::dy::expr::MTimeChecker;
-		const auto timestamp = EXPR_SGT(MTimeChecker).Get("RenderTime").GetRecent();
-		std::cout << "* Elapsed Time : " << timestamp.count() << "s\n";
+		if (const auto flag = ray::CreateImagePpm(outputName.c_str(), container); flag == false) 
+		{ 
+			std::printf("Failed to execute program.\n"); 
+			return 1;
+		}
 	}
 
+	using ::dy::expr::MTimeChecker;
+	const auto timestamp = EXPR_SGT(MTimeChecker).Get("RenderTime").GetRecent();
+	std::cout << "* Elapsed Time : " << timestamp.count() << "s\n";
   return 0;
 }
