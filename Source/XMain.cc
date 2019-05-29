@@ -13,8 +13,11 @@
 
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <thread>
+#include <chrono>
+#include <sstream>
 
 #include <XCommon.hpp>
 #include <XSamples.hpp>
@@ -24,19 +27,22 @@
 #include <MScene.hpp>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
 #include <Expr/FCmdArguments.h>
+#include <Expr/MTimeChecker.h>
 
 int main(int argc, char* argv[])
 {
   // Arguments setup
   using namespace ray;
   sArguments = std::make_unique<decltype(ray::sArguments)::element_type>();
-  sArguments->Add<TU32>('s', "sample", 1);
-  sArguments->Add<bool>('v', "verbose");
-  sArguments->Add<TU32>('t', "thread", 1);
-  sArguments->Add<TU32>('w', "width", 800);
-  sArguments->Add<TU32>('h', "height", 480);
-  sArguments->Add<float>('f', "gamma", 2.2f);
-  sArguments->Add<std::string>('o', "output");
+  sArguments->Add<TU32>('s', "sample", 1);      // Sampling count of each pixel. (Antialiasing)
+  sArguments->Add<bool>('v', "verbose");        // Do process verbosely (Enable log)
+  sArguments->Add<bool>('p', "png");            // Export output as `.png` file.
+  sArguments->Add<TU32>('t', "thread", 1);      // Thread count to process.
+  sArguments->Add<TU32>('w', "width", 800);     // Image Width 
+  sArguments->Add<TU32>('h', "height", 480);    // Image Heigth
+  sArguments->Add<float>('f', "gamma", 2.2f);   // Gamma correction.
+  sArguments->Add<TU32>('r', "repeat", 1);      // Repeat count of each pixel. (Denoising)
+  sArguments->Add<std::string>('o', "output");  // Customizable output path.
   if (sArguments->Parse(argc, argv) == false)
   {
     std::cerr << "Failed to execute application.\n";
@@ -57,7 +63,15 @@ int main(int argc, char* argv[])
   if (outputName.empty() == true) 
   {
     char fileName[256] = {0};
-    std::sprintf(fileName, "./SphereTest_Samples%u_Diffuse.ppm", numSamples);
+    const auto timepoint = std::chrono::system_clock::now();
+    const auto nowC = std::chrono::system_clock::to_time_t(timepoint - std::chrono::hours(24));
+    std::stringstream timeStringStream;
+    timeStringStream << std::put_time(std::localtime(&nowC), "%y%m%d-%H%M%S");
+
+    std::sprintf(fileName, "./SphereTest_s%u_r%u_%s.ppm", 
+      numSamples, 
+      *sArguments->GetValueFrom<TU32>("repeat"),
+      timeStringStream.str().c_str());
     outputName = fileName;
   }
 
@@ -70,6 +84,8 @@ int main(int argc, char* argv[])
     std::cout << "  Pixel Samples : " << numSamples << '\n';
     std::cout << "  Running Thread Number : " << numThreads << '\n';
     std::cout << "  Pixel Count : " << indexCount << '\n';
+    std::cout << "  Repeat : " << *sArguments->GetValueFrom<TU32>("repeat") << '\n';
+    std::cout << "  Gamma : " << *sArguments->GetValueFrom<float>("gamma") << '\n';
     std::cout << "  Work Count For Each Thread : " << workCount << '\n'; 
   }
 
@@ -113,19 +129,22 @@ int main(int argc, char* argv[])
   // Render
   DDynamicGrid2D<DIVec3> container = {imgSize.X, imgSize.Y};
   std::vector<std::pair<FRenderWorker, std::thread>> threads(numThreads);
-  for (TIndex i = 0; i < numThreads; ++i)
-  {
-    auto& [instance, thread] = threads[i];
-    thread = std::thread{
-      &FRenderWorker::Execute, &instance,
-      std::cref(cam),
-      std::cref(indexes[i]), imgSize, std::ref(container)};
-  }
-  for (auto& [instance, thread] : threads) 
-  { 
-    assert(thread.joinable() == true);
-    thread.join(); 
-  }
+	{
+		EXPR_TIMER_CHECK_CPU("RenderTime");
+		for (TIndex i = 0; i < numThreads; ++i)
+		{
+			auto& [instance, thread] = threads[i];
+			thread = std::thread{
+				&FRenderWorker::Execute, &instance,
+				std::cref(cam),
+				std::cref(indexes[i]), imgSize, std::ref(container)};
+		}
+		for (auto& [instance, thread] : threads) 
+		{ 
+			assert(thread.joinable() == true);
+			thread.join(); 
+		}
+	}
 
   // Release time...
   { 
@@ -134,6 +153,17 @@ int main(int argc, char* argv[])
   }
   // After process...
   const auto flag = ray::CreateImagePpm(outputName.c_str(), container);
-  if (flag == false) { std::printf("Failed to execute program.\n"); }
+  if (flag == false) 
+  { 
+		std::printf("Failed to execute program.\n"); 
+		return 1;
+  }
+	else
+	{
+		using ::dy::expr::MTimeChecker;
+		const auto timestamp = EXPR_SGT(MTimeChecker).Get("RenderTime").GetRecent();
+		std::cout << "* Elapsed Time : " << timestamp.count() << "s\n";
+	}
+
   return 0;
 }
