@@ -26,14 +26,18 @@ void FRenderWorker::Execute(
 {
   for (const auto& index : list)
   {
-    auto rayList = cam.CreateRay(index.X, index.Y - 1);
+    const auto rayList = cam.CreateRay(index.X, index.Y - 1);
+    const auto repeat = *sArguments->GetValueFrom<TU32>("repeat");
 
     DVec3 colorSum = {0};
-    for (const auto& ray : rayList) 
-    { 
-      colorSum += EXPR_SGT(MScene).ProceedRay(ray, 0, 32);
+    for (TU32 r = 0; r < repeat; ++r)
+    {
+      for (const auto& ray : rayList) 
+      { 
+        colorSum += EXPR_SGT(MScene).ProceedRay(ray, 0, 32);
+      }
     }
-    colorSum /= TReal(rayList.size());
+    colorSum /= (TReal(rayList.size()) * repeat);
 
     // Encoding
     auto encode = 1.0f / *sArguments->GetValueFrom<float>("gamma");
