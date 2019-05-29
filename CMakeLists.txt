@@ -14,6 +14,8 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/FCamera.cc"
     "${SOURCE_DIRECTORY}/FRenderWorker.cc"
     "${SOURCE_DIRECTORY}/FSphere.cc"
+    "${SOURCE_DIRECTORY}/FMatLambertian.cc"
+    "${SOURCE_DIRECTORY}/FMatMetal.cc"
     "${SOURCE_DIRECTORY}/MScene.cc"
     "${SOURCE_DIRECTORY}/XMain.cc"
     "${SOURCE_DIRECTORY}/XCommon.cc"

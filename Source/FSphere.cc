@@ -16,8 +16,8 @@
 namespace ray
 {
 
-FSphere::FSphere(const DVec3& origin, TReal radius)
-  : IHitable(EShapeType::Sphere),
+FSphere::FSphere(const DVec3& origin, TReal radius, std::unique_ptr<IMaterial>&& mat)
+  : IHitable(EShapeType::Sphere, std::move(mat)),
     DSphere<TReal>(origin, radius)
 { };
 

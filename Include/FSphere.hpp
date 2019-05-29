@@ -26,7 +26,7 @@ class FSphere final :
   public ::dy::math::DSphere<TReal>
 {
 public:
-  FSphere(const DVec3& origin, TReal radius);
+  FSphere(const DVec3& origin, TReal radius, std::unique_ptr<IMaterial>&& mat);
   virtual ~FSphere() = default;
 
 private:

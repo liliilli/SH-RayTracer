@@ -24,6 +24,9 @@
 #include <FSphere.hpp>
 #include <XHelperJson.hpp>
 
+#include <FMatLambertian.hpp>
+#include <FMatMetal.hpp>
+
 namespace ray
 {
 
@@ -40,10 +43,18 @@ ESuccess MScene::pfRelease()
 
 void MScene::AddSampleObjects()
 {
-  this->AddHitableObject<FSphere>(DVec3{0, 0, -2.0}, 1.0f);
-  this->AddHitableObject<FSphere>(DVec3{1.1, -0.2, -1.0}, 0.8f);
-  this->AddHitableObject<FSphere>(DVec3{-1.7, 0, -2.5}, 1.0f);
-  this->AddHitableObject<FSphere>(DVec3{0, -101.0f, -1.f}, 100.0f);
+  this->AddHitableObject<FSphere>(
+    DVec3{0, 0, -2.0f}, 1.0f, 
+    std::make_unique<FMatLambertian>(DVec3{.8f, .8f, 0}));
+  this->AddHitableObject<FSphere>(
+    DVec3{1.1f, -0.2f, -1.0f}, 0.8f,
+    std::make_unique<FMatLambertian>(DVec3{.8f, 0, .8f}));
+  this->AddHitableObject<FSphere>(
+    DVec3{-1.7f, 0, -2.5f}, 1.0f,
+    std::make_unique<FMatLambertian>(DVec3{0, .8f, .8f}));
+  this->AddHitableObject<FSphere>(
+    DVec3{0, -101.0f, -1.f}, 100.0f,
+    std::make_unique<FMatLambertian>(DVec3{0.8f, 0.5f, 0}));
 }
 
 bool MScene::LoadSceneFile(const std::string& pathString)
@@ -65,9 +76,29 @@ bool MScene::LoadSceneFile(const std::string& pathString)
     if (json::HasJsonKey(item, "type") == false) { return false; }
     if (json::HasJsonKey(item, "detail") == false) { return false; }
     if (json::HasJsonKey(item, "material") == false) { return false; }
+    if (json::HasJsonKey(item, "mat_detail") == false) { return false; }
 
     using ::dy::expr::string::Input;
     using ::dy::expr::string::Case;
+
+    std::unique_ptr<IMaterial> psMat = nullptr;
+    const auto& matDetail = item["mat_detail"];
+    switch (Input(json::GetValueFrom<std::string>(item, "material")))
+    {
+    case Case("lambertian"):
+    {
+      if (json::HasJsonKey(matDetail, "color") == false) { return false; }
+      const DVec3 col = json::GetValueFrom<DVec3>(matDetail, "color");
+      psMat = std::make_unique<FMatLambertian>(col);
+    } break;
+    default: break;
+    case Case("metal"):
+    {
+      if (json::HasJsonKey(matDetail, "color") == false) { return false; }
+      const DVec3 col = json::GetValueFrom<DVec3>(matDetail, "color");
+      psMat = std::make_unique<FMatMetal>(col);
+    } break;
+    }
 
     const auto& detail = item["detail"];
     switch (Input(json::GetValueFrom<std::string>(item, "type")))
@@ -79,7 +110,7 @@ bool MScene::LoadSceneFile(const std::string& pathString)
 
       const DVec3 pos = json::GetValueFrom<DVec3>(detail, "pos");
       const TReal radius = json::GetValueFrom<TReal>(detail, "radius");
-      this->AddHitableObject<FSphere>(pos, radius);
+      this->AddHitableObject<FSphere>(pos, radius, std::move(psMat));
     } break;
     default: break;
     }
@@ -132,21 +163,21 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex t, TIndex limit)
       {
       case EShapeType::Sphere:
       {
-        using TSphere = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Sphere);
         auto& sphere = static_cast<TSphere&>(*pClostestObj);
-
-        const auto nextPos = ray.GetPointAtParam(clostestT);
-        const auto normal  = *GetNormalOf(ray, sphere);
-        // Loop...
-        DVec3 refDir = RandomVector3Length<TReal>(1.0f);
-        while (::dy::math::Dot(refDir, normal) <= 0)
+        if (auto* pMat = sphere.GetMaterial(); pMat != nullptr)
         {
-          refDir = RandomVector3Length<TReal>(1.0f);
+          const auto nextPos = ray.GetPointAtParam(clostestT);
+          // Get result
+          auto optResult = pMat->Scatter({nextPos, ray.GetDirection()}, *GetNormalOf(ray, sphere));
+          const auto& [refDir, attCol, isScattered] = *optResult;
+          assert(isScattered == true);
+          // Resursion...
+          return attCol * this->ProceedRay(DRay{nextPos, refDir}, t, limit);
         }
-        const auto nextTarget = nextPos + (normal + refDir);
-
-        return 0.5f * this->ProceedRay(DRay{nextPos, nextTarget - nextPos}, t, limit);
-        //return (*normal + DVec3{1.0f}) * 0.5f;
+        else 
+        {
+          return DVec3{0};
+        }
       } break;
       }
     }
