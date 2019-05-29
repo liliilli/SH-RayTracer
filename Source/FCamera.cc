@@ -93,6 +93,22 @@ std::vector<DRay> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
       this->mCellRight * 7.f / 8.f + this->mCellUp * 3.f / 8.f,
     };
   }
+  else if (this->mSamples == 8)
+  {
+    const auto right = this->mCellRight / 16.f;
+    const auto up    = this->mCellUp / 16.f;
+    offsets = 
+    {
+      right * 1, up * 5,
+      right * 3, up * 13,
+      right * 5, up * 1,
+      right * 7, up * 9,
+      right * 9, up * 15,
+      right * 11, up * 7,
+      right * 13, up * 3,
+      right * 15, up * 11
+    };
+  }
 
   for (const auto& offset : offsets)
   {
