@@ -94,8 +94,6 @@ int main(int argc, char* argv[])
     std::cout << "  Work Count For Each Thread : " << workCount << '\n'; 
   }
 
-  // Create camera & Scene.
-  FCamera cam = { DVec3{0, 0, 1}, DVec3{0, 0, -1}, imgSize, 2.0f * ratio, 2.0f, numSamples };
   // Initialization time...
   {
     [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Initialize();
@@ -104,11 +102,11 @@ int main(int argc, char* argv[])
 	// If input file name is empty (not specified), just add sample objects into manager.
 	if (fileName.empty() == true)
 	{
-		EXPR_SGT(MScene).AddSampleObjects();
+		EXPR_SGT(MScene).AddSampleObjects(imgSize, numSamples);
 	}
 	else 
 	{
-    const auto flag = EXPR_SGT(MScene).LoadSceneFile(fileName);
+    const auto flag = EXPR_SGT(MScene).LoadSceneFile(fileName, imgSize, numSamples);
     if (flag == false)
     {
       std::cerr << "Failed to execute application.\n";
@@ -151,7 +149,7 @@ int main(int argc, char* argv[])
 			auto& [instance, thread] = threads[i];
 			thread = std::thread{
 				&FRenderWorker::Execute, &instance,
-				std::cref(cam),
+				std::cref(*EXPR_SGT(MScene).GetCamera()),
 				std::cref(indexes[i]), imgSize, std::ref(container)};
 		}
 		for (auto& [instance, thread] : threads) 

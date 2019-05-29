@@ -41,8 +41,12 @@ ESuccess MScene::pfRelease()
   return ESuccess::DY_SUCCESS;
 }
 
-void MScene::AddSampleObjects()
+void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
 {
+  const TReal ratio = TReal(imgSize.X) / imgSize.Y;
+  this->mMainCamera = 
+    std::make_unique<FCamera>(DVec3{0, 0, 1}, DVec3{0, 0, -1}, imgSize, 2.0f * ratio, 2.0f, numSamples);
+
   this->AddHitableObject<FSphere>(
     DVec3{0, 0, -2.0f}, 1.0f, 
     std::make_unique<FMatLambertian>(DVec3{.8f, .8f, 0}));
@@ -57,7 +61,7 @@ void MScene::AddSampleObjects()
     std::make_unique<FMatLambertian>(DVec3{0.8f, 0.5f, 0}));
 }
 
-bool MScene::LoadSceneFile(const std::string& pathString)
+bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize, TU32 numSamples)
 {
   // Check
   const std::filesystem::path path = pathString;
@@ -75,47 +79,70 @@ bool MScene::LoadSceneFile(const std::string& pathString)
   {
     if (json::HasJsonKey(item, "type") == false) { return false; }
     if (json::HasJsonKey(item, "detail") == false) { return false; }
-    if (json::HasJsonKey(item, "material") == false) { return false; }
-    if (json::HasJsonKey(item, "mat_detail") == false) { return false; }
-
-    using ::dy::expr::string::Input;
-    using ::dy::expr::string::Case;
-
-    std::unique_ptr<IMaterial> psMat = nullptr;
-    const auto& matDetail = item["mat_detail"];
-    switch (Input(json::GetValueFrom<std::string>(item, "material")))
-    {
-    case Case("lambertian"):
-    {
-      if (json::HasJsonKey(matDetail, "color") == false) { return false; }
-      const DVec3 col = json::GetValueFrom<DVec3>(matDetail, "color");
-      psMat = std::make_unique<FMatLambertian>(col);
-    } break;
-    default: break;
-    case Case("metal"):
-    {
-      if (json::HasJsonKey(matDetail, "color") == false) { return false; }
-      const DVec3 col = json::GetValueFrom<DVec3>(matDetail, "color");
-      psMat = std::make_unique<FMatMetal>(col);
-    } break;
-    }
-
     const auto& detail = item["detail"];
-    switch (Input(json::GetValueFrom<std::string>(item, "type")))
+
+    if (const auto type = json::GetValueFrom<std::string>(item, "type");
+        type == "camera")
     {
-    case Case("sphere"):
-    {
+      // Create camera
       if (json::HasJsonKey(detail, "pos") == false) { return false; }
-      if (json::HasJsonKey(detail, "radius") == false) { return false; }
+      if (json::HasJsonKey(detail, "eye") == false) { return false; }
 
       const DVec3 pos = json::GetValueFrom<DVec3>(detail, "pos");
-      const TReal radius = json::GetValueFrom<TReal>(detail, "radius");
-      this->AddHitableObject<FSphere>(pos, radius, std::move(psMat));
-    } break;
-    default: break;
+      const DVec3 eye = json::GetValueFrom<DVec3>(detail, "eye");
+
+      const TReal ratio = TReal(imgSize.X) / imgSize.Y;
+      this->mMainCamera = std::make_unique<FCamera>(pos, eye, imgSize, 2.0f * ratio, 2.0f, numSamples);
+    }
+    else
+    {
+      // Create objects
+      if (json::HasJsonKey(item, "material") == false) { return false; }
+      if (json::HasJsonKey(item, "mat_detail") == false) { return false; }
+
+      using ::dy::expr::string::Input;
+      using ::dy::expr::string::Case;
+
+      std::unique_ptr<IMaterial> psMat = nullptr;
+      const auto& matDetail = item["mat_detail"];
+      switch (Input(json::GetValueFrom<std::string>(item, "material")))
+      {
+      case Case("lambertian"):
+      {
+        if (json::HasJsonKey(matDetail, "color") == false) { return false; }
+        const DVec3 col = json::GetValueFrom<DVec3>(matDetail, "color");
+        psMat = std::make_unique<FMatLambertian>(col);
+      } break;
+      default: break;
+      case Case("metal"):
+      {
+        if (json::HasJsonKey(matDetail, "color") == false) { return false; }
+        const DVec3 col = json::GetValueFrom<DVec3>(matDetail, "color");
+        psMat = std::make_unique<FMatMetal>(col);
+      } break;
+      }
+
+      switch (Input(type))
+      {
+      case Case("sphere"):
+      {
+        if (json::HasJsonKey(detail, "pos") == false) { return false; }
+        if (json::HasJsonKey(detail, "radius") == false) { return false; }
+
+        const DVec3 pos = json::GetValueFrom<DVec3>(detail, "pos");
+        const TReal radius = json::GetValueFrom<TReal>(detail, "radius");
+        this->AddHitableObject<FSphere>(pos, radius, std::move(psMat));
+      } break;
+      default: break;
+    }
     }
   }
 
+  if (this->mMainCamera == nullptr) 
+  { 
+    std::cerr << "Failed to load scene. Main camera must be exist on scene file.\n";
+    return false; 
+  }
   return true;
 }
 
