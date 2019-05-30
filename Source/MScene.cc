@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #include <Math/Utility/XLinearMath.h>
 #include <Math/Utility/XGraphicsMath.h>
@@ -157,22 +158,19 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
   return true;
 }
 
-DVec3 MScene::ProceedRay(const DRay& ray, TIndex t, TIndex limit)
+DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
 {
   using ::dy::math::DSphere;
   using ::dy::math::IsRayIntersected;
   using ::dy::math::GetNormalOf;
   using ::dy::math::GetTValuesOf;
-  using ::dy::math::GetClosestTValueOf;
   using ::dy::math::RandomVector3Length;
   using TSphere = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Sphere);
 
-  if (++t; t <= limit)
+  if (++cnt; cnt <= limit)
   {
-    IHitable* pClostestObj = nullptr;
-    TReal clostestT = ::dy::math::kMaxValueOf<TReal>;
-
     // Get closest SDF value.
+    std::vector<std::pair<TReal, ray::IHitable*>> tPairList; 
     for (auto& obj : this->mObjects)
     {
       assert(obj != nullptr);
@@ -183,11 +181,9 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex t, TIndex limit)
       {
         if (auto& sphere = static_cast<TSphere&>(*obj); IsRayIntersected(ray, sphere) == true)
         {
-          if (const auto forwardT = GetClosestTValueOf(ray, sphere); 
-              forwardT != 0 && std::min(*forwardT, clostestT) == *forwardT)
+          for (const auto& t : GetTValuesOf(ray, sphere))
           {
-            pClostestObj = obj.get();
-            clostestT = *forwardT;
+            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
           }
         }
       } break;
@@ -195,24 +191,30 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex t, TIndex limit)
       }
     }
 
+    // Sort and get only shortest T one.
+    std::sort(
+      tPairList.begin(), tPairList.end(), 
+      [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+
     // Render
-    if (pClostestObj != nullptr)
+    if (tPairList.empty() == false)
     {
-      switch(pClostestObj->GetType())
+      auto& [t, pObj] = tPairList.front();
+      switch(pObj->GetType())
       {
       case EShapeType::Sphere:
       {
-        auto& sphere = static_cast<TSphere&>(*pClostestObj);
+        auto& sphere = static_cast<TSphere&>(*pObj);
         if (auto* pMat = sphere.GetMaterial(); pMat != nullptr)
         {
-          const auto nextPos = ray.GetPointAtParam(clostestT);
+          const auto nextPos = ray.GetPointAtParam(t);
           // Get result
           auto optResult = pMat->Scatter({nextPos, ray.GetDirection()}, *GetNormalOf(ray, sphere));
           const auto& [refDir, attCol, isScattered] = *optResult;
           if (isScattered == false) { return DVec3{0}; }
 
           // Resursion...
-          return attCol * this->ProceedRay(DRay{nextPos, refDir}, t, limit);
+          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
         }
         else 
         {
