@@ -71,10 +71,10 @@ int main(int argc, char* argv[])
     std::stringstream timeStringStream;
     timeStringStream << std::put_time(std::localtime(&nowC), "%y%m%d-%H%M%S");
 
-    std::sprintf(fileName, "./SphereTest_s%u_r%u_%s.%s", 
+    std::sprintf(fileName, "./Result_%s_s%u_r%u.%s", 
+      timeStringStream.str().c_str(),
       numSamples, 
       *sArguments->GetValueFrom<TU32>("repeat"),
-      timeStringStream.str().c_str(),
 			isPng ? "png" : "ppm");
     outputName = fileName;
   }
