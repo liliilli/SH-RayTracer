@@ -26,6 +26,7 @@
 
 #include <FMatLambertian.hpp>
 #include <FMatMetal.hpp>
+#include <FMatDielectric.hpp>
 
 namespace ray
 {
@@ -123,6 +124,13 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
         const TReal roughness = json::GetValueFrom<TReal>(matDetail, "roughness");
         psMat = std::make_unique<FMatMetal>(col, roughness);
       } break;
+      case Case("dielectric"):
+      {
+        if (json::HasJsonKey(matDetail, "ior") == false) { return false; }
+
+        const TReal ior = json::GetValueFrom<TReal>(matDetail, "ior");
+        psMat = std::make_unique<FMatDielectric>(ior);
+      } break;
       }
 
       switch (Input(type))
@@ -154,6 +162,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex t, TIndex limit)
   using ::dy::math::DSphere;
   using ::dy::math::IsRayIntersected;
   using ::dy::math::GetNormalOf;
+  using ::dy::math::GetTValuesOf;
   using ::dy::math::GetClosestTValueOf;
   using ::dy::math::RandomVector3Length;
   using TSphere = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Sphere);
@@ -175,7 +184,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex t, TIndex limit)
         if (auto& sphere = static_cast<TSphere&>(*obj); IsRayIntersected(ray, sphere) == true)
         {
           if (const auto forwardT = GetClosestTValueOf(ray, sphere); 
-              std::min(*forwardT, clostestT) == *forwardT)
+              forwardT != 0 && std::min(*forwardT, clostestT) == *forwardT)
           {
             pClostestObj = obj.get();
             clostestT = *forwardT;
@@ -200,7 +209,8 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex t, TIndex limit)
           // Get result
           auto optResult = pMat->Scatter({nextPos, ray.GetDirection()}, *GetNormalOf(ray, sphere));
           const auto& [refDir, attCol, isScattered] = *optResult;
-          assert(isScattered == true);
+          if (isScattered == false) { return DVec3{0}; }
+
           // Resursion...
           return attCol * this->ProceedRay(DRay{nextPos, refDir}, t, limit);
         }
