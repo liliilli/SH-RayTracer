@@ -117,8 +117,11 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
       case Case("metal"):
       {
         if (json::HasJsonKey(matDetail, "color") == false) { return false; }
+        if (json::HasJsonKey(matDetail, "roughness") == false) { return false; }
+
         const DVec3 col = json::GetValueFrom<DVec3>(matDetail, "color");
-        psMat = std::make_unique<FMatMetal>(col);
+        const TReal roughness = json::GetValueFrom<TReal>(matDetail, "roughness");
+        psMat = std::make_unique<FMatMetal>(col, roughness);
       } break;
       }
 

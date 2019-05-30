@@ -24,8 +24,17 @@ FMatMetal::Scatter(const DRay& intersectedRay, const DVec3& normal)
 {
   using ::dy::math::Dot;
   using ::dy::math::Reflect;
+  using ::dy::math::RandomVector3Length;
 
-  const auto refDir = Reflect(intersectedRay.GetDirection() * -1.0f, normal);
+  const auto baseRefDir = Reflect(intersectedRay.GetDirection() * -1.0f, normal);
+  auto refDir = RandomVector3Length<TReal>(1.0f);
+  while (Dot(refDir, normal) <= 0)
+  {
+    refDir = RandomVector3Length<TReal>(1.0f);
+  }
+  refDir *= this->mRoughness();
+  refDir = (baseRefDir + refDir).Normalize();
+
   const auto albedo = this->mColor;
   const auto scattered = Dot(refDir, normal) > 0;
 

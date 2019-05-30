@@ -14,6 +14,7 @@
 
 #include <IMaterial.hpp>
 #include <XCommon.hpp>
+#include <Math/Type/Micellanous/DClamp.h>
 
 namespace ray
 {
@@ -21,8 +22,9 @@ namespace ray
 class FMatMetal final : public IMaterial
 {
 public:
-  FMatMetal(const DVec3& color)
-    : mColor { color }
+  FMatMetal(const DVec3& color, TReal roughness)
+    : mColor { color },
+      mRoughness { roughness }
   { };
   virtual ~FMatMetal() = default;
 
@@ -31,6 +33,7 @@ public:
 
 private:
   DVec3 mColor;
+  ::dy::math::DClamp<TReal, 0, 1> mRoughness;
 };
 
 } /// ::ray namespace
