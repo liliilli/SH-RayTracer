@@ -27,12 +27,14 @@ FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal)
   using ::dy::math::Dot;
   using ::dy::math::Refract;
   using ::dy::math::Reflect;
+  using ::dy::math::Schlick;
 
   auto incidentIor  = TReal();
   auto refractIor   = TReal();
   const auto incidentNor = intersectedRay.GetDirection() * -1.0f;
 
   DVec3 outNormal;
+  TReal reflectProb = TReal();
   if (Dot(incidentNor, normal) < 0) // When inside => outside
   {
     outNormal = normal * -1.0f;
@@ -49,8 +51,18 @@ FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal)
   auto optRefract = Refract(incidentIor, refractIor, incidentNor, outNormal);
   if (optRefract.has_value() == false)
   {
+    reflectProb = 1.0f;
+  }
+  else
+  {
+    reflectProb = Schlick(incidentIor, refractIor, incidentNor, outNormal);
+    return std::tuple{*optRefract, DVec3{1}, true};
+  }
+
+  if (::dy::math::RandomUniformReal(0.0f, 1.0f) < reflectProb)
+  {
     const auto refDir = Reflect(incidentNor, normal);
-    return std::tuple{refDir, DVec3{1}, false};
+    return std::tuple{refDir, DVec3{1}, true};
   }
   else
   {
