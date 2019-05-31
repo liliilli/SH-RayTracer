@@ -45,9 +45,18 @@ ESuccess MScene::pfRelease()
 
 void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
 {
-  const TReal ratio = TReal(imgSize.X) / imgSize.Y;
-  this->mMainCamera = 
-    std::make_unique<FCamera>(DVec3{0, 0, 1}, DVec3{0, 0, -1}, imgSize, 2.0f * ratio, 2.0f, numSamples);
+  FCamera::PCtor descriptor = {};
+  {
+    descriptor.mAperture = 1.0f;
+    descriptor.mFocusDistance = 1.0f;
+    descriptor.mForwardTo = DVec3{0, 0, -1};
+    descriptor.mImgSize = imgSize;
+    descriptor.mOrigin = DVec3{0, 0, 1};
+    descriptor.mSamples = numSamples;
+    descriptor.mScreenRatioXy = TReal(imgSize.X) / imgSize.Y;
+    descriptor.mSensorSize = 1.0f;
+  }
+  this->mMainCamera = std::make_unique<FCamera>(descriptor);
 
   this->AddHitableObject<FSphere>(
     DVec3{0, 0, -2.0f}, 1.0f, 
@@ -89,12 +98,21 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
       // Create camera
       if (json::HasJsonKey(detail, "pos") == false) { return false; }
       if (json::HasJsonKey(detail, "eye") == false) { return false; }
+      if (json::HasJsonKey(detail, "focus_dist") == false) { return false; }
+      if (json::HasJsonKey(detail, "sensor_size") == false) { return false; }
+      if (json::HasJsonKey(detail, "aperture") == false) { return false; }
 
-      const DVec3 pos = json::GetValueFrom<DVec3>(detail, "pos");
-      const DVec3 eye = json::GetValueFrom<DVec3>(detail, "eye");
+      FCamera::PCtor descriptor = {};
+      descriptor.mAperture = json::GetValueFrom<TReal>(detail, "aperture");
+      descriptor.mFocusDistance = json::GetValueFrom<TReal>(detail, "focus_dist");
+      descriptor.mForwardTo = json::GetValueFrom<DVec3>(detail, "eye");
+      descriptor.mImgSize = imgSize;
+      descriptor.mOrigin = json::GetValueFrom<DVec3>(detail, "pos");
+      descriptor.mSamples = numSamples;
+      descriptor.mScreenRatioXy = TReal(imgSize.X) / imgSize.Y;
+      descriptor.mSensorSize = json::GetValueFrom<TReal>(detail, "sensor_size");
 
-      const TReal ratio = TReal(imgSize.X) / imgSize.Y;
-      this->mMainCamera = std::make_unique<FCamera>(pos, eye, imgSize, 2.0f * ratio, 2.0f, numSamples);
+      this->mMainCamera = std::make_unique<FCamera>(descriptor);
     }
     else
     {
