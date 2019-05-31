@@ -18,6 +18,7 @@
 #include <Math/Type/Math/DVector3.h>
 #include <Math/Type/Shape/DRay.h>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
+#include <Math/Type/Micellanous/DClamp.h>
 #include <Expr/FCmdArguments.h>
 #include <Expr/ESuccess.h>
 
@@ -31,6 +32,7 @@ namespace ray
 
 using TReal = ::dy::math::TReal;
 using TI32 = ::dy::math::TI32;
+using TI64 = ::dy::math::TI64;
 using TU32 = ::dy::math::TU32;
 using TIndex = ::dy::math::TIndex;
 
@@ -43,6 +45,9 @@ extern std::unique_ptr<::dy::expr::FCmdArguments> sArguments;
 
 template <typename TType>
 using DDynamicGrid2D = ::dy::math::DDynamicGrid2D<TType>;
+
+template <TI64 start, TI64 end>
+using DClamp = ::dy::math::DClamp<TReal, start, end>;
 
 using DRay = ::dy::math::DRay<TReal>;
 using ESuccess = ::dy::expr::EDySuccess;
