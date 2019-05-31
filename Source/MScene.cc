@@ -103,14 +103,14 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
       if (json::HasJsonKey(detail, "aperture") == false) { return false; }
 
       FCamera::PCtor descriptor = {};
-      descriptor.mAperture = json::GetValueFrom<TReal>(detail, "aperture");
+      descriptor.mAperture      = json::GetValueFrom<TReal>(detail, "aperture");
       descriptor.mFocusDistance = json::GetValueFrom<TReal>(detail, "focus_dist");
-      descriptor.mForwardTo = json::GetValueFrom<DVec3>(detail, "eye");
-      descriptor.mImgSize = imgSize;
-      descriptor.mOrigin = json::GetValueFrom<DVec3>(detail, "pos");
-      descriptor.mSamples = numSamples;
+      descriptor.mForwardTo     = json::GetValueFrom<DVec3>(detail, "eye");
+      descriptor.mImgSize       = imgSize;
+      descriptor.mOrigin        = json::GetValueFrom<DVec3>(detail, "pos");
+      descriptor.mSamples       = numSamples;
       descriptor.mScreenRatioXy = TReal(imgSize.X) / imgSize.Y;
-      descriptor.mSensorSize = json::GetValueFrom<TReal>(detail, "sensor_size");
+      descriptor.mSensorSize    = json::GetValueFrom<TReal>(detail, "sensor_size");
 
       this->mMainCamera = std::make_unique<FCamera>(descriptor);
     }

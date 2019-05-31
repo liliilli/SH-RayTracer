@@ -50,19 +50,19 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  const auto imgSize = DUVec2 { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
-  const TReal ratio = TReal(imgSize.X) / imgSize.Y;
-  const auto numSamples = *sArguments->GetValueFrom<TU32>('s');
-  const auto numThreads = 
+  const auto imgSize      = DUVec2 { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
+  const TReal scrRatioXy  = TReal(imgSize.X) / imgSize.Y;
+  const auto numSamples   = *sArguments->GetValueFrom<TU32>('s');
+  const auto numThreads   = 
       *sArguments->GetValueFrom<TU32>('t') > std::thread::hardware_concurrency() 
     ? std::thread::hardware_concurrency()
     : *sArguments->GetValueFrom<TU32>('t');
-  const auto indexCount = imgSize.X * imgSize.Y;
-  const auto workCount = indexCount / numThreads;
+  const auto indexCount   = imgSize.X * imgSize.Y;
+  const auto workCount    = indexCount / numThreads;
   
-	const auto fileName = *sArguments->GetValueFrom<std::string>("file");
-  auto outputName	= *sArguments->GetValueFrom<std::string>("output");
-	const auto isPng = *sArguments->GetValueFrom<bool>("png"); 
+	const auto inputName    = *sArguments->GetValueFrom<std::string>("file");
+  auto outputName	        = *sArguments->GetValueFrom<std::string>("output");
+	const auto isPng        = *sArguments->GetValueFrom<bool>("png"); 
   if (outputName.empty() == true) 
   {
     char fileName[256] = {0};
@@ -79,13 +79,14 @@ int main(int argc, char* argv[])
     outputName = fileName;
   }
 
-  RAY_IF_VERBOSE_MODE() // Print Overall Information.
+  // Print Overall Information when -v mode.
+  RAY_IF_VERBOSE_MODE() 
   {
     std::cout << "* Overall Information [Verbose Mode]\n";
-		std::cout << "  Input Scene File : " << (fileName.empty() ? "Default (internal sample)" : fileName) << '\n';
+		std::cout << "  Input Scene File : " << (inputName.empty() ? "Default (internal sample)" : inputName) << '\n';
     std::cout << "  Output File : " << outputName << '\n';
     std::cout << "  ScreenSize : " << imgSize << '\n';
-    std::cout << "  Screen Ratio (x/y) : " << ratio << '\n';
+    std::cout << "  Screen Ratio (x/y) : " << scrRatioXy << '\n';
     std::cout << "  Pixel Samples : " << numSamples << '\n';
     std::cout << "  Running Thread Number : " << numThreads << '\n';
     std::cout << "  Pixel Count : " << indexCount << '\n';
@@ -99,19 +100,21 @@ int main(int argc, char* argv[])
     [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Initialize();
     assert(flag == ESuccess::DY_SUCCESS);
   }
+
 	// If input file name is empty (not specified), just add sample objects into manager.
-	if (fileName.empty() == true)
+	if (inputName.empty() == true)
 	{
 		EXPR_SGT(MScene).AddSampleObjects(imgSize, numSamples);
 	}
 	else 
 	{
-    const auto flag = EXPR_SGT(MScene).LoadSceneFile(fileName, imgSize, numSamples);
-    if (flag == false)
+    if (const auto flag = EXPR_SGT(MScene).LoadSceneFile(inputName, imgSize, numSamples); 
+        flag == false)
     {
       std::cerr << "Failed to execute application.\n";
-      [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Release();
-      assert(flag == ESuccess::DY_SUCCESS);
+      [[maybe_unused]] const auto flag2 = EXPR_SGT(MScene).Release();
+      assert(flag2 == ESuccess::DY_SUCCESS);
+
       return 1;
     }
 	}
@@ -127,7 +130,9 @@ int main(int argc, char* argv[])
       if (++c; c >= workCount && t + 1 < numThreads) { ++t; c = 0; }
     }
   }
-  RAY_IF_VERBOSE_MODE() // Print Thread Work list.
+
+  // Print Thread Work list -v mode.
+  RAY_IF_VERBOSE_MODE() 
   {
     std::cout << "* Thread Work List\n";
     for (TIndex i = 0; i < numThreads; ++i)
@@ -144,6 +149,7 @@ int main(int argc, char* argv[])
   std::vector<std::pair<FRenderWorker, std::thread>> threads(numThreads);
 	{
 		EXPR_TIMER_CHECK_CPU("RenderTime");
+
 		for (TIndex i = 0; i < numThreads; ++i)
 		{
 			auto& [instance, thread] = threads[i];
@@ -152,6 +158,7 @@ int main(int argc, char* argv[])
 				std::cref(*EXPR_SGT(MScene).GetCamera()),
 				std::cref(indexes[i]), imgSize, std::ref(container)};
 		}
+
 		for (auto& [instance, thread] : threads) 
 		{ 
 			assert(thread.joinable() == true);
@@ -164,6 +171,7 @@ int main(int argc, char* argv[])
     [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Release();
     assert(flag == ESuccess::DY_SUCCESS);
   }
+
   // After process...
 	// If --png (-p) is enabled, export result as `.png`, not `.ppm`.
 	if (isPng == true)
