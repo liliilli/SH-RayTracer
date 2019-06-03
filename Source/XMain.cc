@@ -13,34 +13,43 @@
 
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <thread>
+#include <chrono>
+#include <sstream>
 
 #include <XCommon.hpp>
 #include <XSamples.hpp>
 #include <FCamera.hpp>
+#include <FSphere.hpp>
 #include <FRenderWorker.hpp>
+#include <MScene.hpp>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
-#include <Expr/FCmdArguments.h>
+#include <Expr/MTimeChecker.h>
 
 int main(int argc, char* argv[])
 {
   // Arguments setup
   using namespace ray;
-  ray::sArguments = std::make_unique<decltype(ray::sArguments)::element_type>();
-  ray::sArguments->Add<TU32>('s', "sample", 1);
-  ray::sArguments->Add<bool>('v', "verbose");
-  ray::sArguments->Add<TU32>('t', "thread", 1);
-  ray::sArguments->Add<TU32>('w', "width", 800);
-  ray::sArguments->Add<TU32>('h', "height", 480);
-  ray::sArguments->Add<std::string>('o', "output");
-  if (ray::sArguments->Parse(argc, argv) == false)
-  {
-    std::cerr << "Failed to execute application.\n";
-    return 1;
-  }
+  sArguments = std::make_unique<decltype(ray::sArguments)::element_type>();
+  // Parse command arguments
+  AddDefaultCommandArguments(*sArguments);
+  ParseCommandArguments(*sArguments, argc, argv);
 
-  const auto imgSize = DUVec2
+  const auto imgSize      = DUVec2 { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
+  const TReal scrRatioXy  = TReal(imgSize.X) / imgSize.Y;
+  const auto numSamples   = *sArguments->GetValueFrom<TU32>('s');
+  const auto numThreads   = *sArguments->GetValueFrom<TU32>('t');
+  const auto indexCount   = imgSize.X * imgSize.Y;
+  const auto workCount    = indexCount / numThreads;
+  
+	const auto inputName    = *sArguments->GetValueFrom<std::string>("file");
+  const auto outputName	  = *sArguments->GetValueFrom<std::string>("output");
+	const auto isPng        = *sArguments->GetValueFrom<bool>("png"); 
+
+  // Print Overall Information when -v mode.
+  RAY_IF_VERBOSE_MODE() 
   {
     *ray::sArguments->GetValueFrom<TU32>('w'),
     *ray::sArguments->GetValueFrom<TU32>('h'),
@@ -53,21 +62,9 @@ int main(int argc, char* argv[])
     : *ray::sArguments->GetValueFrom<TU32>('t');
   const auto indexCount = imgSize.X * imgSize.Y;
   const auto workCount = indexCount / numThreads;
-  
-  auto outputName = *ray::sArguments->GetValueFrom<std::string>("output");
-  if (outputName.empty() == true) 
-  {
-    char fileName[256] = {0};
-    std::sprintf(
-      fileName, 
-      "./SphereTest_Samples%u.ppm", numSamples);
-    outputName = fileName;
-  }
-
   RAY_IF_VERBOSE_MODE() // Print Overall Information.
   {
     std::cout << "* Overall Information [Verbose Mode]\n";
-    std::cout << "  Output File : " << outputName << '\n';
     std::cout << "  ScreenSize : " << imgSize << '\n';
     std::cout << "  Screen Ratio (x/y) : " << ratio << '\n';
     std::cout << "  Pixel Samples : " << numSamples << '\n';
@@ -76,21 +73,23 @@ int main(int argc, char* argv[])
     std::cout << "  Work Count For Each Thread : " << workCount << '\n'; 
   }
 
-  // Create camera.
   FCamera cam = { DVec3{0, 0, 1}, DVec3{0, 0, -1}, imgSize, 2.0f * ratio, 2.0f, numSamples };
 
-  // Separate work list to each thread. (potential)
+  DDynamicGrid2D<DIVec3> container = {imgSize.X, imgSize.Y};
+
   std::vector<std::vector<DUVec2>> indexes(numThreads);
   for (auto y = imgSize.Y, t = 0u, c = 0u; y > 0; --y)
   {
-    for (auto x = 0; x < imgSize.X; ++x)
+    for (auto x = 0u; x < imgSize.X; ++x)
     {
       indexes[t].emplace_back(x, y);     
       // Next thread index list.
       if (++c; c >= workCount && t + 1 < numThreads) { ++t; c = 0; }
     }
   }
-  RAY_IF_VERBOSE_MODE() // Print Thread Work list.
+
+  // Print Thread Work list -v mode.
+  RAY_IF_VERBOSE_MODE() 
   {
     std::cout << "* Thread Work List\n";
     for (TIndex i = 0; i < numThreads; ++i)
@@ -105,22 +104,33 @@ int main(int argc, char* argv[])
   // Render
   DDynamicGrid2D<DIVec3> container = {imgSize.X, imgSize.Y};
   std::vector<std::pair<FRenderWorker, std::thread>> threads(numThreads);
-  for (TIndex i = 0; i < numThreads; ++i)
-  {
-    auto& [instance, thread] = threads[i];
-    thread = std::thread{
-      &FRenderWorker::Execute, &instance,
-      std::cref(cam),
-      std::cref(indexes[i]), imgSize, std::ref(container)};
-  }
-  for (auto& [instance, thread] : threads) 
-  { 
-    assert(thread.joinable() == true);
-    thread.join(); 
-  }
+	{
+		EXPR_TIMER_CHECK_CPU("RenderTime");
+
+		for (TIndex i = 0; i < numThreads; ++i)
+		{
+			auto& [instance, thread] = threads[i];
+			thread = std::thread{
+				&FRenderWorker::Execute, &instance,
+				std::cref(*EXPR_SGT(MScene).GetCamera()),
+				std::cref(indexes[i]), imgSize, std::ref(container)};
+		}
+
+		for (auto& [instance, thread] : threads) 
+		{ 
+			assert(thread.joinable() == true);
+			thread.join(); 
+		}
+	}
+
+  // Release time...
+  EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Release());
 
   // After process...
-  const auto flag = ray::CreateImagePpm(outputName.c_str(), container);
+  char fileName[256] = {0};
+  std::sprintf(fileName, "./SphereTest_Samples%u.ppm", cam.GetSamples());
+
+  const auto flag = ray::CreateImagePpm(fileName, container);
   if (flag == false) { std::printf("Failed to execute program.\n"); }
   return 0;
 }

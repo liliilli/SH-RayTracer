@@ -15,6 +15,7 @@
 #include <vector>
 #include <XCommon.hpp>
 #include <Math/Type/Shape/DRay.h>
+#include <Math/Type/Micellanous/DClamp.h>
 
 namespace ray
 {
@@ -24,16 +25,26 @@ namespace ray
 class FCamera final
 {
 public:
-  FCamera(
-    const DVec3& origin, const DVec3& forwardTo, 
-    DUVec2 imgSize, TReal scrWidth, TReal scrHeight,
-    TU32 samples);
+  /// @brief Constructor instance type of FCamera.
+  struct PCtor final
+  {
+    DVec3   mOrigin;
+    DVec3   mForwardTo;
+    DUVec2  mImgSize;
+    TReal   mScreenRatioXy;
+    TU32    mSamples;
+    DClamp<0, 100> mAperture;
+    DClamp<0, 100> mFocusDistance;
+    DClamp<0, 100> mSensorSize;
+  };
+
+  FCamera(const FCamera::PCtor& arg);
 
   /// @brief Get image size.
   const DUVec2& GetImageSize() const noexcept;
 
   /// @brief Get ray calculated by [x, y] of Image size and eye / forward.
-  std::vector<DRay<TReal>> CreateRay(TIndex x, TIndex y) const noexcept;
+  std::vector<DRay> CreateRay(TIndex x, TIndex y) const noexcept;
 
   /// @brief Set sample value of pixel. (1, 2, 4)
   void SetSamples(TU32 sample);
@@ -41,6 +52,14 @@ public:
   TU32 GetSamples() const noexcept;
 
 private:
+  /// @brief Get sample offset list of given anti-aliasing sample count.
+  /// If `samples` value exceeds 8, offset list of sample 8 will be returned.
+  /// @param right Screen space unit right vector per pixel
+  /// @param up Screen space unit up vector per pixel
+  /// @param samples Anti-aliasing sample count.
+  /// @return Subpixel offset vector list.
+  std::vector<DVec3> GetSampleOffsetsOf(const DVec3& right, const DVec3& up, TU32 samples) const;
+
   DVec3 mOrigin;
   DVec3 mForward;
   DVec3 mSide;
@@ -51,6 +70,9 @@ private:
   DUVec2 mScreenSize;
 
   TU32 mSamples = 4;
+  TReal mAperture = 1.0f;
+  TReal mDistance = 1.0f;
+  TReal mSensorSize = 1.0f;
 };
 
 } /// ::ray namespace
