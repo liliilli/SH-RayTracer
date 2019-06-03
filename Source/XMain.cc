@@ -26,7 +26,6 @@
 #include <FRenderWorker.hpp>
 #include <MScene.hpp>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
-#include <Expr/FCmdArguments.h>
 #include <Expr/MTimeChecker.h>
 
 int main(int argc, char* argv[])
@@ -34,21 +33,9 @@ int main(int argc, char* argv[])
   // Arguments setup
   using namespace ray;
   sArguments = std::make_unique<decltype(ray::sArguments)::element_type>();
-  sArguments->Add<TU32>('s', "sample", 1);      // Sampling count of each pixel. (Antialiasing)
-  sArguments->Add<bool>('v', "verbose");        // Do process verbosely (Enable log)
-  sArguments->Add<bool>('p', "png");            // Export output as `.png` file.
-  sArguments->Add<TU32>('t', "thread", 1);      // Thread count to process.
-  sArguments->Add<TU32>('w', "width", 800);     // Image Width 
-  sArguments->Add<TU32>('h', "height", 480);    // Image Heigth
-  sArguments->Add<float>('g', "gamma", 2.2f);   // Gamma correction.
-  sArguments->Add<TU32>('r', "repeat", 1);      // Repeat count of each pixel. (Denoising)
-	sArguments->Add<std::string>('f', "file");		// Load scene file. (json)
-  sArguments->Add<std::string>('o', "output");  // Customizable output path.
-  if (sArguments->Parse(argc, argv) == false)
-  {
-    std::cerr << "Failed to execute application.\n";
-    return 1;
-  }
+  // Parse command arguments
+  AddDefaultCommandArguments(*sArguments);
+  ParseCommandArguments(*sArguments, argc, argv);
 
   const auto imgSize      = DUVec2 { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
   const TReal scrRatioXy  = TReal(imgSize.X) / imgSize.Y;
@@ -82,17 +69,7 @@ int main(int argc, char* argv[])
   // Print Overall Information when -v mode.
   RAY_IF_VERBOSE_MODE() 
   {
-    std::cout << "* Overall Information [Verbose Mode]\n";
-		std::cout << "  Input Scene File : " << (inputName.empty() ? "Default (internal sample)" : inputName) << '\n';
-    std::cout << "  Output File : " << outputName << '\n';
-    std::cout << "  ScreenSize : " << imgSize << '\n';
-    std::cout << "  Screen Ratio (x/y) : " << scrRatioXy << '\n';
-    std::cout << "  Pixel Samples : " << numSamples << '\n';
-    std::cout << "  Running Thread Number : " << numThreads << '\n';
-    std::cout << "  Pixel Count : " << indexCount << '\n';
-    std::cout << "  Repeat : " << *sArguments->GetValueFrom<TU32>("repeat") << '\n';
-    std::cout << "  Gamma : " << *sArguments->GetValueFrom<float>("gamma") << '\n';
-    std::cout << "  Work Count For Each Thread : " << workCount << '\n'; 
+    PrintOverallInformation(*sArguments);
   }
 
   // Initialization time...

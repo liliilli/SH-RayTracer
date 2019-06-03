@@ -12,9 +12,13 @@
 ///
 
 #include <XCommon.hpp>
-#include <memory>
+
 #include <cstdlib>
 #include <cstdio>
+
+#include <iostream>
+#include <memory>
+#include <thread>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #if defined(_MSVC_LANG)
@@ -32,6 +36,80 @@ namespace ray
 {
 
 std::unique_ptr<::dy::expr::FCmdArguments> sArguments = nullptr;
+
+void AddDefaultCommandArguments(::dy::expr::FCmdArguments& manager)
+{
+  using namespace ray;
+#if defined(EXPR_ENABLE_BOOST) == true
+  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('s', "sample", 1));     // Sampling count of each pixel. (Antialiasing)
+  EXPR_OUTCOME_ASSERT(manager.Add<bool>('v', "verbose"));       // Do process verbosely (Enable log)
+  EXPR_OUTCOME_ASSERT(manager.Add<bool>('p', "png"));           // Export output as `.png` file.
+  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('t', "thread", 1));     // Thread count to process.
+  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('w', "width", 800));    // Image Width 
+  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('h', "height", 480));   // Image Heigth
+  EXPR_OUTCOME_ASSERT(manager.Add<float>('g', "gamma", 2.2f));  // Gamma correction.
+  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('r', "repeat", 1));     // Repeat count of each pixel. (Denoising)
+	EXPR_OUTCOME_ASSERT(manager.Add<std::string>('f', "file"));   // Load scene file. (json)
+  EXPR_OUTCOME_ASSERT(manager.Add<std::string>('o', "output")); // Customizable output path.
+#else /// If not defined `EXPR_ENABLE_BOOST`
+  manager.Add<TU32>('s', "sample", 1);      // Sampling count of each pixel. (Antialiasing)
+  manager.Add<bool>('v', "verbose");        // Do process verbosely (Enable log)
+  manager.Add<bool>('p', "png");            // Export output as `.png` file.
+  manager.Add<TU32>('t', "thread", 1);      // Thread count to process.
+  manager.Add<TU32>('w', "width", 800);     // Image Width 
+  manager.Add<TU32>('h', "height", 480);    // Image Heigth
+  manager.Add<float>('g', "gamma", 2.2f);   // Gamma correction.
+  manager.Add<TU32>('r', "repeat", 1);      // Repeat count of each pixel. (Denoising)
+	manager.Add<std::string>('f', "file");		// Load scene file. (json)
+  manager.Add<std::string>('o', "output");  // Customizable output path.
+#endif /// #if defined(EXPR_ENABLE_BOOST)
+};
+
+void ParseCommandArguments(::dy::expr::FCmdArguments& manager, int argc, char* argv[])
+{
+  using namespace ray;
+#if defined(EXPR_ENABLE_BOOST)
+  if (auto result = manager.Parse(argc, argv); result.has_failure() == true)
+  {
+    std::cerr << result.error().message() << '\n';
+    std::exit(3);
+  }
+#else /// If not defined `EXPR_ENABLE_BOOST`
+  if (manager.Parse(argc, argv) == ESuccess::DY_FAILURE)
+  {
+    std::cerr << "Failed to execute application.\n";
+    std::exit(3);
+  }
+#endif /// #if defined(EXPR_ENABLE_BOOST)
+}
+
+void PrintOverallInformation(const ::dy::expr::FCmdArguments& manager)
+{
+  const auto imgSize = DUVec2{ *manager.GetValueFrom<TU32>('w'), *manager.GetValueFrom<TU32>('h') };
+  const TReal scrRatioXy = TReal(imgSize.X) / imgSize.Y;
+  const auto numSamples = *manager.GetValueFrom<TU32>('s');
+	const auto inputName = *manager.GetValueFrom<std::string>("file");
+	const auto isPng = *sArguments->GetValueFrom<bool>("png"); 
+  const auto numThreads   = 
+      *sArguments->GetValueFrom<TU32>('t') > std::thread::hardware_concurrency() 
+    ? std::thread::hardware_concurrency()
+    : *sArguments->GetValueFrom<TU32>('t');
+  const auto indexCount = imgSize.X * imgSize.Y;
+  const auto workCount = indexCount / numThreads;
+  auto outputName	= *sArguments->GetValueFrom<std::string>("output");
+
+  std::cout << "* Overall Information [Verbose Mode]\n";
+  std::cout << "  Input Scene File : " << (inputName.empty() ? "Default (internal sample)" : inputName) << '\n';
+  std::cout << "  Output File : " << outputName << '\n';
+  std::cout << "  ScreenSize : " << imgSize << '\n';
+  std::cout << "  Screen Ratio (x/y) : " << scrRatioXy << '\n';
+  std::cout << "  Pixel Samples : " << numSamples << '\n';
+  std::cout << "  Running Thread Number : " << numThreads << '\n';
+  std::cout << "  Pixel Count : " << indexCount << '\n';
+  std::cout << "  Repeat : " << *sArguments->GetValueFrom<TU32>("repeat") << '\n';
+  std::cout << "  Gamma : " << *sArguments->GetValueFrom<float>("gamma") << '\n';
+  std::cout << "  Work Count For Each Thread : " << workCount << '\n'; 
+}
 
 bool CreateImagePpm(const char* const path, DDynamicGrid2D<DIVec3>& container)
 {

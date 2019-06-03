@@ -52,6 +52,18 @@ using DClamp = ::dy::math::DClamp<TReal, start, end>;
 using DRay = ::dy::math::DRay<TReal>;
 using ESuccess = ::dy::expr::EDySuccess;
 
+/// @brief Add Default Command Arguments into command manager.
+/// @param manager Command Argument Manager Reference.
+void AddDefaultCommandArguments(::dy::expr::FCmdArguments& manager);
+
+/// @brief Parse given argc, and argv into command argument manager.
+/// @param manager Command Argument Manager Reference.
+void ParseCommandArguments(::dy::expr::FCmdArguments& manager, int argc, char* argv[]);
+
+/// @brief Print overall information.
+/// @param manager Command Argument Manager Reference.
+void PrintOverallInformation(const ::dy::expr::FCmdArguments& manager);
+
 /// @brief Create image ppm with grid2d container.
 /// @return If successful, return true. Otherwise, return false.
 bool CreateImagePpm(const char* const path, DDynamicGrid2D<DIVec3>& container);
