@@ -17,8 +17,10 @@
 #include <cstdio>
 
 #include <iostream>
+#include <iomanip>
 #include <memory>
 #include <thread>
+#include <sstream>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #if defined(_MSVC_LANG)
@@ -32,6 +34,30 @@
 #endif
 #include <nlohmann/json.hpp>
 
+namespace
+{
+
+/// @brief Construct default output file name.
+void InitFunctionOutput(std::string& output)
+{
+  using namespace ray;
+
+  char fileName[256] = {0};
+  const auto timepoint = std::chrono::system_clock::now();
+  const auto nowC = std::chrono::system_clock::to_time_t(timepoint - std::chrono::hours(24));
+  std::stringstream timeStringStream;
+  timeStringStream << std::put_time(std::localtime(&nowC), "%y%m%d-%H%M%S");
+
+  std::sprintf(fileName, "./Result_%s_s%u_r%u.%s", 
+    timeStringStream.str().c_str(),
+    *sArguments->GetValueFrom<TU32>("sample"), 
+    *sArguments->GetValueFrom<TU32>("repeat"),
+    *sArguments->GetValueFrom<bool>("png") ? "png" : "ppm");
+  output = fileName;
+}
+
+} /// anonymous namespace
+
 namespace ray
 {
 
@@ -40,28 +66,30 @@ std::unique_ptr<::dy::expr::FCmdArguments> sArguments = nullptr;
 void AddDefaultCommandArguments(::dy::expr::FCmdArguments& manager)
 {
   using namespace ray;
+  const auto defThreads = TU32(std::thread::hardware_concurrency());
+
 #if defined(EXPR_ENABLE_BOOST) == true
   EXPR_OUTCOME_ASSERT(manager.Add<TU32>('s', "sample", 1));     // Sampling count of each pixel. (Antialiasing)
   EXPR_OUTCOME_ASSERT(manager.Add<bool>('v', "verbose"));       // Do process verbosely (Enable log)
   EXPR_OUTCOME_ASSERT(manager.Add<bool>('p', "png"));           // Export output as `.png` file.
-  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('t', "thread", 1));     // Thread count to process.
   EXPR_OUTCOME_ASSERT(manager.Add<TU32>('w', "width", 800));    // Image Width 
   EXPR_OUTCOME_ASSERT(manager.Add<TU32>('h', "height", 480));   // Image Heigth
   EXPR_OUTCOME_ASSERT(manager.Add<float>('g', "gamma", 2.2f));  // Gamma correction.
   EXPR_OUTCOME_ASSERT(manager.Add<TU32>('r', "repeat", 1));     // Repeat count of each pixel. (Denoising)
+  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('t', "thread", defThreads)); // Thread count to process.
 	EXPR_OUTCOME_ASSERT(manager.Add<std::string>('f', "file"));   // Load scene file. (json)
-  EXPR_OUTCOME_ASSERT(manager.Add<std::string>('o', "output")); // Customizable output path.
+  EXPR_OUTCOME_ASSERT(manager.Add<std::string>('o', "output", &InitFunctionOutput)); // Customizable output path.
 #else /// If not defined `EXPR_ENABLE_BOOST`
   manager.Add<TU32>('s', "sample", 1);      // Sampling count of each pixel. (Antialiasing)
   manager.Add<bool>('v', "verbose");        // Do process verbosely (Enable log)
   manager.Add<bool>('p', "png");            // Export output as `.png` file.
-  manager.Add<TU32>('t', "thread", 1);      // Thread count to process.
+  manager.Add<TU32>('t', "thread", defThreads); // Thread count to process.
   manager.Add<TU32>('w', "width", 800);     // Image Width 
   manager.Add<TU32>('h', "height", 480);    // Image Heigth
   manager.Add<float>('g', "gamma", 2.2f);   // Gamma correction.
   manager.Add<TU32>('r', "repeat", 1);      // Repeat count of each pixel. (Denoising)
 	manager.Add<std::string>('f', "file");		// Load scene file. (json)
-  manager.Add<std::string>('o', "output");  // Customizable output path.
+  manager.Add<std::string>('o', "output", &InitFunctionOutput);  // Customizable output path.
 #endif /// #if defined(EXPR_ENABLE_BOOST)
 };
 
@@ -85,18 +113,15 @@ void ParseCommandArguments(::dy::expr::FCmdArguments& manager, int argc, char* a
 
 void PrintOverallInformation(const ::dy::expr::FCmdArguments& manager)
 {
-  const auto imgSize = DUVec2{ *manager.GetValueFrom<TU32>('w'), *manager.GetValueFrom<TU32>('h') };
+  const auto imgSize    = DUVec2{ *manager.GetValueFrom<TU32>('w'), *manager.GetValueFrom<TU32>('h') };
   const TReal scrRatioXy = TReal(imgSize.X) / imgSize.Y;
   const auto numSamples = *manager.GetValueFrom<TU32>('s');
-	const auto inputName = *manager.GetValueFrom<std::string>("file");
-	const auto isPng = *sArguments->GetValueFrom<bool>("png"); 
-  const auto numThreads   = 
-      *sArguments->GetValueFrom<TU32>('t') > std::thread::hardware_concurrency() 
-    ? std::thread::hardware_concurrency()
-    : *sArguments->GetValueFrom<TU32>('t');
+	const auto inputName  = *manager.GetValueFrom<std::string>("file");
+	const auto isPng      = *sArguments->GetValueFrom<bool>("png"); 
+  const auto numThreads = *sArguments->GetValueFrom<TU32>('t');
   const auto indexCount = imgSize.X * imgSize.Y;
-  const auto workCount = indexCount / numThreads;
-  auto outputName	= *sArguments->GetValueFrom<std::string>("output");
+  const auto workCount  = indexCount / numThreads;
+  const auto outputName	= *sArguments->GetValueFrom<std::string>("output");
 
   std::cout << "* Overall Information [Verbose Mode]\n";
   std::cout << "  Input Scene File : " << (inputName.empty() ? "Default (internal sample)" : inputName) << '\n';

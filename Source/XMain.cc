@@ -40,31 +40,13 @@ int main(int argc, char* argv[])
   const auto imgSize      = DUVec2 { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
   const TReal scrRatioXy  = TReal(imgSize.X) / imgSize.Y;
   const auto numSamples   = *sArguments->GetValueFrom<TU32>('s');
-  const auto numThreads   = 
-      *sArguments->GetValueFrom<TU32>('t') > std::thread::hardware_concurrency() 
-    ? std::thread::hardware_concurrency()
-    : *sArguments->GetValueFrom<TU32>('t');
+  const auto numThreads   = *sArguments->GetValueFrom<TU32>('t');
   const auto indexCount   = imgSize.X * imgSize.Y;
   const auto workCount    = indexCount / numThreads;
   
 	const auto inputName    = *sArguments->GetValueFrom<std::string>("file");
-  auto outputName	        = *sArguments->GetValueFrom<std::string>("output");
+  const auto outputName	  = *sArguments->GetValueFrom<std::string>("output");
 	const auto isPng        = *sArguments->GetValueFrom<bool>("png"); 
-  if (outputName.empty() == true) 
-  {
-    char fileName[256] = {0};
-    const auto timepoint = std::chrono::system_clock::now();
-    const auto nowC = std::chrono::system_clock::to_time_t(timepoint - std::chrono::hours(24));
-    std::stringstream timeStringStream;
-    timeStringStream << std::put_time(std::localtime(&nowC), "%y%m%d-%H%M%S");
-
-    std::sprintf(fileName, "./Result_%s_s%u_r%u.%s", 
-      timeStringStream.str().c_str(),
-      numSamples, 
-      *sArguments->GetValueFrom<TU32>("repeat"),
-			isPng ? "png" : "ppm");
-    outputName = fileName;
-  }
 
   // Print Overall Information when -v mode.
   RAY_IF_VERBOSE_MODE() 
@@ -73,10 +55,7 @@ int main(int argc, char* argv[])
   }
 
   // Initialization time...
-  {
-    [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Initialize();
-    assert(flag == ESuccess::DY_SUCCESS);
-  }
+  EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Initialize());
 
 	// If input file name is empty (not specified), just add sample objects into manager.
 	if (inputName.empty() == true)
@@ -89,8 +68,7 @@ int main(int argc, char* argv[])
         flag == false)
     {
       std::cerr << "Failed to execute application.\n";
-      [[maybe_unused]] const auto flag2 = EXPR_SGT(MScene).Release();
-      assert(flag2 == ESuccess::DY_SUCCESS);
+      EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Release());
 
       return 1;
     }
@@ -144,10 +122,7 @@ int main(int argc, char* argv[])
 	}
 
   // Release time...
-  { 
-    [[maybe_unused]] const auto flag = EXPR_SGT(MScene).Release();
-    assert(flag == ESuccess::DY_SUCCESS);
-  }
+  EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Release());
 
   // After process...
 	// If --png (-p) is enabled, export result as `.png`, not `.ppm`.
