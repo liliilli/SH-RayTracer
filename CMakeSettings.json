@@ -18,11 +18,22 @@
       "configurationType": "Debug",
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON",
+      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DEXPR_BUILD_WITH_BOOST=ON ",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "msvc_x64_x64" ],
-      "variables": []
+      "variables": [
+        {
+          "name": "MATH_BUILD_WITH_BOOST",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "EXPR_BUILD_WITH_BOOST",
+          "value": "True",
+          "type": "BOOL"
+        }
+      ]
     }
   ]
 }

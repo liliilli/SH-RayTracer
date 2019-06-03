@@ -47,17 +47,29 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	target_compile_options(sse4_1 INTERFACE -msse4.1)
 	target_link_libraries(${CMAKE_PROJECT_NAME}
 		DyStringUtil
+		DyExpression
 		DyMath
 		pthread
 	)
 	add_definitions(-lstdc++fs -lpthread)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	message(STATUS "Build ${PROJECT_NAME} with ${CMAKE_CXX_COMPILER_ID}...")
     target_compile_options(sse4_1 INTERFACE /arch:SSE4.1)
 	target_link_libraries(${CMAKE_PROJECT_NAME}
 		DyStringUtil
+		DyExpression
 		DyMath
 	)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS -DUNICODE)
+	# Warning level 4 as warning to error.
+	# Enable Multiple core building.
+	# Force to always compile with W4
+	if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+		string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	else()
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+	endif()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX /MP /wd4127")
 endif()
 
 # INSTALL SETTINGS
