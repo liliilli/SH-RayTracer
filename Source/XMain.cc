@@ -51,32 +51,30 @@ int main(int argc, char* argv[])
   // Print Overall Information when -v mode.
   RAY_IF_VERBOSE_MODE() 
   {
-    *ray::sArguments->GetValueFrom<TU32>('w'),
-    *ray::sArguments->GetValueFrom<TU32>('h'),
-  };
-  const TReal ratio = TReal(imgSize.X) / imgSize.Y;
-  auto numSamples = *ray::sArguments->GetValueFrom<TU32>('s');
-  auto numThreads = 
-      *ray::sArguments->GetValueFrom<TU32>('t') > std::thread::hardware_concurrency() 
-    ? std::thread::hardware_concurrency()
-    : *ray::sArguments->GetValueFrom<TU32>('t');
-  const auto indexCount = imgSize.X * imgSize.Y;
-  const auto workCount = indexCount / numThreads;
-  RAY_IF_VERBOSE_MODE() // Print Overall Information.
-  {
-    std::cout << "* Overall Information [Verbose Mode]\n";
-    std::cout << "  ScreenSize : " << imgSize << '\n';
-    std::cout << "  Screen Ratio (x/y) : " << ratio << '\n';
-    std::cout << "  Pixel Samples : " << numSamples << '\n';
-    std::cout << "  Running Thread Number : " << numThreads << '\n';
-    std::cout << "  Pixel Count : " << indexCount << '\n';
-    std::cout << "  Work Count For Each Thread : " << workCount << '\n'; 
+    PrintOverallInformation(*sArguments);
   }
 
-  FCamera cam = { DVec3{0, 0, 1}, DVec3{0, 0, -1}, imgSize, 2.0f * ratio, 2.0f, numSamples };
+  // Initialization time...
+  EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Initialize());
 
-  DDynamicGrid2D<DIVec3> container = {imgSize.X, imgSize.Y};
+	// If input file name is empty (not specified), just add sample objects into manager.
+	if (inputName.empty() == true)
+	{
+		EXPR_SGT(MScene).AddSampleObjects(imgSize, numSamples);
+	}
+	else 
+	{
+    if (const auto flag = EXPR_SGT(MScene).LoadSceneFile(inputName, imgSize, numSamples); 
+        flag == false)
+    {
+      std::cerr << "Failed to execute application.\n";
+      EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Release());
 
+      return 1;
+    }
+	}
+
+  // Separate work list to each thread. (potential)
   std::vector<std::vector<DUVec2>> indexes(numThreads);
   for (auto y = imgSize.Y, t = 0u, c = 0u; y > 0; --y)
   {
@@ -127,10 +125,26 @@ int main(int argc, char* argv[])
   EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Release());
 
   // After process...
-  char fileName[256] = {0};
-  std::sprintf(fileName, "./SphereTest_Samples%u.ppm", cam.GetSamples());
+	// If --png (-p) is enabled, export result as `.png`, not `.ppm`.
+	if (isPng == true)
+	{
+		if (const auto flag = ray::CreateImagePng(outputName.c_str(), container); flag == false) 
+		{ 
+			std::printf("Failed to execute program.\n"); 
+			return 1;
+		}
+	}
+	else
+	{
+		if (const auto flag = ray::CreateImagePpm(outputName.c_str(), container); flag == false) 
+		{ 
+			std::printf("Failed to execute program.\n"); 
+			return 1;
+		}
+	}
 
-  const auto flag = ray::CreateImagePpm(fileName, container);
-  if (flag == false) { std::printf("Failed to execute program.\n"); }
+	using ::dy::expr::MTimeChecker;
+	const auto timestamp = EXPR_SGT(MTimeChecker).Get("RenderTime").GetRecent();
+	std::cout << "* Elapsed Time : " << timestamp.count() << "s\n";
   return 0;
 }
