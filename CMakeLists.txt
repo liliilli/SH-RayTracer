@@ -44,7 +44,10 @@ PRIVATE
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	message(STATUS "Build ${PROJECT_NAME} with ${CMAKE_CXX_COMPILER_ID}...")
 	target_compile_options(sse4_1 INTERFACE -msse4.1)
+	add_library(DyMath INTERFACE IMPORTED)
+	link_directories("${CMAKE_SOURCE_DIR}/DyUtils/DyMath/lib/")
 	target_link_libraries(${CMAKE_PROJECT_NAME}
 		DyStringUtil
 		DyExpression
