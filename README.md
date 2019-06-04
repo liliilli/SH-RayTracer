@@ -29,7 +29,7 @@
 * nlohmann
 * (optional) boost 1.70.0
 
-To build `SH-RayTracer`, `DyUtils` library uses submodule, so need to command below codes prior to use CMake commands.
+To build `SH-RayTracer`, `DyUtils` library uses submodule so need to write below command codes prior to use CMake commands.
 
 ``` bash
 > git submodule update --init --recursive
