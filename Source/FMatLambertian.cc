@@ -32,8 +32,6 @@ FMatLambertian::Scatter(const DRay& intersectedRay, const DVec3& normal)
     refDir = RandomVector3Length<TReal>(1.0f);
   }
 
-  const auto nextPos = intersectedRay.GetOrigin();
-  //const auto nextTarget = nextPos + (normal + refDir);
   return std::tuple{(normal + refDir).Normalize(), this->mColor * 0.9f, true};
 }
 

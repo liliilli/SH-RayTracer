@@ -38,7 +38,6 @@ int main(int argc, char* argv[])
   ParseCommandArguments(*sArguments, argc, argv);
 
   const auto imgSize      = DUVec2 { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
-  const TReal scrRatioXy  = TReal(imgSize.X) / imgSize.Y;
   const auto numSamples   = *sArguments->GetValueFrom<TU32>('s');
   const auto numThreads   = *sArguments->GetValueFrom<TU32>('t');
   const auto indexCount   = imgSize.X * imgSize.Y;

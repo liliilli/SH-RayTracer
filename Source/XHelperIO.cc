@@ -32,7 +32,9 @@ GetBufferFromFile(const std::string& iFilePath)
   std::fseek(fd, 0, SEEK_SET);
 
   std::vector<char> buffer(size + 1);
-  std::fread(buffer.data(), sizeof(char), size, fd);
+  [[maybe_unused]] const auto readSize = 
+	  std::fread(buffer.data(), sizeof(char), size, fd);
+  
   std::fclose(fd);
 
   return std::move(buffer);

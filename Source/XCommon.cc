@@ -91,7 +91,7 @@ void AddDefaultCommandArguments(::dy::expr::FCmdArguments& manager)
 	manager.Add<std::string>('f', "file");		// Load scene file. (json)
   manager.Add<std::string>('o', "output", &InitFunctionOutput);  // Customizable output path.
 #endif /// #if defined(EXPR_ENABLE_BOOST)
-};
+}
 
 void ParseCommandArguments(::dy::expr::FCmdArguments& manager, int argc, char* argv[])
 {
@@ -117,7 +117,6 @@ void PrintOverallInformation(const ::dy::expr::FCmdArguments& manager)
   const TReal scrRatioXy = TReal(imgSize.X) / imgSize.Y;
   const auto numSamples = *manager.GetValueFrom<TU32>('s');
 	const auto inputName  = *manager.GetValueFrom<std::string>("file");
-	const auto isPng      = *sArguments->GetValueFrom<bool>("png"); 
   const auto numThreads = *sArguments->GetValueFrom<TU32>('t');
   const auto indexCount = imgSize.X * imgSize.Y;
   const auto workCount  = indexCount / numThreads;
@@ -170,9 +169,9 @@ bool CreateImagePng(const char* const path, const DDynamicGrid2D<DIVec3>& contai
 	using DU8Vec3 = ::dy::math::DVector3<::dy::math::TU8>;
 	DDynamicGrid2D<DU8Vec3> charContainer = {w, h};
 
-	for (auto y = 0; y < h; ++y)
+	for (auto y = 0u; y < h; ++y)
 	{
-		for (auto x = 0; x < w; ++x)
+		for (auto x = 0u; x < w; ++x)
 		{
 			charContainer.Set(x, y, static_cast<DU8Vec3>(container.Get(x, y)));
 		}
