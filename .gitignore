@@ -416,3 +416,10 @@ bin
 .bin/*
 
 *.ppm
+*.png
+*.jpg
+*.bmp
+*.tiff
+!Docs/Image0.png
+!Docs/Image1.png
+!Docs/Image2.png
