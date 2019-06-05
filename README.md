@@ -35,11 +35,12 @@ To build `SH-RayTracer`, `DyUtils` library uses submodule so need to write below
 > git submodule update --init --recursive
 ```
 
-If you want to use application with more informatively, install `boost 1.70.0` library into below path following platform.
+If you want to use application with more informatively, install `boost 1.70.0` library (header files) into below path following platform.
 
-| Platform | Path     |
-| -------- | -------- |
-| Windows  | C:\boost |
+| Platform          | Path         |
+| ----------------- | ------------ |
+| Windows           | C:\boost     |
+| Linux (not apple) | /usr/include |
 
 ### Windows
 
@@ -57,12 +58,16 @@ Afterward, open `ShRayTracer.sln` in `./build` directory and build `ALL_BUILD`.
 
 ### Linux with gcc (g++)
 
-To build `SH-RayTracer` with g++ on `-inx`, C++17 Supported version is required.
+To build `SH-RayTracer` with g++ on `-inx`, C++17 Supported version is required. You must add `DEBUG` or `RELEASE` mode to compile it as debug (not optimized version) or release (fully-optimized version) version like a below.
 
 ``` bash
 > mkdir build && cd build
-> cmake .. -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON
-> or, cmake .. -DEXPR_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON
+> cmake .. \
+-DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON \
+-DCMAKE_BUILD_TYPE=DEBUG or RELEASE
+> or, cmake .. \
+-DEXPR_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON \
+-DCMAKE_BUILD_TYPE=DEBUG or RELEASE
 ```
 
 and
@@ -71,11 +76,10 @@ and
 > make
 ```
 
-In linux version, I do not provide `Release` version yet. But I'll add optimized version (`Release`) building soon.
-
 ## Log
 
-2019-06-04 : Create Document
+2019-06-04 : Create Document<br>
+2019-06-05 : Add DEBUG & RELEASE building mode for Linux (GCC)
 
 ## Copyright
 
