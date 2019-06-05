@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_VERBOSE_MAKEFILE true)
 
+set(CMAKE_CXX_FLAGS_COMMON "-Wall -Werror -pedantic")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -pg")
+set(CMKAE_CXX_FLAGS_RELEASE "-s -O2 -DNDEBUG -march=native")
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 add_subdirectory(DyUtils)
 
@@ -43,10 +47,11 @@ PRIVATE
     ${CMAKE_SOURCE_DIR}/DyUtils/DyMath/Include
 )
 
+message(STATUS 
+	"Build ${PROJECT_NAME} with ${CMAKE_CXX_COMPILER_ID} as ${CMAKE_BUILD_TYPE} mode...")
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	message(STATUS "Build ${PROJECT_NAME} with ${CMAKE_CXX_COMPILER_ID}...")
 	target_compile_options(sse4_1 INTERFACE -msse4.1)
-	add_library(DyMath INTERFACE IMPORTED)
+	# add_library(DyMath INTERFACE IMPORTED)
 	link_directories("${CMAKE_SOURCE_DIR}/DyUtils/DyMath/lib/")
 	target_link_libraries(${CMAKE_PROJECT_NAME}
 		DyStringUtil
@@ -55,8 +60,16 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		pthread
 	)
 	add_definitions(-lstdc++fs -lpthread)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_COMMON}")
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
+	elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMKAE_CXX_FLAGS_RELEASE}")
+	else()
+		message(FATAL_ERROR "CMAKE_BUILD_TYPE is not specified. Failed to build.")
+	endif()
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	message(STATUS "Build ${PROJECT_NAME} with ${CMAKE_CXX_COMPILER_ID}...")
+	
     target_compile_options(sse4_1 INTERFACE /arch:SSE4.1)
 	target_link_libraries(${CMAKE_PROJECT_NAME}
 		DyStringUtil
