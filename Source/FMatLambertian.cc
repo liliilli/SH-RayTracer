@@ -20,7 +20,7 @@ namespace ray
 {
 
 std::optional<std::tuple<DVec3, DVec3, bool>> 
-FMatLambertian::Scatter(const DRay& intersectedRay, const DVec3& normal)
+FMatLambertian::Scatter([[maybe_unused]] const DRay& intersectedRay, const DVec3& normal)
 {
   using ::dy::math::GetClosestTValueOf;
   using ::dy::math::RandomVector3Length;
