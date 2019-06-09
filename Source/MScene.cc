@@ -58,18 +58,13 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   }
   this->mMainCamera = std::make_unique<FCamera>(descriptor);
 
-  this->AddHitableObject<FSphere>(
-    DVec3{0, 0, -2.0f}, 1.0f, 
-    std::make_unique<FMatLambertian>(DVec3{.8f, .8f, 0}));
-  this->AddHitableObject<FSphere>(
-    DVec3{1.1f, -0.2f, -1.0f}, 0.8f,
-    std::make_unique<FMatLambertian>(DVec3{.8f, 0, .8f}));
-  this->AddHitableObject<FSphere>(
-    DVec3{-1.7f, 0, -2.5f}, 1.0f,
-    std::make_unique<FMatLambertian>(DVec3{0, .8f, .8f}));
-  this->AddHitableObject<FSphere>(
-    DVec3{0, -101.0f, -1.f}, 100.0f,
-    std::make_unique<FMatLambertian>(DVec3{0.8f, 0.5f, 0}));
+  // Object
+  this->AddHitableObject<FSphere>(DVec3{0, 0, -2.0f}, 1.0f, std::make_unique<FMatLambertian>(DVec3{.8f, .8f, 0}));
+  this->AddHitableObject<FSphere>(DVec3{1.1f, -0.2f, -1.0f}, 0.8f, std::make_unique<FMatLambertian>(DVec3{.8f, 0, .8f}));
+  this->AddHitableObject<FSphere>(DVec3{-1.7f, 0, -2.5f}, 1.0f, std::make_unique<FMatLambertian>(DVec3{0, .8f, .8f}));
+
+  // Floor
+  this->AddHitableObject<FSphere>(DVec3{0, -101.0f, -1.f}, 100.0f, std::make_unique<FMatLambertian>(DVec3{0.5f, 0.5f, 0.5f}));
 }
 
 bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize, TU32 numSamples)

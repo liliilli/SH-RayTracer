@@ -60,6 +60,9 @@ void AddDefaultCommandArguments(::dy::expr::FCmdArguments& manager);
 /// @param manager Command Argument Manager Reference.
 void ParseCommandArguments(::dy::expr::FCmdArguments& manager, int argc, char* argv[]);
 
+/// @brief Print help log. (`--help`)
+void PrintHelp(const ::dy::expr::FCmdArguments& manager);
+
 /// @brief Print overall information.
 /// @param manager Command Argument Manager Reference.
 void PrintOverallInformation(const ::dy::expr::FCmdArguments& manager);

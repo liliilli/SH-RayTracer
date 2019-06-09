@@ -66,30 +66,63 @@ std::unique_ptr<::dy::expr::FCmdArguments> sArguments = nullptr;
 void AddDefaultCommandArguments(::dy::expr::FCmdArguments& manager)
 {
   using namespace ray;
+  using ::dy::expr::PCmdArgument;
   const auto defThreads = TU32(std::thread::hardware_concurrency());
 
+  const PCmdArgument sampler = PCmdArgument{
+    's', "sample", (TU32)1, 
+    "Anti-aliase (Sample) each pixels. supported value is 1, 2, 4, 8. (example : -s 1, -s 4)"};
+  const PCmdArgument verbose = PCmdArgument{'v', "verbose", false, "Log process verbosely. (-v, --verbose)"};
+  const PCmdArgument exportPng = PCmdArgument{'p', "png", false, "Export result as .png. (-p, --png)"};
+  const PCmdArgument imageWidth = PCmdArgument{
+    'w', "width", (TU32)800, 
+    "Set up the width of result image. (example : -w 1280, -w 1920)"};
+  const PCmdArgument imageHeight = PCmdArgument{
+    'h', "height", (TU32)480,
+    "Set up the height of result iamge. (example : -h 720, -h 1080)"};
+  const PCmdArgument gamma = PCmdArgument{
+    'g', "gamma", (float)2.2f,
+    "Gamma correction. (example : -g 2.2, --gamma 1.8)"};
+  const PCmdArgument repeat = PCmdArgument{
+    'r', "repeat", (TU32)1,
+    "Repeat ray marching given times per pixel. (example : -r 4, -r 16)"};
+  const PCmdArgument thread = PCmdArgument{
+    't', "thread", defThreads,
+    "Do ray tracing with given the number of threads. "
+    "Default value is the number of processors of CPU. (example -t 2, -t 8)"};
+  const PCmdArgument inputFile = PCmdArgument{
+    'f', "file", std::string{},
+    "Load custom scene file. Default value is empty, "
+    "so if empty load sample scene file. (example -f scene1.json)"};
+  const PCmdArgument outputFile = PCmdArgument{
+    'o', "output", &InitFunctionOutput,
+    R"(Set up output path. Default output file path is directory of executable. (example -f "./../result.ppm")"};
+  const PCmdArgument help = PCmdArgument{'x', "help", false, "Display help instruction."};
+
 #if defined(EXPR_ENABLE_BOOST) == true
-  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('s', "sample", 1));     // Sampling count of each pixel. (Antialiasing)
-  EXPR_OUTCOME_ASSERT(manager.Add<bool>('v', "verbose"));       // Do process verbosely (Enable log)
-  EXPR_OUTCOME_ASSERT(manager.Add<bool>('p', "png"));           // Export output as `.png` file.
-  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('w', "width", 800));    // Image Width 
-  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('h', "height", 480));   // Image Heigth
-  EXPR_OUTCOME_ASSERT(manager.Add<float>('g', "gamma", 2.2f));  // Gamma correction.
-  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('r', "repeat", 1));     // Repeat count of each pixel. (Denoising)
-  EXPR_OUTCOME_ASSERT(manager.Add<TU32>('t', "thread", defThreads)); // Thread count to process.
-	EXPR_OUTCOME_ASSERT(manager.Add<std::string>('f', "file"));   // Load scene file. (json)
-  EXPR_OUTCOME_ASSERT(manager.Add<std::string>('o', "output", &InitFunctionOutput)); // Customizable output path.
+  EXPR_OUTCOME_ASSERT(manager.Add(sampler));    // Sampling count of each pixel. (Antialiasing)
+  EXPR_OUTCOME_ASSERT(manager.Add(verbose));    // Do process verbosely (Enable log)
+  EXPR_OUTCOME_ASSERT(manager.Add(exportPng));  // Export output as `.png` file.
+  EXPR_OUTCOME_ASSERT(manager.Add(imageWidth)); // Image Width 
+  EXPR_OUTCOME_ASSERT(manager.Add(imageHeight));// Image Heigth
+  EXPR_OUTCOME_ASSERT(manager.Add(gamma));      // Gamma correction.
+  EXPR_OUTCOME_ASSERT(manager.Add(repeat));     // Repeat count of each pixel. (Denoising)
+  EXPR_OUTCOME_ASSERT(manager.Add(thread));     // Thread count to process.
+	EXPR_OUTCOME_ASSERT(manager.Add(inputFile));  // Load scene file. (json)
+  EXPR_OUTCOME_ASSERT(manager.Add(outputFile)); // Customizable output path.
+  EXPR_OUTCOME_ASSERT(manager.Add(help));       // Help command
 #else /// If not defined `EXPR_ENABLE_BOOST`
-  manager.Add<TU32>('s', "sample", 1);      // Sampling count of each pixel. (Antialiasing)
-  manager.Add<bool>('v', "verbose");        // Do process verbosely (Enable log)
-  manager.Add<bool>('p', "png");            // Export output as `.png` file.
-  manager.Add<TU32>('t', "thread", defThreads); // Thread count to process.
-  manager.Add<TU32>('w', "width", 800);     // Image Width 
-  manager.Add<TU32>('h', "height", 480);    // Image Heigth
-  manager.Add<float>('g', "gamma", 2.2f);   // Gamma correction.
-  manager.Add<TU32>('r', "repeat", 1);      // Repeat count of each pixel. (Denoising)
-	manager.Add<std::string>('f', "file");		// Load scene file. (json)
-  manager.Add<std::string>('o', "output", &InitFunctionOutput);  // Customizable output path.
+  manager.Add(sampler);           // Sampling count of each pixel. (Antialiasing)
+  manager.Add(verbose);           // Do process verbosely (Enable log)
+  manager.Add(exportPng);         // Export output as `.png` file.
+  manager.Add(imageWidth);        // Image Width 
+  manager.Add(imageHeight);       // Image Heigth
+  manager.Add(gamma);             // Gamma correction.
+  manager.Add(repeat);            // Repeat count of each pixel. (Denoising)
+  manager.Add(thread);            // Thread count to process.
+	manager.Add(inputFile);		      // Load scene file. (json)
+  manager.Add(outputFile);        // Customizable output path.
+  manager.Add(help);              // Help command
 #endif /// #if defined(EXPR_ENABLE_BOOST)
 }
 
@@ -109,6 +142,18 @@ void ParseCommandArguments(::dy::expr::FCmdArguments& manager, int argc, char* a
     std::exit(3);
   }
 #endif /// #if defined(EXPR_ENABLE_BOOST)
+}
+
+void PrintHelp(const ::dy::expr::FCmdArguments& manager)
+{
+  const auto& list = manager.GetArgumentList();
+  std::printf("* Help\n");
+  for (const auto& item : list)
+  {
+    std::printf(
+      "  [-%c, --%s] : %s\n", 
+      item.GetShortName(), item.GetLongName().c_str(), item.GetDesciption().c_str());
+  }
 }
 
 void PrintOverallInformation(const ::dy::expr::FCmdArguments& manager)

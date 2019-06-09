@@ -37,15 +37,22 @@ int main(int argc, char* argv[])
   AddDefaultCommandArguments(*sArguments);
   ParseCommandArguments(*sArguments, argc, argv);
 
-  const auto imgSize      = DUVec2 { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
-  const auto numSamples   = *sArguments->GetValueFrom<TU32>('s');
-  const auto numThreads   = *sArguments->GetValueFrom<TU32>('t');
-  const auto indexCount   = imgSize.X * imgSize.Y;
-  const auto workCount    = indexCount / numThreads;
+  // If "--help" is activated, just print and terminate application.
+  if (*sArguments->GetValueFrom<bool>("help") == true)
+  {
+    PrintHelp(*sArguments);
+    return 0;
+  }
+
+  const auto imgSize    = DUVec2 { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
+  const auto numSamples = *sArguments->GetValueFrom<TU32>('s');
+  const auto numThreads = *sArguments->GetValueFrom<TU32>('t');
+  const auto indexCount = imgSize.X * imgSize.Y;
+  const auto workCount  = indexCount / numThreads;
   
-	const auto inputName    = *sArguments->GetValueFrom<std::string>("file");
-  const auto outputName	  = *sArguments->GetValueFrom<std::string>("output");
-	const auto isPng        = *sArguments->GetValueFrom<bool>("png"); 
+	const auto inputName  = *sArguments->GetValueFrom<std::string>("file");
+  const auto outputName	= *sArguments->GetValueFrom<std::string>("output");
+	const auto isPng      = *sArguments->GetValueFrom<bool>("png"); 
 
   // Print Overall Information when -v mode.
   RAY_IF_VERBOSE_MODE() 
