@@ -6,6 +6,7 @@
 
 `SH-RayTracer` is open sourced CPU ray-tracing application, coded based on C++17. 
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1a829c0522af4af8b9e9bc5bc38f1ca6)](https://app.codacy.com/app/liliilli/SH-RayTracer?utm_source=github.com&utm_medium=referral&utm_content=liliilli/SH-RayTracer&utm_campaign=Badge_Grade_Dashboard)
 [![Build status](https://ci.appveyor.com/api/projects/status/8efrab1n7d63jq6q/branch/master?svg=true)](https://ci.appveyor.com/project/liliilli/sh-raytracer/branch/master)
 
 ## Features
