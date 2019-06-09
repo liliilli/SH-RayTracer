@@ -23,16 +23,6 @@
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "variables": [
-        {
-          "name": "MATH_BUILD_WITH_BOOST",
-          "value": "True",
-          "type": "BOOL"
-        },
-        {
-          "name": "EXPR_BUILD_WITH_BOOST",
-          "value": "True",
-          "type": "BOOL"
-        }
       ]
     }
   ]
