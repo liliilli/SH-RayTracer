@@ -7,10 +7,10 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DEXPR_BUILD_WITH_BOOST=ON ",
+      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON ",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
-      "variables": []
+      "variables": [ ]
     },
     {
       "name": "x64-Debug",
@@ -18,12 +18,11 @@
       "configurationType": "Debug",
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DEXPR_BUILD_WITH_BOOST=ON ",
+      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "msvc_x64_x64" ],
-      "variables": [
-      ]
+      "variables": [ ]
     }
   ]
 }

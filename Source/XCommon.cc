@@ -112,17 +112,17 @@ void AddDefaultCommandArguments(::dy::expr::FCmdArguments& manager)
   EXPR_OUTCOME_ASSERT(manager.Add(outputFile)); // Customizable output path.
   EXPR_OUTCOME_ASSERT(manager.Add(help));       // Help command
 #else /// If not defined `EXPR_ENABLE_BOOST`
-  manager.Add(sampler);           // Sampling count of each pixel. (Antialiasing)
-  manager.Add(verbose);           // Do process verbosely (Enable log)
-  manager.Add(exportPng);         // Export output as `.png` file.
-  manager.Add(imageWidth);        // Image Width 
-  manager.Add(imageHeight);       // Image Heigth
-  manager.Add(gamma);             // Gamma correction.
-  manager.Add(repeat);            // Repeat count of each pixel. (Denoising)
-  manager.Add(thread);            // Thread count to process.
-	manager.Add(inputFile);		      // Load scene file. (json)
-  manager.Add(outputFile);        // Customizable output path.
-  manager.Add(help);              // Help command
+  EXPR_SUCCESS_ASSERT(manager.Add(sampler));    // Sampling count of each pixel. (Antialiasing)
+  EXPR_SUCCESS_ASSERT(manager.Add(verbose));    // Do process verbosely (Enable log)
+  EXPR_SUCCESS_ASSERT(manager.Add(exportPng));  // Export output as `.png` file.
+  EXPR_SUCCESS_ASSERT(manager.Add(imageWidth)); // Image Width 
+  EXPR_SUCCESS_ASSERT(manager.Add(imageHeight));// Image Heigth
+  EXPR_SUCCESS_ASSERT(manager.Add(gamma));      // Gamma correction.
+  EXPR_SUCCESS_ASSERT(manager.Add(repeat));     // Repeat count of each pixel. (Denoising)
+  EXPR_SUCCESS_ASSERT(manager.Add(thread));     // Thread count to process.
+	EXPR_SUCCESS_ASSERT(manager.Add(inputFile));	// Load scene file. (json)
+  EXPR_SUCCESS_ASSERT(manager.Add(outputFile)); // Customizable output path.
+  EXPR_SUCCESS_ASSERT(manager.Add(help));       // Help command
 #endif /// #if defined(EXPR_ENABLE_BOOST)
 }
 
