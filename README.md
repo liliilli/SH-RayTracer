@@ -6,6 +6,8 @@
 
 `SH-RayTracer` is open sourced CPU ray-tracing application, coded based on C++17. 
 
+[![Build status](https://ci.appveyor.com/api/projects/status/8efrab1n7d63jq6q/branch/master?svg=true)](https://ci.appveyor.com/project/liliilli/sh-raytracer/branch/master)
+
 ## Features
 
 * Customized Scene Loading using `json` file.
