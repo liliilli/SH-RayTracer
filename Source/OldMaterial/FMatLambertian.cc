@@ -11,13 +11,24 @@
 /// SOFTWARE.
 ///
 
-#include <FMatLambertian.hpp>
+#include <OldMaterial/FMatLambertian.hpp>
+#include <nlohmann/json.hpp>
+
 #include <Math/Utility/XLinearMath.h>
 #include <Math/Utility/XGraphicsMath.h>
 #include <Math/Utility/XRandom.h>
 
+#include <XHelperJson.hpp>
+
 namespace ray
 {
+
+void from_json(const nlohmann::json& json, FMatLambertian::PCtor& oCtor)
+{
+  assert(json::HasJsonKey(json, "color") == true); 
+
+  oCtor.mColor = json::GetValueFrom<DVec3>(json, "color");
+}
 
 std::optional<std::tuple<DVec3, DVec3, bool>> 
 FMatLambertian::Scatter([[maybe_unused]] const DRay& intersectedRay, const DVec3& normal)

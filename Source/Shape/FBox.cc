@@ -1,4 +1,3 @@
-#pragma once
 ///
 /// MIT License
 /// Copyright (c) 2018-2019 Jongmin Yun
@@ -12,25 +11,9 @@
 /// SOFTWARE.
 ///
 
-#include <IMaterial.hpp>
-#include <XCommon.hpp>
+#include <Shape/FBox.hpp>
 
 namespace ray
 {
-
-class FMatLambertian final : public IMaterial
-{
-public:
-  FMatLambertian(const DVec3& color)
-    : mColor { color }
-  { };
-  virtual ~FMatLambertian() = default;
-
-  virtual std::optional<std::tuple<DVec3, DVec3, bool>> 
-  Scatter(const DRay& intersectedRay, const DVec3& normal) override final;
-
-private:
-  DVec3 mColor;
-};
 
 } /// ::ray namespace

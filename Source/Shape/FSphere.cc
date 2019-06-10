@@ -12,13 +12,29 @@
 ///
 
 #include <Shape/FSphere.hpp>
+#include <nlohmann/json.hpp>
+#include <XHelperJson.hpp>
 
 namespace ray
 {
 
+void from_json(const nlohmann::json& json, FSphere::PCtor& oCtor)
+{
+  assert(json::HasJsonKey(json, "pos") == true);
+  assert(json::HasJsonKey(json, "radius") == true); 
+
+  oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos");
+  oCtor.mRadius = json::GetValueFrom<TReal>(json, "radius");
+}
+
 FSphere::FSphere(const DVec3& origin, TReal radius, std::unique_ptr<IMaterial>&& mat)
   : IHitable(EShapeType::Sphere, std::move(mat)),
     DSphere<TReal>(origin, radius)
+{ }
+
+FSphere::FSphere(const FSphere::PCtor& arg, std::unique_ptr<IMaterial>&& mat)
+  : IHitable{EShapeType::Sphere, std::move(mat)},
+    DSphere<TReal>{ arg.mOrigin, arg.mRadius }
 { }
 
 } /// ::ray namespace

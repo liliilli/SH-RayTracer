@@ -12,9 +12,11 @@
 /// SOFTWARE.
 ///
 
+#include <nlohmann/json_fwd.hpp>
+#include <Math/Type/Micellanous/DClamp.h>
+
 #include <IMaterial.hpp>
 #include <XCommon.hpp>
-#include <Math/Type/Micellanous/DClamp.h>
 
 namespace ray
 {
@@ -22,9 +24,20 @@ namespace ray
 class FMatMetal final : public IMaterial
 {
 public:
+  /// @brief Constructor instance type of FMatMetal.
+  struct PCtor final
+  {
+    DVec3 mColor;
+    TReal mRoughness;
+  };
+
   FMatMetal(const DVec3& color, TReal roughness)
     : mColor { color },
       mRoughness { roughness }
+  { };
+  FMatMetal(const PCtor& arg)
+    : mColor { arg.mColor },
+      mRoughness { arg.mRoughness }
   { };
   virtual ~FMatMetal() = default;
 
@@ -35,5 +48,9 @@ private:
   DVec3 mColor;
   ::dy::math::DClamp<TReal, 0, 1> mRoughness;
 };
+
+/// @brief Template function for automatic parsing from json.
+/// This initialize FMatMetal::PCtor instance, except some elements.
+void from_json(const nlohmann::json& json, FMatMetal::PCtor& oCtor);
 
 } /// ::ray namespace

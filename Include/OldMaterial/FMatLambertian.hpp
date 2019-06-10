@@ -13,32 +13,35 @@
 ///
 
 #include <nlohmann/json_fwd.hpp>
-#include <Math/Type/Shape/DSphere.h>
-#include <IHitable.hpp>
+
+#include <IMaterial.hpp>
 #include <XCommon.hpp>
 
 namespace ray
 {
 
-/// @class FSphere
-/// @brief Sphere type.
-class FSphere final : public IHitable, public ::dy::math::DSphere<TReal>
+class FMatLambertian final : public IMaterial
 {
 public:
-  /// @brief Constructor type of FSphere.
+  /// @brief Constructor instance type of FMatLambertian.
   struct PCtor final
   {
-    DVec3 mOrigin;
-    TReal mRadius;
+    DVec3 mColor;
   };
 
-  FSphere(const DVec3& origin, TReal radius, std::unique_ptr<IMaterial>&& mat);
-  FSphere(const FSphere::PCtor& arg, std::unique_ptr<IMaterial>&& mat);
-  virtual ~FSphere() = default;
+  FMatLambertian(const DVec3& color) : mColor { color } { };
+  FMatLambertian(const FMatLambertian::PCtor& arg) : mColor { arg.mColor } { };
+  virtual ~FMatLambertian() = default;
+
+  virtual std::optional<std::tuple<DVec3, DVec3, bool>> 
+  Scatter(const DRay& intersectedRay, const DVec3& normal) override final;
+
+private:
+  DVec3 mColor;
 };
 
 /// @brief Template function for automatic parsing from json.
-/// This initialize FSphere::PCtor instance, except some elements.
-void from_json(const nlohmann::json& json, FSphere::PCtor& oCtor);
+/// This initialize FMatLambertian::PCtor instance, except some elements.
+void from_json(const nlohmann::json& json, FMatLambertian::PCtor& oCtor);
 
 } /// ::ray namespace

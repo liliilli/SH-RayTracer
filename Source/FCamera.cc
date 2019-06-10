@@ -12,13 +12,32 @@
 ///
 
 #include <FCamera.hpp>
+
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <Math/Utility/XLinearMath.h>
 #include <Math/Utility/XRandom.h>
+
 #include <XCommon.hpp>
+#include <XHelperJson.hpp>
 
 namespace ray
 {
+
+void from_json(const nlohmann::json& item, FCamera::PCtor& oCtor)
+{
+  assert(json::HasJsonKey(item, "pos") == true); 
+  assert(json::HasJsonKey(item, "eye") == true);
+  assert(json::HasJsonKey(item, "focus_dist") == true); 
+  assert(json::HasJsonKey(item, "sensor_size") == true); 
+  assert(json::HasJsonKey(item, "aperture") == true); 
+
+  oCtor.mAperture      = json::GetValueFrom<TReal>(item, "aperture");
+  oCtor.mFocusDistance = json::GetValueFrom<TReal>(item, "focus_dist");
+  oCtor.mForwardTo     = json::GetValueFrom<DVec3>(item, "eye");
+  oCtor.mOrigin        = json::GetValueFrom<DVec3>(item, "pos");
+  oCtor.mSensorSize    = json::GetValueFrom<TReal>(item, "sensor_size");
+}
 
 FCamera::FCamera(const FCamera::PCtor& arg)
   : mOrigin{ arg.mOrigin },

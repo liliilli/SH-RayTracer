@@ -11,13 +11,26 @@
 /// SOFTWARE.
 ///
 
-#include <FMatMetal.hpp>
+#include <OldMaterial/FMatMetal.hpp>
+
+#include <nlohmann/json.hpp>
 #include <Math/Utility/XLinearMath.h>
 #include <Math/Utility/XGraphicsMath.h>
 #include <Math/Utility/XRandom.h>
 
+#include <XHelperJson.hpp>
+
 namespace ray
 {
+
+void from_json(const nlohmann::json& json, FMatMetal::PCtor& oCtor)
+{
+  assert(json::HasJsonKey(json, "color") == true);
+  assert(json::HasJsonKey(json, "roughness") == true); 
+
+  oCtor.mColor = json::GetValueFrom<DVec3>(json, "color");
+  oCtor.mRoughness = json::GetValueFrom<TReal>(json, "roughness");
+}
 
 std::optional<std::tuple<DVec3, DVec3, bool>> 
 FMatMetal::Scatter(const DRay& intersectedRay, const DVec3& normal)

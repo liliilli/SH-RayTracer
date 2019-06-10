@@ -12,9 +12,11 @@
 /// SOFTWARE.
 ///
 
+#include <nlohmann/json_fwd.hpp>
+#include <Math/Type/Micellanous/DClamp.h>
+
 #include <IMaterial.hpp>
 #include <XCommon.hpp>
-#include <Math/Type/Micellanous/DClamp.h>
 
 namespace ray
 {
@@ -22,7 +24,14 @@ namespace ray
 class FMatDielectric final : public IMaterial
 {
 public:
+  /// @brief Constructor instance type of FMatDielectric.
+  struct PCtor final
+  {
+    TReal mIor;
+  };
+
   FMatDielectric(TReal ior) : mIor { ior } { };
+  FMatDielectric(const PCtor& arg) : mIor { arg.mIor } { };
   virtual ~FMatDielectric() = default;
 
   virtual std::optional<std::tuple<DVec3, DVec3, bool>> 
@@ -31,5 +40,9 @@ public:
 private:
   ::dy::math::DClamp<TReal, 0, 100> mIor;
 };
+
+/// @brief Template function for automatic parsing from json.
+/// This initialize FMatDielectric::PCtor instance, except some elements.
+void from_json(const nlohmann::json& json, FMatDielectric::PCtor& oCtor);
 
 } /// ::ray namespace

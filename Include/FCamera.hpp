@@ -14,6 +14,8 @@
 
 #include <vector>
 #include <XCommon.hpp>
+#include <nlohmann/json_fwd.hpp>
+
 #include <Math/Type/Shape/DRay.h>
 #include <Math/Type/Micellanous/DClamp.h>
 
@@ -74,5 +76,9 @@ private:
   TReal mDistance = 1.0f;
   TReal mSensorSize = 1.0f;
 };
+
+/// @brief Template function for automatic parsing from json.
+/// This initialize FCamera::PCtor instance, except some elements.
+void from_json(const nlohmann::json& json, FCamera::PCtor& oCtor);
 
 } /// ::ray namespace

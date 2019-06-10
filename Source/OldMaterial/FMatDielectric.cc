@@ -11,13 +11,23 @@
 /// SOFTWARE.
 ///
 
-#include <FMatDielectric.hpp>
+#include <OldMaterial/FMatDielectric.hpp>
+
+#include <nlohmann/json.hpp>
 #include <Math/Utility/XLinearMath.h>
 #include <Math/Utility/XGraphicsMath.h>
 #include <Math/Utility/XRandom.h>
+#include <XHelperJson.hpp>
 
 namespace ray
 {
+
+void from_json(const nlohmann::json& json, FMatDielectric::PCtor& oCtor)
+{
+  assert(json::HasJsonKey(json, "ior") == true);
+
+  oCtor.mIor = json::GetValueFrom<TReal>(json, "ior");
+}
 
 std::optional<std::tuple<DVec3, DVec3, bool>> 
 FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal)

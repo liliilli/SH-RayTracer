@@ -25,9 +25,9 @@
 #include <Shape/FSphere.hpp>
 #include <XHelperJson.hpp>
 
-#include <FMatLambertian.hpp>
-#include <FMatMetal.hpp>
-#include <FMatDielectric.hpp>
+#include <OldMaterial/FMatLambertian.hpp>
+#include <OldMaterial/FMatMetal.hpp>
+#include <OldMaterial/FMatDielectric.hpp>
 #include <Shape\FPlane.hpp>
 
 namespace ray
@@ -94,29 +94,15 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
   {
     if (json::HasJsonKey(item, "type") == false) { return false; }
     if (json::HasJsonKey(item, "detail") == false) { return false; }
-    const auto& detail = item["detail"];
 
-    if (const auto type = json::GetValueFrom<std::string>(item, "type");
-        type == "camera")
+    if (const auto type = json::GetValueFrom<std::string>(item, "type"); type == "camera")
     {
       // Create camera
-      if (json::HasJsonKey(detail, "pos") == false) { return false; }
-      if (json::HasJsonKey(detail, "eye") == false) { return false; }
-      if (json::HasJsonKey(detail, "focus_dist") == false) { return false; }
-      if (json::HasJsonKey(detail, "sensor_size") == false) { return false; }
-      if (json::HasJsonKey(detail, "aperture") == false) { return false; }
-
-      FCamera::PCtor descriptor = {};
-      descriptor.mAperture      = json::GetValueFrom<TReal>(detail, "aperture");
-      descriptor.mFocusDistance = json::GetValueFrom<TReal>(detail, "focus_dist");
-      descriptor.mForwardTo     = json::GetValueFrom<DVec3>(detail, "eye");
-      descriptor.mImgSize       = imgSize;
-      descriptor.mOrigin        = json::GetValueFrom<DVec3>(detail, "pos");
-      descriptor.mSamples       = numSamples;
-      descriptor.mScreenRatioXy = TReal(imgSize.X) / imgSize.Y;
-      descriptor.mSensorSize    = json::GetValueFrom<TReal>(detail, "sensor_size");
-
-      this->mMainCamera = std::make_unique<FCamera>(descriptor);
+      auto ctor = json::GetValueFrom<FCamera::PCtor>(item, "detail");
+      ctor.mImgSize = imgSize;
+      ctor.mSamples = numSamples;
+      ctor.mScreenRatioXy = TReal(imgSize.X) / imgSize.Y;
+      this->mMainCamera = std::make_unique<FCamera>(ctor);
     }
     else
     {
@@ -128,44 +114,26 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
       using ::dy::expr::string::Case;
 
       std::unique_ptr<IMaterial> psMat = nullptr;
-      const auto& matDetail = item["mat_detail"];
       switch (Input(json::GetValueFrom<std::string>(item, "material")))
       {
       case Case("lambertian"):
-      {
-        if (json::HasJsonKey(matDetail, "color") == false) { return false; }
-        const DVec3 col = json::GetValueFrom<DVec3>(matDetail, "color");
-        psMat = std::make_unique<FMatLambertian>(col);
-      } break;
-      default: break;
+        psMat = std::make_unique<FMatLambertian>(json::GetValueFrom<FMatLambertian::PCtor>(item, "mat_detail"));
+        break;
       case Case("metal"):
-      {
-        if (json::HasJsonKey(matDetail, "color") == false) { return false; }
-        if (json::HasJsonKey(matDetail, "roughness") == false) { return false; }
-
-        const DVec3 col = json::GetValueFrom<DVec3>(matDetail, "color");
-        const TReal roughness = json::GetValueFrom<TReal>(matDetail, "roughness");
-        psMat = std::make_unique<FMatMetal>(col, roughness);
-      } break;
+        psMat = std::make_unique<FMatMetal>(json::GetValueFrom<FMatMetal::PCtor>(item, "mat_detail"));
+        break;
       case Case("dielectric"):
-      {
-        if (json::HasJsonKey(matDetail, "ior") == false) { return false; }
-
-        const TReal ior = json::GetValueFrom<TReal>(matDetail, "ior");
-        psMat = std::make_unique<FMatDielectric>(ior);
-      } break;
+        psMat = std::make_unique<FMatDielectric>(json::GetValueFrom<FMatDielectric::PCtor>(item, "mat_detail"));
+        break;
+      default: break;
       }
 
       switch (Input(type))
       {
       case Case("sphere"):
       {
-        if (json::HasJsonKey(detail, "pos") == false) { return false; }
-        if (json::HasJsonKey(detail, "radius") == false) { return false; }
-
-        const DVec3 pos = json::GetValueFrom<DVec3>(detail, "pos");
-        const TReal radius = json::GetValueFrom<TReal>(detail, "radius");
-        this->AddHitableObject<FSphere>(pos, radius, std::move(psMat));
+        const auto ctor = json::GetValueFrom<FSphere::PCtor>(item, "detail");
+        this->AddHitableObject<FSphere>(ctor, std::move(psMat));
       } break;
       default: break;
     }

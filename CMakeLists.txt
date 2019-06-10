@@ -25,14 +25,15 @@ add_subdirectory(DyUtils)
 
 set(SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 set(SOURCE
+    "${SOURCE_DIRECTORY}/OldMaterial/FMatLambertian.cc"
+    "${SOURCE_DIRECTORY}/OldMaterial/FMatDielectric.cc"
+    "${SOURCE_DIRECTORY}/OldMaterial/FMatMetal.cc"
+
     "${SOURCE_DIRECTORY}/Shape/FSphere.cc"
     "${SOURCE_DIRECTORY}/Shape/FPlane.cc"
 
     "${SOURCE_DIRECTORY}/FCamera.cc"
     "${SOURCE_DIRECTORY}/FRenderWorker.cc"
-    "${SOURCE_DIRECTORY}/FMatDielectric.cc"
-    "${SOURCE_DIRECTORY}/FMatLambertian.cc"
-    "${SOURCE_DIRECTORY}/FMatMetal.cc"
     "${SOURCE_DIRECTORY}/MScene.cc"
     "${SOURCE_DIRECTORY}/XMain.cc"
     "${SOURCE_DIRECTORY}/XCommon.cc"
