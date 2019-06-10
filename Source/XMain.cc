@@ -22,7 +22,6 @@
 #include <XCommon.hpp>
 #include <XSamples.hpp>
 #include <FCamera.hpp>
-#include <FSphere.hpp>
 #include <FRenderWorker.hpp>
 #include <MScene.hpp>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>

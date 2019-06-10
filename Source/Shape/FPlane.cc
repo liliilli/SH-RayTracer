@@ -1,7 +1,6 @@
-#pragma once
 ///
 /// MIT License
-/// Copyright (c) 2019 Jongmin Yun
+/// Copyright (c) 2018-2019 Jongmin Yun
 ///
 /// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 /// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -12,28 +11,19 @@
 /// SOFTWARE.
 ///
 
-#include <Expr/XEnumConversion.h>
+#include <Shape/FPlane.hpp>
 
 namespace ray
 {
 
-/// @enum class EShapeType
-/// @brief EShapeType value.
-enum class EShapeType 
-{
-  Sphere,
-  Plane
-};
+FPlane::FPlane(const DVec3& normal, TReal d, std::unique_ptr<IMaterial>&& mat)
+  : IHitable{EShapeType::Plane, std::move(mat)},
+    DPlane<TReal>{normal, d}
+{ }
 
-//!
-//! Forward declaration
-//!
-
-class FSphere;
-class FPlane;
-
-EXPR_INIT_ENUMTOTYPE(ShapeType, EShapeType);
-EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Sphere, FSphere);
-EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Plane, FPlane);
+FPlane::FPlane(const DVec3& pos1, const DVec3& pos2, const DVec3& pos3, std::unique_ptr<IMaterial>&& mat)
+  : IHitable{EShapeType::Plane, std::move(mat)},
+    DPlane<TReal>{pos1, pos2, pos3}
+{ }
 
 } /// ::ray namespace

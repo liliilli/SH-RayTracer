@@ -25,9 +25,11 @@ add_subdirectory(DyUtils)
 
 set(SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 set(SOURCE
+    "${SOURCE_DIRECTORY}/Shape/FSphere.cc"
+    "${SOURCE_DIRECTORY}/Shape/FPlane.cc"
+
     "${SOURCE_DIRECTORY}/FCamera.cc"
     "${SOURCE_DIRECTORY}/FRenderWorker.cc"
-    "${SOURCE_DIRECTORY}/FSphere.cc"
     "${SOURCE_DIRECTORY}/FMatDielectric.cc"
     "${SOURCE_DIRECTORY}/FMatLambertian.cc"
     "${SOURCE_DIRECTORY}/FMatMetal.cc"
@@ -43,9 +45,7 @@ find_package(Threads REQUIRED)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty")
 add_library(sse4_1 INTERFACE IMPORTED)
-add_executable(${CMAKE_PROJECT_NAME}
-    ${SOURCE}
-)
+add_executable(${CMAKE_PROJECT_NAME} ${SOURCE})
 target_include_directories(${CMAKE_PROJECT_NAME}
 PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Include

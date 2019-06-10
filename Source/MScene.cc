@@ -22,12 +22,13 @@
 #include <Math/Utility/XRandom.h>
 #include <Expr/XStringSwitch.h>
 #include <EShapeType.hpp>
-#include <FSphere.hpp>
+#include <Shape/FSphere.hpp>
 #include <XHelperJson.hpp>
 
 #include <FMatLambertian.hpp>
 #include <FMatMetal.hpp>
 #include <FMatDielectric.hpp>
+#include <Shape\FPlane.hpp>
 
 namespace ray
 {
@@ -63,8 +64,16 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   this->AddHitableObject<FSphere>(DVec3{1.1f, -0.2f, -1.0f}, 0.8f, std::make_unique<FMatLambertian>(DVec3{.8f, 0, .8f}));
   this->AddHitableObject<FSphere>(DVec3{-1.7f, 0, -2.5f}, 1.0f, std::make_unique<FMatLambertian>(DVec3{0, .8f, .8f}));
 
+#if 0
+  this->AddHitableObject<FPlane>(
+    DVec3{6, 1, 0}, DVec3{5, 2, -1}, DVec3{5, 1, -1},
+    std::make_unique<FMatMetal>(DVec3{1.f, 1.f, 1.f}, 1.0f));
+#endif
+
   // Floor
-  this->AddHitableObject<FSphere>(DVec3{0, -101.0f, -1.f}, 100.0f, std::make_unique<FMatLambertian>(DVec3{0.5f, 0.5f, 0.5f}));
+  this->AddHitableObject<FPlane>(DVec3::UnitY(), 1.0f, std::make_unique<FMatLambertian>(DVec3{1.0f, .5f, .5f}));
+  //this->AddHitableObject<FPlane>(DVec3::UnitY(), 1.0f, std::make_unique<FMatMetal>(DVec3{1.0f, .5f, .5f}, 1.0f));
+  //this->AddHitableObject<FSphere>(DVec3{0, -101.0f, -1.f}, 100.0f, std::make_unique<FMatLambertian>(DVec3{0.5f, 0.5f, 0.5f}));
 }
 
 bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize, TU32 numSamples)
@@ -179,6 +188,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
   using ::dy::math::GetTValuesOf;
   using ::dy::math::RandomVector3Length;
   using TSphere = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Sphere);
+  using TPlane = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Plane);
 
   if (++cnt; cnt <= limit)
   {
@@ -200,6 +210,16 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
           }
         }
       } break;
+      case EShapeType::Plane:
+      {
+        if (auto& plane = static_cast<TPlane&>(*obj); IsRayIntersected(ray, plane) == true)
+        {
+          for (const auto& t : GetTValuesOf(ray, plane))
+          {
+            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+          }
+        }
+      }
       default: break;
       }
     }
@@ -229,10 +249,23 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
           // Resursion...
           return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
         }
-        else 
+        else { return DVec3{0}; }
+      } break;
+      case EShapeType::Plane:
+      {
+        auto& plane = static_cast<TPlane&>(*pObj);
+        if (auto* pMat = plane.GetMaterial(); pMat != nullptr)
         {
-          return DVec3{0};
+          const auto nextPos = ray.GetPointAtParam(t);
+          // Get result
+          auto optResult = pMat->Scatter({nextPos, ray.GetDirection()}, *GetNormalOf(ray, plane));
+          const auto& [refDir, attCol, isScattered] = *optResult;
+          if (isScattered == false) { return DVec3{0}; }
+
+          // Resursion...
+          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
         }
+        else { return DVec3{0}; }
       } break;
       }
     }
