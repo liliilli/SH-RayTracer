@@ -11,7 +11,7 @@
 /// SOFTWARE.
 ///
 
-#include <FSphere.hpp>
+#include <Shape/FSphere.hpp>
 
 namespace ray
 {
