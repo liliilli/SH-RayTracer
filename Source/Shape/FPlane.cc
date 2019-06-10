@@ -13,8 +13,56 @@
 
 #include <Shape/FPlane.hpp>
 
+#include <nlohmann/json.hpp>
+#include <XHelperJson.hpp>
+
 namespace ray
 {
+
+void from_json(const nlohmann::json& json, FPlane::PCtor& oCtor)
+{
+  /// Type 1 (size is 2)
+  /// Type 2 (size is 3)
+
+  if (json.size() == 2)
+  {
+    oCtor.mCtorType = FPlane::PCtor::_1;
+    oCtor.mCtor = json.get<FPlane::PCtor::PType1>();
+  }
+  else if (json.size() == 3)
+  {
+    oCtor.mCtorType = FPlane::PCtor::_2;
+    oCtor.mCtor = json.get<FPlane::PCtor::PType2>();
+  }
+}
+
+void from_json(const nlohmann::json& json, FPlane::PCtor::PType1& oCtor)
+{
+  /// Type 1 (size is 2)
+  /// {
+  ///   "detail": { "normal": [ 0, 1, 0 ], "d": 2 },
+  /// }
+  assert(json::HasJsonKey(json, "normal") == true); 
+  assert(json::HasJsonKey(json, "d") == true);
+  
+  oCtor.mNormal = json::GetValueFrom<DVec3>(json, "normal").Normalize();
+  oCtor.mD = json::GetValueFrom<TReal>(json, "d");
+}
+
+void from_json(const nlohmann::json& json, FPlane::PCtor::PType2& oCtor)
+{
+  /// Type 2 (size is 3)
+  /// {
+  ///   "detail": { "pos1": [ 0, -1, 0 ], "pos2": [ 1, ..], "pos3": [ 1, ..] },
+  /// }
+  assert(json::HasJsonKey(json, "pos1") == true); 
+  assert(json::HasJsonKey(json, "pos2") == true); 
+  assert(json::HasJsonKey(json, "pos3") == true); 
+
+  oCtor.mPos1 = json::GetValueFrom<DVec3>(json, "pos1");
+  oCtor.mPos2 = json::GetValueFrom<DVec3>(json, "pos2");
+  oCtor.mPos3 = json::GetValueFrom<DVec3>(json, "pos3");
+}
 
 FPlane::FPlane(const DVec3& normal, TReal d, std::unique_ptr<IMaterial>&& mat)
   : IHitable{EShapeType::Plane, std::move(mat)},
@@ -25,5 +73,28 @@ FPlane::FPlane(const DVec3& pos1, const DVec3& pos2, const DVec3& pos3, std::uni
   : IHitable{EShapeType::Plane, std::move(mat)},
     DPlane<TReal>{pos1, pos2, pos3}
 { }
+
+FPlane::FPlane(const FPlane::PCtor& arg, std::unique_ptr<IMaterial>&& mat)
+  : IHitable{EShapeType::Plane, std::move(mat)},
+    DPlane{}
+{
+  switch (arg.mCtorType)
+  {
+  case FPlane::PCtor::_1:
+  {
+    const auto ctor = std::get<FPlane::PCtor::PType1>(arg.mCtor);
+    this->mNormal = ctor.mNormal;
+    this->mD      = ctor.mD;
+  } break;
+  case FPlane::PCtor::_2:
+  {
+    const auto ctor = std::get<FPlane::PCtor::PType2>(arg.mCtor);
+    const auto vec1 = (ctor.mPos2 - ctor.mPos1).Normalize();
+    const auto vec2 = (ctor.mPos3 - ctor.mPos1).Normalize();
+    this->mNormal   = Cross(vec1, vec2);
+    this->mD        = Dot(this->mNormal, ctor.mPos1) * TValueType(-1);
+  } break;
+  }
+}
 
 } /// ::ray namespace

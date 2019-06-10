@@ -135,6 +135,11 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
         const auto ctor = json::GetValueFrom<FSphere::PCtor>(item, "detail");
         this->AddHitableObject<FSphere>(ctor, std::move(psMat));
       } break;
+      case Case("plane"):
+      {
+        const auto ctor = json::GetValueFrom<FPlane::PCtor>(item, "detail");
+        this->AddHitableObject<FPlane>(ctor, std::move(psMat));
+      } break;
       default: break;
     }
     }
