@@ -12,7 +12,7 @@
 ///
 
 #include <FRenderWorker.hpp>
-#include <MScene.hpp>
+#include <Manager/MScene.hpp>
 #include <XCommon.hpp>
 
 namespace ray

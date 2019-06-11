@@ -11,7 +11,7 @@
 /// SOFTWARE.
 ///
 
-#include <MScene.hpp>
+#include <Manager/MScene.hpp>
 
 #include <cmath>
 #include <iostream>

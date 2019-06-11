@@ -19,13 +19,15 @@
 #include <chrono>
 #include <sstream>
 
+#include <Expr/MTimeChecker.h>
+#include <Math/Type/Micellanous/DDynamicGrid2D.h>
+
+#include <Manager/MScene.hpp>
+#include <Manager/MMaterial.hpp>
 #include <XCommon.hpp>
 #include <XSamples.hpp>
 #include <FCamera.hpp>
 #include <FRenderWorker.hpp>
-#include <MScene.hpp>
-#include <Math/Type/Micellanous/DDynamicGrid2D.h>
-#include <Expr/MTimeChecker.h>
 
 int main(int argc, char* argv[])
 {
@@ -61,6 +63,7 @@ int main(int argc, char* argv[])
 
   // Initialization time...
   EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Initialize());
+  EXPR_SUCCESS_ASSERT(EXPR_SGT(MMaterial).Initialize());
 
 	// If input file name is empty (not specified), just add sample objects into manager.
 	if (inputName.empty() == true)
@@ -127,6 +130,7 @@ int main(int argc, char* argv[])
 	}
 
   // Release time...
+  EXPR_SUCCESS_ASSERT(EXPR_SGT(MMaterial).Release());
   EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Release());
 
   // After process...
