@@ -52,13 +52,13 @@ std::string DMatId::ToString() const noexcept
   }
 }
 
-inline bool operator==(const DMatId& lhs, const DMatId& rhs)
+bool operator==(const DMatId& lhs, const DMatId& rhs)
 {
   if (lhs.mIdType != rhs.mIdType) { return false; }
   return lhs.mId == rhs.mId;
 }
 
-inline bool operator!=(const DMatId& lhs, const DMatId& rhs)
+bool operator!=(const DMatId& lhs, const DMatId& rhs)
 {
   return !(lhs == rhs);
 }
