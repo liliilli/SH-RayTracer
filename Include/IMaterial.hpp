@@ -12,9 +12,11 @@
 /// SOFTWARE.
 ///
 
-#include <XCommon.hpp>
 #include <optional>
 #include <tuple>
+#include <string>
+#include <Math/Type/Micellanous/DUuid.h>
+#include <XCommon.hpp>
 
 namespace ray
 {
@@ -24,11 +26,16 @@ namespace ray
 class IMaterial
 {
 public:
+  IMaterial(const ::dy::math::DUuid& id);
+  IMaterial(const std::string& id);
   virtual ~IMaterial() = 0;
 
-  /// @brief
+  /// @brief Diffuse scattering function.
   virtual std::optional<std::tuple<DVec3, DVec3, bool>> 
   Scatter(const DRay& intersectedRay, const DVec3& normal) = 0;
+
+private:
+  std::string mId;
 };
 
 inline IMaterial::~IMaterial() = default;

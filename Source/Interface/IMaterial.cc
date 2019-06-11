@@ -1,7 +1,6 @@
-#pragma once
 ///
 /// MIT License
-/// Copyright (c) 2019 Jongmin Yun
+/// Copyright (c) 2018-2019 Jongmin Yun
 ///
 /// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 /// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -12,30 +11,17 @@
 /// SOFTWARE.
 ///
 
-#include <Expr/ISingleton.h>
-#include <unordered_map>
-#include <memory>
-
-#include <Math/Type/Micellanous/DUuid.h>
 #include <IMaterial.hpp>
 
 namespace ray
 {
 
-/// @class MMaterial
-/// @brief Material management singleton type.
-class MMaterial final : public ::dy::expr::ISingleton<MMaterial>
-{
-public:
-  EXPR_SINGLETON_DERIVED(MMaterial);
-  EXPR_SINGLETON_PROPERTIES(MMaterial);
+IMaterial::IMaterial(const ::dy::math::DUuid& id)
+  : mId { id.ToString() }
+{ }
 
-private:
-  using TKey = ::dy::math::DUuid;
-  using TValue = std::unique_ptr<IMaterial>;
-  using TContainer = std::unordered_map<TKey, TValue>;
-
-  TContainer mContainer;
-};
+IMaterial::IMaterial(const std::string& id)
+  : mId { id }
+{ }
 
 } /// ::ray namespace
