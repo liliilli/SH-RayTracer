@@ -32,8 +32,8 @@ public:
     TReal mRadius;
   };
 
-  FSphere(const DVec3& origin, TReal radius, std::unique_ptr<IMaterial>&& mat);
-  FSphere(const FSphere::PCtor& arg, std::unique_ptr<IMaterial>&& mat);
+  FSphere(const DVec3& origin, TReal radius, IMaterial* mat);
+  FSphere(const FSphere::PCtor& arg, IMaterial* mat);
   virtual ~FSphere() = default;
 };
 

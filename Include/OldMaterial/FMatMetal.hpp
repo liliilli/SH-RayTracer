@@ -17,6 +17,7 @@
 
 #include <IMaterial.hpp>
 #include <XCommon.hpp>
+#include <DMatId.hpp>
 
 namespace ray
 {
@@ -27,16 +28,20 @@ public:
   /// @brief Constructor instance type of FMatMetal.
   struct PCtor final
   {
+    DMatId mId;
     DVec3 mColor;
     TReal mRoughness;
   };
 
+#if 0
   FMatMetal(const DVec3& color, TReal roughness)
     : mColor { color },
       mRoughness { roughness }
   { };
+#endif
   FMatMetal(const PCtor& arg)
-    : mColor { arg.mColor },
+    : IMaterial { arg.mId },
+      mColor { arg.mColor },
       mRoughness { arg.mRoughness }
   { };
   virtual ~FMatMetal() = default;

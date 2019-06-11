@@ -17,6 +17,7 @@
 
 #include <IMaterial.hpp>
 #include <XCommon.hpp>
+#include <DMatId.hpp>
 
 namespace ray
 {
@@ -27,11 +28,17 @@ public:
   /// @brief Constructor instance type of FMatDielectric.
   struct PCtor final
   {
+    DMatId mId;
     TReal mIor;
   };
 
+#if 0
   FMatDielectric(TReal ior) : mIor { ior } { };
-  FMatDielectric(const PCtor& arg) : mIor { arg.mIor } { };
+#endif
+  FMatDielectric(const PCtor& arg) 
+    : IMaterial { arg.mId },
+      mIor { arg.mIor } 
+  { };
   virtual ~FMatDielectric() = default;
 
   virtual std::optional<std::tuple<DVec3, DVec3, bool>> 

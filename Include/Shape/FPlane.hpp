@@ -42,11 +42,11 @@ public:
   };
 
   /// @brief Construct DPlane with normalized vector and just d.
-  FPlane(const DVec3& normal, TReal d, std::unique_ptr<IMaterial>&& mat);
+  FPlane(const DVec3& normal, TReal d, IMaterial* mat);
   /// @brief Construct DPlane with (pos2 - pos1) and (pos3 - pos1) vector.
-  FPlane(const DVec3& pos1, const DVec3& pos2, const DVec3& pos3, std::unique_ptr<IMaterial>&& mat);
+  FPlane(const DVec3& pos1, const DVec3& pos2, const DVec3& pos3, IMaterial* mat);
   /// @brief Construct DPlane with FPlane::PCtor.
-  FPlane(const FPlane::PCtor& arg, std::unique_ptr<IMaterial>&& mat);
+  FPlane(const FPlane::PCtor& arg, IMaterial* mat);
 
   virtual ~FPlane() = default;
 };

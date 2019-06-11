@@ -13,9 +13,11 @@
 ///
 
 #include <nlohmann/json_fwd.hpp>
+#include <Math/Type/Micellanous/DUuid.h>
 
 #include <IMaterial.hpp>
 #include <XCommon.hpp>
+#include <DMatId.hpp>
 
 namespace ray
 {
@@ -26,11 +28,14 @@ public:
   /// @brief Constructor instance type of FMatLambertian.
   struct PCtor final
   {
+    DMatId mId;
     DVec3 mColor;
   };
 
-  FMatLambertian(const DVec3& color) : mColor { color } { };
-  FMatLambertian(const FMatLambertian::PCtor& arg) : mColor { arg.mColor } { };
+  //FMatLambertian(const DVec3& color) mColor { color } { };
+  FMatLambertian(const FMatLambertian::PCtor& arg) 
+    : IMaterial { arg.mId },
+      mColor { arg.mColor } { };
   virtual ~FMatLambertian() = default;
 
   virtual std::optional<std::tuple<DVec3, DVec3, bool>> 

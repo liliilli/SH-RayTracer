@@ -64,18 +64,18 @@ void from_json(const nlohmann::json& json, FPlane::PCtor::PType2& oCtor)
   oCtor.mPos3 = json::GetValueFrom<DVec3>(json, "pos3");
 }
 
-FPlane::FPlane(const DVec3& normal, TReal d, std::unique_ptr<IMaterial>&& mat)
-  : IHitable{EShapeType::Plane, std::move(mat)},
+FPlane::FPlane(const DVec3& normal, TReal d, IMaterial* mat)
+  : IHitable{EShapeType::Plane, mat},
     DPlane<TReal>{normal, d}
 { }
 
-FPlane::FPlane(const DVec3& pos1, const DVec3& pos2, const DVec3& pos3, std::unique_ptr<IMaterial>&& mat)
-  : IHitable{EShapeType::Plane, std::move(mat)},
+FPlane::FPlane(const DVec3& pos1, const DVec3& pos2, const DVec3& pos3, IMaterial* mat)
+  : IHitable{EShapeType::Plane, mat},
     DPlane<TReal>{pos1, pos2, pos3}
 { }
 
-FPlane::FPlane(const FPlane::PCtor& arg, std::unique_ptr<IMaterial>&& mat)
-  : IHitable{EShapeType::Plane, std::move(mat)},
+FPlane::FPlane(const FPlane::PCtor& arg, IMaterial* mat)
+  : IHitable{EShapeType::Plane, mat},
     DPlane{}
 {
   switch (arg.mCtorType)

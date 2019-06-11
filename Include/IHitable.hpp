@@ -24,20 +24,20 @@ namespace ray
 class IHitable
 {
 public:
-  IHitable(EShapeType type, std::unique_ptr<IMaterial>&& material = nullptr)
+  IHitable(EShapeType type, IMaterial*& pMaterial)
     : mType { type },
-      mMaterial{ std::move(material) }
+      mpMaterial{ pMaterial }
   { }
   virtual ~IHitable() = 0;
 
   /// @brief Get type.
   EShapeType GetType() const noexcept { return this->mType; }
   /// @brief Get pointer instance of material.
-  IMaterial* GetMaterial() const noexcept { return this->mMaterial.get(); }
+  IMaterial* GetMaterial() const noexcept { return this->mpMaterial; }
 
 private:
   EShapeType mType;
-  std::unique_ptr<IMaterial> mMaterial = nullptr;
+  IMaterial* mpMaterial = nullptr;
 };
 
 inline IHitable::~IHitable() = default;
