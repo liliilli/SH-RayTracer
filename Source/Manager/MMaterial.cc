@@ -33,11 +33,17 @@ ESuccess MMaterial::pfRelease()
   return ESuccess::DY_SUCCESS;
 }
 
-IMaterial* MMaterial::GetMaterial(const DMatId& id)
+bool MMaterial::HasMaterial(const DMatId& id) const noexcept
 {
   const auto it = this->mContainer.find(id);
-  if (it == this->mContainer.end()) { return nullptr; }
+  return it != this->mContainer.end(); 
+}
 
+IMaterial* MMaterial::GetMaterial(const DMatId& id)
+{
+  if (this->HasMaterial(id) == false) { return nullptr; }
+
+  const auto it = this->mContainer.find(id);
   return it->second.get();
 }
 
@@ -63,6 +69,33 @@ std::optional<DMatId> MMaterial::AddOldMaterial_FMatDielectric(const nlohmann::j
 {
   auto ctor = json::GetValueFrom<FMatDielectric::PCtor>(json, "mat_detail");
   ctor.mId = ::dy::math::DUuid{true};
+
+  this->mContainer.try_emplace(ctor.mId, std::make_unique<FMatDielectric>(ctor));
+  return ctor.mId;
+}
+
+std::optional<DMatId> MMaterial::AddMaterial_FMatLambertian(const nlohmann::json& json, const std::string& id)
+{
+  auto ctor = json::GetValueFrom<FMatLambertian::PCtor>(json, "detail");
+  ctor.mId = id;
+
+  this->mContainer.try_emplace(ctor.mId, std::make_unique<FMatLambertian>(ctor));
+  return ctor.mId;
+}
+
+std::optional<DMatId> MMaterial::AddMaterial_FMatMetal(const nlohmann::json& json, const std::string& id)
+{
+  auto ctor = json::GetValueFrom<FMatMetal::PCtor>(json, "detail");
+  ctor.mId = id;
+
+  this->mContainer.try_emplace(ctor.mId, std::make_unique<FMatMetal>(ctor));
+  return ctor.mId;
+}
+
+std::optional<DMatId> MMaterial::AddMaterial_FMatDielectric(const nlohmann::json& json, const std::string& id)
+{
+  auto ctor = json::GetValueFrom<FMatDielectric::PCtor>(json, "detail");
+  ctor.mId = id;
 
   this->mContainer.try_emplace(ctor.mId, std::make_unique<FMatDielectric>(ctor));
   return ctor.mId;

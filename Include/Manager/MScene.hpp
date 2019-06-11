@@ -30,6 +30,14 @@ namespace ray
 class MScene final : public ::dy::expr::ISingleton<MScene>
 {
 public:
+  /// @struct PSceneDefaults
+  /// @brief Parameter type for handling values into functions.
+  struct PSceneDefaults final
+  {
+    DUVec2  mImageSize;
+    TU32    mNumSamples;
+  };
+
   EXPR_SINGLETON_DERIVED(MScene);
   EXPR_SINGLETON_PROPERTIES(MScene);
 
@@ -62,6 +70,11 @@ public:
   FCamera* GetCamera() const noexcept { return this->mMainCamera.get(); }
 
 private:
+  /// @brief
+  bool LoadOldSceneFile(const nlohmann::json& json, const DUVec2& imgSize, TU32 numSamples);
+  /// @brief
+  bool LoadSceneFile190710(const nlohmann::json& json, const PSceneDefaults& defaults);
+
   std::vector<std::unique_ptr<IHitable>> mObjects;
   std::unique_ptr<FCamera> mMainCamera;
 };

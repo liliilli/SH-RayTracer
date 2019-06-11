@@ -79,6 +79,9 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
 
 bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize, TU32 numSamples)
 {
+  using ::dy::expr::string::Input;
+  using ::dy::expr::string::Case;
+
   // Check
   const std::filesystem::path path = pathString;
   if (std::filesystem::exists(path) == false) 
@@ -91,7 +94,68 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
   const auto jsonAtlas = json::GetAtlasFromFile(path);
   if (jsonAtlas.has_value() == false) { return false; }
 
-  for (const auto& item : *jsonAtlas)
+  if (jsonAtlas->is_array() == true)
+  {
+    // Load old `~v190710` version.
+    const auto flag = LoadOldSceneFile(*jsonAtlas, imgSize, numSamples);
+    if (flag == false)
+    {
+      std::cerr << "Failed to load scene.\n";
+      return false;
+    }
+  }
+  else
+  {
+    // Checks `meta::version` is `"190710"`.
+    if (json::HasJsonKey(*jsonAtlas, "meta") == false)
+    {
+      std::cerr << "Failed to load scene. `meta` header is not found.\n";
+      return false;
+    }
+    if (json::HasJsonKey((*jsonAtlas)["meta"], "version") == false)
+    {
+      std::cerr << "Failed to load scene. `meta::version` header is not found.\n";
+      return false;
+    }
+    
+    // Check version.
+    switch (Input(json::GetValueFrom<std::string>((*jsonAtlas)["meta"], "version")))
+    {
+    case Case("190710"):
+    {
+      // Load `v190710` version.
+      MScene::PSceneDefaults defaults;
+      defaults.mImageSize = imgSize;
+      defaults.mNumSamples = numSamples;
+      const auto flag = LoadSceneFile190710(*jsonAtlas, defaults);
+      if (flag == false)
+      {
+        std::cerr << "Failed to load scene.\n";
+        return false;
+      } 
+    } break;
+    default:
+    {
+      std::cerr << "Failed to load scene. `meta::version` value does not match any values.\n";
+      return false;
+    }
+    }
+  }
+
+  if (this->mMainCamera == nullptr) 
+  { 
+    std::cerr << "Failed to load scene. Main camera must be exist on scene file.\n";
+    return false; 
+  }
+  return true;
+}
+
+bool MScene::LoadOldSceneFile(const nlohmann::json& json, const DUVec2& imgSize, TU32 numSamples)
+{
+  using ::dy::expr::string::Input;
+  using ::dy::expr::string::Case;
+
+  for (const auto& item : json)
   {
     if (json::HasJsonKey(item, "type") == false) { return false; }
     if (json::HasJsonKey(item, "detail") == false) { return false; }
@@ -110,9 +174,6 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
       // Create objects
       if (json::HasJsonKey(item, "material") == false) { return false; }
       if (json::HasJsonKey(item, "mat_detail") == false) { return false; }
-
-      using ::dy::expr::string::Input;
-      using ::dy::expr::string::Case;
 
       DMatId matId;
       switch (Input(json::GetValueFrom<std::string>(item, "material")))
@@ -140,26 +201,126 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
 
       switch (Input(type))
       {
-      case Case("sphere"):
-      {
-        const auto ctor = json::GetValueFrom<FSphere::PCtor>(item, "detail");
-        this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
-      } break;
-      case Case("plane"):
-      {
-        const auto ctor = json::GetValueFrom<FPlane::PCtor>(item, "detail");
-        this->AddHitableObject<FPlane>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
-      } break;
-      default: break;
-    }
+        case Case("sphere"):
+        {
+          const auto ctor = json::GetValueFrom<FSphere::PCtor>(item, "detail");
+          this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+        } break;
+        case Case("plane"):
+        {
+          const auto ctor = json::GetValueFrom<FPlane::PCtor>(item, "detail");
+          this->AddHitableObject<FPlane>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+        } break;
+        default: break;
+      }
     }
   }
 
-  if (this->mMainCamera == nullptr) 
-  { 
-    std::cerr << "Failed to load scene. Main camera must be exist on scene file.\n";
-    return false; 
+  return true;
+}
+
+bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PSceneDefaults& defaults)
+{
+  using ::dy::expr::string::Input;
+  using ::dy::expr::string::Case;
+
+  // Check there is `materials` header key.
+  if (json::HasJsonKey(json, "materials") == false)
+  {
+    std::cerr << "Can not find `materials` list header.\n";
+    return false;
   }
+  // First, get material informations from `materials`.
+  for (const auto& item : json["materials"])
+  {
+    // Check fundamental key headers.
+    if (json::HasJsonKey(item, "name") == false) 
+    { 
+      std::cerr << "Item has not `name` key header.\n";
+      return false; 
+    }
+    if (json::HasJsonKey(item, "type") == false)
+    {
+      std::cerr << "Item has not `type` key header.\n";
+      return false;
+    }
+    if (json::HasJsonKey(item, "detail") == false)
+    {
+      std::cerr << "Item has not `detail` key header.\n";
+      return false;
+    }
+
+    // Get Name and Type string from item json atlas.
+    const auto name = json::GetValueFrom<std::string>(item, "name");
+    const auto type = json::GetValueFrom<std::string>(item, "type");
+    switch (Input(type))
+    {
+    case Case("lambertian"):  { EXPR_SGT(MMaterial).AddMaterial<FMatLambertian>(item, name); } break;
+    case Case("metal"):       { EXPR_SGT(MMaterial).AddMaterial<FMatMetal>(item, name); } break;
+    case Case("dielectric"):  { EXPR_SGT(MMaterial).AddMaterial<FMatDielectric>(item, name); } break;
+    default: break;
+    }
+  }
+
+  // Check there is `objects` header key.
+  if (json::HasJsonKey(json, "objects") == false)
+  {
+    std::cerr << "Can not find `objects` list header.\n";
+    return false;
+  }
+  // Second, get object informations from `objects`.
+  for (const auto& item : json["objects"])
+  {
+    const auto type = json::GetValueFrom<std::string>(item, "type"); 
+    switch (Input(type))
+    {
+    case Case("camera"): // Create camera
+    {
+      auto ctor = json::GetValueFrom<FCamera::PCtor>(item, "detail");
+      ctor.mImgSize = defaults.mImageSize;
+      ctor.mSamples = defaults.mNumSamples;
+      ctor.mScreenRatioXy = TReal(defaults.mImageSize.X) / defaults.mImageSize.Y;
+      this->mMainCamera = std::make_unique<FCamera>(ctor);
+    } break;
+    case Case("sphere"): // Create SDF Sphere
+    {
+      // Check
+      if (json::HasJsonKey(item, "material") == false)
+      {
+        std::cerr << "Object Item has not `material` key header.\n";
+        return false;
+      }
+      const auto matId = json::GetValueFrom<std::string>(item, "material");
+      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+      {
+        std::cerr << "Material `" << matId << "` not found.";
+        return false;
+      }
+      // Create Object with the pointer of material instance.
+      const auto ctor = json::GetValueFrom<FSphere::PCtor>(item, "detail");
+      this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+    } break;
+    case Case("plane"): // Create SDF plane
+    {
+      // Check
+      if (json::HasJsonKey(item, "material") == false)
+      {
+        std::cerr << "Object Item has not `material` key header.\n";
+        return false;
+      }
+      const auto matId = json::GetValueFrom<std::string>(item, "material");
+      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+      {
+        std::cerr << "Material `" << matId << "` not found.";
+        return false;
+      }
+      // Create Object with the pointer of material instance.
+      const auto ctor = json::GetValueFrom<FPlane::PCtor>(item, "detail");
+      this->AddHitableObject<FPlane>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+    } break;
+    }
+  }
+  
   return true;
 }
 
