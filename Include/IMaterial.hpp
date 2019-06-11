@@ -16,6 +16,8 @@
 #include <tuple>
 #include <string>
 #include <Math/Type/Micellanous/DUuid.h>
+
+#include <DMatId.hpp>
 #include <XCommon.hpp>
 
 namespace ray
@@ -26,16 +28,18 @@ namespace ray
 class IMaterial
 {
 public:
-  IMaterial(const ::dy::math::DUuid& id);
-  IMaterial(const std::string& id);
+  IMaterial(const DMatId& id);
   virtual ~IMaterial() = 0;
 
   /// @brief Diffuse scattering function.
   virtual std::optional<std::tuple<DVec3, DVec3, bool>> 
   Scatter(const DRay& intersectedRay, const DVec3& normal) = 0;
 
+  /// @brief Get ID instance.
+  const DMatId& GetId() const noexcept;
+
 private:
-  std::string mId;
+  DMatId mId;
 };
 
 inline IMaterial::~IMaterial() = default;

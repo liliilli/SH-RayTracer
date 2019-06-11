@@ -12,15 +12,22 @@
 /// SOFTWARE.
 ///
 
-#include <Expr/ISingleton.h>
 #include <unordered_map>
 #include <memory>
+#include <optional>
 
+#include <nlohmann/json_fwd.hpp>
+#include <Expr/ISingleton.h>
 #include <Math/Type/Micellanous/DUuid.h>
 #include <IMaterial.hpp>
+#include <DMatId.hpp>
 
 namespace ray
 {
+
+class FMatLambertian;
+class FMatMetal;
+class FMatDielectric;
 
 /// @class MMaterial
 /// @brief Material management singleton type.
@@ -30,8 +37,24 @@ public:
   EXPR_SINGLETON_DERIVED(MMaterial);
   EXPR_SINGLETON_PROPERTIES(MMaterial);
 
+  /// @brief Add material from old structured json atlas with TType material type.
+  /// @param json Json atlas of old material structure.
+  /// @tparam TType Material Type
+  /// @return If succcessful, return created material's id instance.
+  template <typename TType>
+  std::optional<DMatId> AddOldMaterial(const nlohmann::json& json);
+
+  /// @brief Get pointer of material that has id.
+  /// @param id Id of material.
+  /// @return The pointer of material instance. If failed, just return nullptr.
+  IMaterial* GetMaterial(const DMatId& id);
+
 private:
-  using TKey = ::dy::math::DUuid;
+  std::optional<DMatId> AddOldMaterial_FMatLambertian(const nlohmann::json& json);
+  std::optional<DMatId> AddOldMaterial_FMatMetal(const nlohmann::json& json);
+  std::optional<DMatId> AddOldMaterial_FMatDielectric(const nlohmann::json& json);
+
+  using TKey = DMatId; 
   using TValue = std::unique_ptr<IMaterial>;
   using TContainer = std::unordered_map<TKey, TValue>;
 
@@ -39,3 +62,4 @@ private:
 };
 
 } /// ::ray namespace
+#include <Inline/MMaterial.inl>

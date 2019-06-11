@@ -16,22 +16,24 @@ namespace ray
 {
 
 template <typename TType>
-std::optional<std::string> MMaterial::AddOldMaterial(const nlohmann::json& json)
+std::optional<DMatId> MMaterial::AddOldMaterial(const nlohmann::json& json)
 {
   if constexpr(std::is_same_v<TType, FMatLambertian> == true)
   {
-    return this->AddOldMaterial(json, std::declval<FMatLambertian>());
+    return this->AddOldMaterial_FMatLambertian(json);
   }
   else if constexpr (std::is_same_v<TType, FMatMetal> == true)
   {
-    return this->AddOldMaterial(json, std::declval<FMatMetal>());
+    return this->AddOldMaterial_FMatMetal(json);
   }
   else if constexpr (std::is_same_v<TType, FMatDielectric> == true)
   {
-    return this->AddOldMaterial(json, std::declval<FMatDielectric>());
+    return this->AddOldMaterial_FMatDielectric(json);
   }
-
-  return std::nullopt;
+  else
+  {
+    return std::nullopt;
+  }
 }
 
 } /// ::ray namespace

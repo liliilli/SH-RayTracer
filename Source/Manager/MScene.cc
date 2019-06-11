@@ -25,6 +25,7 @@
 #include <Shape/FSphere.hpp>
 #include <XHelperJson.hpp>
 
+#include <Manager/MMaterial.hpp>
 #include <OldMaterial/FMatLambertian.hpp>
 #include <OldMaterial/FMatMetal.hpp>
 #include <OldMaterial/FMatDielectric.hpp>
@@ -60,18 +61,18 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   this->mMainCamera = std::make_unique<FCamera>(descriptor);
 
   // Object
+#if 0
   this->AddHitableObject<FSphere>(DVec3{0, 0, -2.0f}, 1.0f, std::make_unique<FMatLambertian>(DVec3{.8f, .8f, 0}));
   this->AddHitableObject<FSphere>(DVec3{1.1f, -0.2f, -1.0f}, 0.8f, std::make_unique<FMatLambertian>(DVec3{.8f, 0, .8f}));
   this->AddHitableObject<FSphere>(DVec3{-1.7f, 0, -2.5f}, 1.0f, std::make_unique<FMatLambertian>(DVec3{0, .8f, .8f}));
 
-#if 0
   this->AddHitableObject<FPlane>(
     DVec3{6, 1, 0}, DVec3{5, 2, -1}, DVec3{5, 1, -1},
     std::make_unique<FMatMetal>(DVec3{1.f, 1.f, 1.f}, 1.0f));
-#endif
 
   // Floor
   this->AddHitableObject<FPlane>(DVec3::UnitY(), 1.0f, std::make_unique<FMatLambertian>(DVec3{1.0f, .5f, .5f}));
+#endif
   //this->AddHitableObject<FPlane>(DVec3::UnitY(), 1.0f, std::make_unique<FMatMetal>(DVec3{1.0f, .5f, .5f}, 1.0f));
   //this->AddHitableObject<FSphere>(DVec3{0, -101.0f, -1.f}, 100.0f, std::make_unique<FMatLambertian>(DVec3{0.5f, 0.5f, 0.5f}));
 }
@@ -113,18 +114,27 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
       using ::dy::expr::string::Input;
       using ::dy::expr::string::Case;
 
-      std::unique_ptr<IMaterial> psMat = nullptr;
+      DMatId matId;
       switch (Input(json::GetValueFrom<std::string>(item, "material")))
       {
       case Case("lambertian"):
-        psMat = std::make_unique<FMatLambertian>(json::GetValueFrom<FMatLambertian::PCtor>(item, "mat_detail"));
-        break;
+      {
+        const auto optId = EXPR_SGT(MMaterial).AddOldMaterial<FMatLambertian>(item);
+        assert(optId.has_value() == true);
+        matId = *optId;
+      } break;
       case Case("metal"):
-        psMat = std::make_unique<FMatMetal>(json::GetValueFrom<FMatMetal::PCtor>(item, "mat_detail"));
-        break;
+      {
+        const auto optId = EXPR_SGT(MMaterial).AddOldMaterial<FMatMetal>(item);
+        assert(optId.has_value() == true);
+        matId = *optId;
+      } break;
       case Case("dielectric"):
-        psMat = std::make_unique<FMatDielectric>(json::GetValueFrom<FMatDielectric::PCtor>(item, "mat_detail"));
-        break;
+      {
+        const auto optId = EXPR_SGT(MMaterial).AddOldMaterial<FMatDielectric>(item);
+        assert(optId.has_value() == true);
+        matId = *optId;
+      } break;
       default: break;
       }
 
@@ -133,12 +143,12 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
       case Case("sphere"):
       {
         const auto ctor = json::GetValueFrom<FSphere::PCtor>(item, "detail");
-        this->AddHitableObject<FSphere>(ctor, std::move(psMat));
+        this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
       } break;
       case Case("plane"):
       {
         const auto ctor = json::GetValueFrom<FPlane::PCtor>(item, "detail");
-        this->AddHitableObject<FPlane>(ctor, std::move(psMat));
+        this->AddHitableObject<FPlane>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
       } break;
       default: break;
     }

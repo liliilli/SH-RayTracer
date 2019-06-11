@@ -16,12 +16,13 @@
 namespace ray
 {
 
-IMaterial::IMaterial(const ::dy::math::DUuid& id)
-  : mId { id.ToString() }
-{ }
-
-IMaterial::IMaterial(const std::string& id)
+IMaterial::IMaterial(const DMatId& id)
   : mId { id }
 { }
+
+const DMatId& IMaterial::GetId() const noexcept
+{
+  return this->mId;
+}
 
 } /// ::ray namespace
