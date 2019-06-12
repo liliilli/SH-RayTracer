@@ -34,7 +34,7 @@ public:
     EXPR_INIT_ENUMTOTYPE(Type, EType);
 
     struct PType1 final { DVec3 mOrigin; std::array<TReal, 6> mLength; DVec3 mAngle; };
-    struct PType2 final { DVec3 mOrigin, mLength; DVec3 mAngle; };
+    struct PType2 final { DVec3 mOrigin, mLength, mAngle; };
     struct PType3 final { DVec3 mOrigin; TReal mLength; DVec3 mAngle; };
     EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_1, PType1);
     EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_2, PType2);

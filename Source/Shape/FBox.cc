@@ -12,9 +12,86 @@
 ///
 
 #include <Shape/FBox.hpp>
+#include <nlohmann/json.hpp>
+#include <XHelperJson.hpp>
 
 namespace ray
 {
+
+void from_json(const nlohmann::json& json, FBox::PCtor& oCtor)
+{
+  /// Type 1 ("type": 1)
+  /// Type 2 ("type": 2)
+  /// Type 3 ("type": 3)
+  assert(json::HasJsonKey(json, "type") == true);
+  switch (json::GetValueFrom<TU32>(json, "type"))
+  {
+  case 1:
+  {
+    oCtor.mCtorType = FBox::PCtor::_1;
+    oCtor.mCtor = json.get<FBox::PCtor::PType1>();
+  } break;
+  case 2:
+  {
+    oCtor.mCtorType = FBox::PCtor::_2;
+    oCtor.mCtor = json.get<FBox::PCtor::PType2>();
+  } break;
+  case 3:
+  {
+    oCtor.mCtorType = FBox::PCtor::_3;
+    oCtor.mCtor = json.get<FBox::PCtor::PType3>();
+  } break;
+  default: break;
+  }
+}
+
+void from_json(const nlohmann::json& json, FBox::PCtor::PType1& oCtor)
+{
+  /// Type 1
+  /// {
+  ///   "detail": { "type": 1, "pos": [ 0, 1, 0 ], "length": [1, 2, 3, 4, 5, 6], "angle": [45, 0, 45] },
+  /// }
+  assert(json::HasJsonKey(json, "pos") == true); 
+  assert(json::HasJsonKey(json, "length") == true);
+  assert(json::HasJsonKey(json, "angle") == true);
+  
+  oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos");
+  oCtor.mAngle  = json::GetValueFrom<DVec3>(json, "angle");
+
+  const auto lenVec = json::GetValueFrom<std::vector<TReal>>(json, "length");
+  assert(lenVec.size() == 6);
+  for (TIndex i = 0; i < 6; ++i) { oCtor.mLength[i] = lenVec[i]; }
+}
+
+void from_json(const nlohmann::json& json, FBox::PCtor::PType2& oCtor)
+{
+  /// Type 2
+  /// {
+  ///   "detail": { "type": 2, "pos": [ 0, 1, 0 ], "length": [ 1, 2, 3 ], "angle": [45, 0, 45] },
+  /// }
+  assert(json::HasJsonKey(json, "pos") == true); 
+  assert(json::HasJsonKey(json, "length") == true);
+  assert(json::HasJsonKey(json, "angle") == true);
+  
+  oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos");
+  oCtor.mAngle  = json::GetValueFrom<DVec3>(json, "angle");
+  oCtor.mLength = json::GetValueFrom<DVec3>(json, "length");
+}
+
+void from_json(const nlohmann::json& json, FBox::PCtor::PType3& oCtor)
+{
+  /// Type 3
+  /// {
+  ///   "detail": { "type": 3, "pos": [ 0, 1, 0 ], "length": 1, "angle": [45, 0, 45] },
+  /// }
+  assert(json::HasJsonKey(json, "pos") == true); 
+  assert(json::HasJsonKey(json, "length") == true);
+  assert(json::HasJsonKey(json, "angle") == true);
+  
+  oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos");
+  oCtor.mAngle  = json::GetValueFrom<DVec3>(json, "angle");
+  oCtor.mLength = json::GetValueFrom<TReal>(json, "length");
+}
 
 FBox::FBox(const PCtor& arg, IMaterial* mat)
   : IHitable{EShapeType::Box, mat},
