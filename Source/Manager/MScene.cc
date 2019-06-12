@@ -61,20 +61,52 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   this->mMainCamera = std::make_unique<FCamera>(descriptor);
 
   // Object
-#if 0
-  this->AddHitableObject<FSphere>(DVec3{0, 0, -2.0f}, 1.0f, std::make_unique<FMatLambertian>(DVec3{.8f, .8f, 0}));
-  this->AddHitableObject<FSphere>(DVec3{1.1f, -0.2f, -1.0f}, 0.8f, std::make_unique<FMatLambertian>(DVec3{.8f, 0, .8f}));
-  this->AddHitableObject<FSphere>(DVec3{-1.7f, 0, -2.5f}, 1.0f, std::make_unique<FMatLambertian>(DVec3{0, .8f, .8f}));
+  FMatLambertian::PCtor lambCtor;
+  {
+    lambCtor.mId = ::dy::math::DUuid{true};
+    lambCtor.mColor = DVec3{.8f, .8f, 0};
+  }
+  const auto lamb1Id = *EXPR_SGT(MMaterial).AddMaterial<FMatLambertian>(lambCtor);
+  {
+    lambCtor.mId = ::dy::math::DUuid{true};
+    lambCtor.mColor = DVec3{.8f, 0, .8f};
+  }
+  const auto lamb2Id = *EXPR_SGT(MMaterial).AddMaterial<FMatLambertian>(lambCtor);
+  {
+    lambCtor.mId = ::dy::math::DUuid{true};
+    lambCtor.mColor = DVec3{0, .8f, .8f};
+  }
+  const auto lamb3Id = *EXPR_SGT(MMaterial).AddMaterial<FMatLambertian>(lambCtor);
+  {
+    lambCtor.mId = ::dy::math::DUuid{true};
+    lambCtor.mColor = DVec3{.5f, .5f, .5f};
+  }
+  const auto backLambId = *EXPR_SGT(MMaterial).AddMaterial<FMatLambertian>(lambCtor);
 
-  this->AddHitableObject<FPlane>(
-    DVec3{6, 1, 0}, DVec3{5, 2, -1}, DVec3{5, 1, -1},
-    std::make_unique<FMatMetal>(DVec3{1.f, 1.f, 1.f}, 1.0f));
-
-  // Floor
-  this->AddHitableObject<FPlane>(DVec3::UnitY(), 1.0f, std::make_unique<FMatLambertian>(DVec3{1.0f, .5f, .5f}));
-#endif
-  //this->AddHitableObject<FPlane>(DVec3::UnitY(), 1.0f, std::make_unique<FMatMetal>(DVec3{1.0f, .5f, .5f}, 1.0f));
-  //this->AddHitableObject<FSphere>(DVec3{0, -101.0f, -1.f}, 100.0f, std::make_unique<FMatLambertian>(DVec3{0.5f, 0.5f, 0.5f}));
+  {
+    FSphere::PCtor ctor;
+    ctor.mOrigin = DVec3{0, 0, -2.0f};
+    ctor.mRadius = 1.0f;
+    this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb1Id));
+  }
+  {
+    FSphere::PCtor ctor;
+    ctor.mOrigin = DVec3{1.1f, -.2f, -1.f};
+    ctor.mRadius = 0.8f;
+    this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb2Id));
+  }
+  {
+    FSphere::PCtor ctor;
+    ctor.mOrigin = DVec3{-1.7f, 0, -2.5f};
+    ctor.mRadius = 1.0f;
+    this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb3Id));
+  }
+  {
+    FSphere::PCtor ctor;
+    ctor.mOrigin = DVec3{0, -101.f, -1.f};
+    ctor.mRadius = 100.0f;
+    this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(backLambId));
+  }
 }
 
 bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize, TU32 numSamples)
