@@ -16,4 +16,36 @@
 namespace ray
 {
 
+FBox::FBox(const PCtor& arg, IMaterial* mat)
+  : IHitable{EShapeType::Box, mat},
+    DBox{}
+{
+  switch (arg.mCtorType)
+  {
+  case FBox::PCtor::_1:
+  {
+    const auto ctor = std::get<FBox::PCtor::PType1>(arg.mCtor);
+    this->mOrigin   = ctor.mOrigin;
+    this->mLength   = ctor.mLength;
+    this->mRotQuat  = DQuat{ctor.mAngle};
+  } break;
+  case FBox::PCtor::_2:
+  {
+    const auto ctor = std::get<FBox::PCtor::PType2>(arg.mCtor);
+    this->mOrigin   = ctor.mOrigin;
+    this->mLength   = {
+      ctor.mLength[0], ctor.mLength[1], ctor.mLength[2], 
+      ctor.mLength[3], ctor.mLength[4], ctor.mLength[5]};
+    this->mRotQuat  = DQuat{ctor.mAngle};
+  } break;
+  case FBox::PCtor::_3:
+  {
+    const auto ctor = std::get<FBox::PCtor::PType3>(arg.mCtor);
+    this->mOrigin   = ctor.mOrigin;
+    std::fill(this->mLength.begin(), this->mLength.end(), ctor.mLength);
+    this->mRotQuat  = DQuat{ctor.mAngle};
+  } break;
+  }
+}
+
 } /// ::ray namespace

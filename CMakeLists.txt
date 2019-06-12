@@ -36,6 +36,7 @@ set(SOURCE
 
     "${SOURCE_DIRECTORY}/Shape/FSphere.cc"
     "${SOURCE_DIRECTORY}/Shape/FPlane.cc"
+    "${SOURCE_DIRECTORY}/Shape/FBox.cc"
 
     "${SOURCE_DIRECTORY}/DMatId.cc"
     "${SOURCE_DIRECTORY}/FCamera.cc"
