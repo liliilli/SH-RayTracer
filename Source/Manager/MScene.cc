@@ -23,13 +23,14 @@
 #include <Expr/XStringSwitch.h>
 #include <EShapeType.hpp>
 #include <Shape/FSphere.hpp>
+#include <Shape\FPlane.hpp>
+#include <Shape/FBox.hpp>
 #include <XHelperJson.hpp>
 
 #include <Manager/MMaterial.hpp>
 #include <OldMaterial/FMatLambertian.hpp>
 #include <OldMaterial/FMatMetal.hpp>
 #include <OldMaterial/FMatDielectric.hpp>
-#include <Shape\FPlane.hpp>
 
 namespace ray
 {
@@ -83,6 +84,7 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   }
   const auto backLambId = *EXPR_SGT(MMaterial).AddMaterial<FMatLambertian>(lambCtor);
 
+#if 0
   {
     FSphere::PCtor ctor;
     ctor.mOrigin = DVec3{0, 0, -2.0f};
@@ -101,11 +103,30 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
     ctor.mRadius = 1.0f;
     this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb3Id));
   }
+#endif
   {
     FSphere::PCtor ctor;
     ctor.mOrigin = DVec3{0, -101.f, -1.f};
     ctor.mRadius = 100.0f;
     this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(backLambId));
+  }
+  {
+    FBox::PCtor ctor; ctor.mCtorType = decltype(ctor.mCtorType)::_3;
+    FBox::PCtor::PType3 type; type.mOrigin = DVec3{1.5f, 0, -2.f}; type.mLength = 1.f; type.mAngle = DVec3{};
+    ctor.mCtor = type;
+    this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb1Id));
+  }
+  {
+    FBox::PCtor ctor; ctor.mCtorType = decltype(ctor.mCtorType)::_3;
+    FBox::PCtor::PType3 type; type.mOrigin = DVec3{-.25f, -.5f, -2.f}; type.mLength = .5f; type.mAngle = DVec3{0};
+    ctor.mCtor = type;
+    this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb2Id));
+  }
+  {
+    FBox::PCtor ctor; ctor.mCtorType = decltype(ctor.mCtorType)::_3;
+    FBox::PCtor::PType3 type; type.mOrigin = DVec3{-1.25f, -.75f, -2.f}; type.mLength = .25f; type.mAngle = DVec3{0};
+    ctor.mCtor = type;
+    this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb3Id));
   }
 }
 
@@ -350,6 +371,24 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
       const auto ctor = json::GetValueFrom<FPlane::PCtor>(item, "detail");
       this->AddHitableObject<FPlane>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
+    case Case("box"): // Create SDF box
+    {
+      // Check
+      if (json::HasJsonKey(item, "material") == false)
+      {
+        std::cerr << "Object Item has not `material` key header.\n";
+        return false;
+      }
+      const auto matId = json::GetValueFrom<std::string>(item, "material");
+      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+      {
+        std::cerr << "Material `" << matId << "` not found.";
+        return false;
+      }
+      // Create Object with the pointer of material instance.
+      const auto ctor = json::GetValueFrom<FBox::PCtor>(item, "detail");
+      this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+    } break;
     }
   }
   
@@ -364,7 +403,8 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
   using ::dy::math::GetTValuesOf;
   using ::dy::math::RandomVector3Length;
   using TSphere = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Sphere);
-  using TPlane = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Plane);
+  using TPlane  = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Plane);
+  using TBox    = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Box);
 
   if (++cnt; cnt <= limit)
   {
@@ -378,7 +418,8 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
       {
       case EShapeType::Sphere:
       {
-        if (auto& sphere = static_cast<TSphere&>(*obj); IsRayIntersected(ray, sphere) == true)
+        if (auto& sphere = static_cast<TSphere&>(*obj); 
+            IsRayIntersected(ray, sphere) == true)
         {
           for (const auto& t : GetTValuesOf(ray, sphere))
           {
@@ -388,14 +429,26 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
       } break;
       case EShapeType::Plane:
       {
-        if (auto& plane = static_cast<TPlane&>(*obj); IsRayIntersected(ray, plane) == true)
+        if (auto& plane = static_cast<TPlane&>(*obj); 
+            IsRayIntersected(ray, plane) == true)
         {
           for (const auto& t : GetTValuesOf(ray, plane))
           {
             if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
           }
         }
-      }
+      } break;
+      case EShapeType::Box:
+      {
+        if (auto& box = static_cast<TBox&>(*obj); 
+            IsRayIntersected(ray, box, box.GetQuaternion()) == true)
+        {
+          for (const auto& t : GetTValuesOf(ray, box, box.GetQuaternion()))
+          {
+            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+          }
+        }
+      } break;
       default: break;
       }
     }
@@ -435,6 +488,25 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
           const auto nextPos = ray.GetPointAtParam(t);
           // Get result
           auto optResult = pMat->Scatter({nextPos, ray.GetDirection()}, *GetNormalOf(ray, plane));
+          const auto& [refDir, attCol, isScattered] = *optResult;
+          if (isScattered == false) { return DVec3{0}; }
+
+          // Resursion...
+          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
+        }
+        else { return DVec3{0}; }
+      } break;
+      case EShapeType::Box:
+      {
+        auto& box = static_cast<TBox&>(*pObj);
+        if (auto* pMat = box.GetMaterial(); pMat != nullptr)
+        {
+          const auto nextPos = ray.GetPointAtParam(t);
+          // Get result
+          auto optResult = pMat->Scatter(
+            DRay{nextPos, ray.GetDirection()}, 
+            *GetNormalOf(ray, box, box.GetQuaternion())
+          );
           const auto& [refDir, attCol, isScattered] = *optResult;
           if (isScattered == false) { return DVec3{0}; }
 
