@@ -16,6 +16,7 @@
 #include <Math/Common/TGlobalTypes.h>
 #include <Math/Type/Math/DVector2.h>
 #include <Math/Type/Math/DVector3.h>
+#include <Math/Type/Math/DQuat.h>
 #include <Math/Type/Shape/DRay.h>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
 #include <Math/Type/Micellanous/DClamp.h>
@@ -40,6 +41,7 @@ using DVec3 = ::dy::math::DVector3<TReal>;
 using DIVec2 = ::dy::math::DVector2<TI32>;
 using DUVec2 = ::dy::math::DVector2<TU32>;
 using DIVec3 = ::dy::math::DVector3<TI32>;
+using DQuat = ::dy::math::DQuaternion<TReal>;
 
 extern std::unique_ptr<::dy::expr::FCmdArguments> sArguments;
 
