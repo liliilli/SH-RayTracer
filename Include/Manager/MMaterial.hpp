@@ -52,6 +52,13 @@ public:
   template <typename TType>
   std::optional<DMatId> AddMaterial(const nlohmann::json& json, const std::string& name);
 
+  /// @brief Add material with internal constructor type of material type.
+  /// @param ctor Construction paratmeter type.
+  /// @tparam TType Material Type
+  /// @return If successful, return created material's id instance.
+  template <typename TType>
+  std::optional<DMatId> AddMaterial(const typename TType::PCtor& ctor);
+
   /// @brief Check container has material that named `id`.
   /// @param id Id of material to find.
   /// @return If found, return true or false.

@@ -65,5 +65,21 @@ std::optional<DMatId> MMaterial::AddMaterial(const nlohmann::json& json, const s
   }
 }
 
+template <typename TType>
+std::optional<DMatId> MMaterial::AddMaterial(const typename TType::PCtor& ctor)
+{
+  // Check there is duplicated id name in material container.
+  if (this->HasMaterial(ctor.mId) == true)
+  {
+    std::cerr 
+      << "Failed to create material, `" << ctor.mId.ToString() 
+      << "`. The other material that has duplicated ID is exist.\n";
+    return std::nullopt;
+  }  
+
+  this->mContainer.try_emplace(ctor.mId, std::make_unique<TType>(ctor));
+  return ctor.mId;
+}
+
 } /// ::ray namespace
 
