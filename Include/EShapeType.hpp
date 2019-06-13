@@ -24,6 +24,7 @@ enum class EShapeType
   Sphere,
   Plane,
   Box,
+  Torus,
 };
 
 //!
@@ -33,10 +34,12 @@ enum class EShapeType
 class FSphere;
 class FPlane;
 class FBox;
+class FTorus;
 
 EXPR_INIT_ENUMTOTYPE(ShapeType, EShapeType);
 EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Sphere, FSphere);
 EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Plane, FPlane);
 EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Box, FBox);
+EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Torus, FTorus);
 
 } /// ::ray namespace
