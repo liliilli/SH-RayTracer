@@ -23,8 +23,9 @@
 #include <Expr/XStringSwitch.h>
 #include <EShapeType.hpp>
 #include <Shape/FSphere.hpp>
-#include <Shape\FPlane.hpp>
+#include <Shape/FPlane.hpp>
 #include <Shape/FBox.hpp>
+#include <Shape/FTorus.hpp>
 #include <XHelperJson.hpp>
 
 #include <Manager/MMaterial.hpp>
@@ -84,26 +85,14 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   }
   const auto backLambId = *EXPR_SGT(MMaterial).AddMaterial<FMatLambertian>(lambCtor);
 
-#if 0
+  FMatMetal::PCtor metalCtor;
   {
-    FSphere::PCtor ctor;
-    ctor.mOrigin = DVec3{0, 0, -2.0f};
-    ctor.mRadius = 1.0f;
-    this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb1Id));
+    metalCtor.mId = ::dy::math::DUuid{true};
+    metalCtor.mColor = DVec3{1};
+    metalCtor.mRoughness = 0.0f;
   }
-  {
-    FSphere::PCtor ctor;
-    ctor.mOrigin = DVec3{1.1f, -.2f, -1.f};
-    ctor.mRadius = 0.8f;
-    this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb2Id));
-  }
-  {
-    FSphere::PCtor ctor;
-    ctor.mOrigin = DVec3{-1.7f, 0, -2.5f};
-    ctor.mRadius = 1.0f;
-    this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb3Id));
-  }
-#endif
+  const auto metalId = *EXPR_SGT(MMaterial).AddMaterial<FMatMetal>(metalCtor);
+
   {
     FSphere::PCtor ctor;
     ctor.mOrigin = DVec3{0, -101.f, -1.f};
@@ -118,15 +107,20 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   }
   {
     FBox::PCtor ctor; ctor.mCtorType = decltype(ctor.mCtorType)::_3;
-    FBox::PCtor::PType3 type; type.mOrigin = DVec3{-.25f, -.5f, -2.f}; type.mLength = .5f; type.mAngle = DVec3{0};
+    FBox::PCtor::PType3 type; type.mOrigin = DVec3{-.4f, -.25f, -2.f}; type.mLength = .5f; type.mAngle = DVec3{30};
     ctor.mCtor = type;
     this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb2Id));
   }
   {
-    FBox::PCtor ctor; ctor.mCtorType = decltype(ctor.mCtorType)::_3;
-    FBox::PCtor::PType3 type; type.mOrigin = DVec3{-1.25f, -.75f, -2.f}; type.mLength = .25f; type.mAngle = DVec3{0};
-    ctor.mCtor = type;
-    this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb3Id));
+    FSphere::PCtor ctor; 
+    ctor.mOrigin = DVec3{-1.5f, -.5f, -2.f}; ctor.mRadius = .5f;
+    this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb3Id));
+  }
+  {
+    FTorus::PCtor ctor; 
+    ctor.mAngle = {90, 30, 0}; ctor.mOrigin = DVec3{-2.f, 1.75f, -3.f};
+    ctor.mDistance = 1.0f; ctor.mRadius = 0.8f;
+    this->AddHitableObject<FTorus>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb1Id));
   }
 }
 
@@ -389,6 +383,24 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
       const auto ctor = json::GetValueFrom<FBox::PCtor>(item, "detail");
       this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
+    case Case("torus"): // Create SDF torus
+    {
+      // Check
+      if (json::HasJsonKey(item, "material") == false)
+      {
+        std::cerr << "Object Item has not `material` key header.\n";
+        return false;
+      }
+      const auto matId = json::GetValueFrom<std::string>(item, "material");
+      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+      {
+        std::cerr << "Material `" << matId << "` not found.";
+        return false;
+      }
+      // Create Object with the pointer of material instance.
+      const auto ctor = json::GetValueFrom<FTorus::PCtor>(item, "detail");
+      this->AddHitableObject<FTorus>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+    } break;
     }
   }
   
@@ -405,6 +417,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
   using TSphere = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Sphere);
   using TPlane  = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Plane);
   using TBox    = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Box);
+  using TTorus  = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Torus);
 
   if (++cnt; cnt <= limit)
   {
@@ -444,6 +457,17 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
             IsRayIntersected(ray, box, box.GetQuaternion()) == true)
         {
           for (const auto& t : GetTValuesOf(ray, box, box.GetQuaternion()))
+          {
+            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+          }
+        }
+      } break;
+      case EShapeType::Torus:
+      {
+        if (auto& torus = static_cast<TTorus&>(*obj);
+            IsRayIntersected(ray, torus, torus.GetQuaternion()) == true)
+        {
+          for (const auto& t : GetTValuesOf(ray, torus, torus.GetQuaternion()))
           {
             if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
           }
@@ -506,6 +530,25 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
           auto optResult = pMat->Scatter(
             DRay{nextPos, ray.GetDirection()}, 
             *GetNormalOf(ray, box, box.GetQuaternion())
+          );
+          const auto& [refDir, attCol, isScattered] = *optResult;
+          if (isScattered == false) { return DVec3{0}; }
+
+          // Resursion...
+          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
+        }
+        else { return DVec3{0}; }
+      } break;
+      case EShapeType::Torus:
+      {
+        auto& torus = static_cast<TTorus&>(*pObj);
+        if (auto* pMat = torus.GetMaterial(); pMat != nullptr)
+        {
+          const auto nextPos = ray.GetPointAtParam(t);
+          // Get result
+          auto optResult = pMat->Scatter(
+            DRay{nextPos, ray.GetDirection()}, 
+            *GetNormalOf(ray, torus, torus.GetQuaternion())
           );
           const auto& [refDir, attCol, isScattered] = *optResult;
           if (isScattered == false) { return DVec3{0}; }
