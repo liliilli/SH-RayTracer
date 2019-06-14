@@ -21,26 +21,30 @@ namespace ray
 
 void from_json(const nlohmann::json& json, FPlane::PCtor& oCtor)
 {
-  /// Type 1 (size is 2)
-  /// Type 2 (size is 3)
-
-  if (json.size() == 2)
+  /// Type 1 ("type" : 1)
+  /// Type 2 ("type" : 2)
+  assert(json::HasJsonKey(json, "type") == true);
+  switch (json::GetValueFrom<TU32>(json, "type"))
+  {
+  case 1:
   {
     oCtor.mCtorType = FPlane::PCtor::_1;
     oCtor.mCtor = json.get<FPlane::PCtor::PType1>();
-  }
-  else if (json.size() == 3)
+  } break;
+  case 2:
   {
     oCtor.mCtorType = FPlane::PCtor::_2;
     oCtor.mCtor = json.get<FPlane::PCtor::PType2>();
+  } break;
+  default: break;
   }
 }
 
 void from_json(const nlohmann::json& json, FPlane::PCtor::PType1& oCtor)
 {
-  /// Type 1 (size is 2)
+  /// Type 1
   /// {
-  ///   "detail": { "normal": [ 0, 1, 0 ], "d": 2 },
+  ///   "detail": { "type": 1, "normal": [ 0, 1, 0 ], "d": 2 },
   /// }
   assert(json::HasJsonKey(json, "normal") == true); 
   assert(json::HasJsonKey(json, "d") == true);
@@ -51,9 +55,9 @@ void from_json(const nlohmann::json& json, FPlane::PCtor::PType1& oCtor)
 
 void from_json(const nlohmann::json& json, FPlane::PCtor::PType2& oCtor)
 {
-  /// Type 2 (size is 3)
+  /// Type 2
   /// {
-  ///   "detail": { "pos1": [ 0, -1, 0 ], "pos2": [ 1, ..], "pos3": [ 1, ..] },
+  ///   "detail": { "type": 2, "pos1": [ 0, -1, 0 ], "pos2": [ 1, ..], "pos3": [ 1, ..] },
   /// }
   assert(json::HasJsonKey(json, "pos1") == true); 
   assert(json::HasJsonKey(json, "pos2") == true); 
