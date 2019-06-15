@@ -409,6 +409,24 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
       const auto ctor = json::GetValueFrom<FTorus::PCtor>(item, "detail");
       this->AddHitableObject<FTorus>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
+    case Case("cone"): // Create SDF cone
+    {
+      // Check
+      if (json::HasJsonKey(item, "material") == false)
+      {
+        std::cerr << "Object Item has not `material` key header.\n";
+        return false;
+      }
+      const auto matId = json::GetValueFrom<std::string>(item, "material");
+      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+      {
+        std::cerr << "Material `" << matId << "` not found.";
+        return false;
+      }
+      // Create Object with the pointer of material instance.
+      const auto ctor = json::GetValueFrom<FCone::PCtor>(item, "detail");
+      this->AddHitableObject<FCone>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+    } break;
     }
   }
   
