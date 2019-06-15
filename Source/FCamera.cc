@@ -119,7 +119,55 @@ std::vector<DVec3> FCamera::GetSampleOffsetsOf(const DVec3& right, const DVec3& 
     return right * r + up * u; 
   };
 
-  if (samples >= 16) // If >= AAx16
+  if (samples >= 64) // If >= AAx64. Okay... I need to end up this features to 64 maximum.
+  {
+    const auto r = right / 32.f;
+    const auto u = up / 32.f;
+    offsets = 
+    {
+      // LeftDown
+      fo(r, 1, u, 5), fo(r, 3, u, 1), fo(r, 5, u, 7), fo(r, 7, u, 3),
+      fo(r, 1, u, 13), fo(r, 3, u, 9), fo(r, 5, u, 15), fo(r, 7, u, 11),
+      fo(r, 9, u, 13), fo(r, 11, u, 9), fo(r, 13, u, 15), fo(r, 15, u, 11),
+      fo(r, 9, u, 5), fo(r, 11, u, 1), fo(r, 13, u, 7), fo(r, 15, u, 3),
+      // LeftUp
+      fo(r, 1, u, 31), fo(r, 3, u, 17), fo(r, 5, u, 23), fo(r, 7, u, 19),
+      fo(r, 1, u, 29), fo(r, 3, u, 25), fo(r, 5, u, 31), fo(r, 7, u, 27),
+      fo(r, 9, u, 29), fo(r, 11, u, 25), fo(r, 13, u, 31), fo(r, 15, u, 27),
+      fo(r, 9, u, 21), fo(r, 11, u, 17), fo(r, 13, u, 23), fo(r, 15, u, 19),
+      // RightUp
+      fo(r, 17, u, 31), fo(r, 19, u, 17), fo(r, 21, u, 23), fo(r, 23, u, 19),
+      fo(r, 17, u, 29), fo(r, 19, u, 25), fo(r, 21, u, 31), fo(r, 23, u, 27),
+      fo(r, 25, u, 29), fo(r, 27, u, 25), fo(r, 29, u, 31), fo(r, 31, u, 27),
+      fo(r, 25, u, 21), fo(r, 27, u, 17), fo(r, 29, u, 23), fo(r, 31, u, 19),
+      // RightDown
+      fo(r, 17, u, 5), fo(r, 19, u, 1), fo(r, 21, u, 7), fo(r, 23, u, 3),
+      fo(r, 17, u, 13), fo(r, 19, u, 9), fo(r, 21, u, 15), fo(r, 23, u, 11),
+      fo(r, 25, u, 13), fo(r, 27, u, 9), fo(r, 29, u, 15), fo(r, 31, u, 11),
+      fo(r, 25, u, 5), fo(r, 27, u, 1), fo(r, 29, u, 7), fo(r, 31, u, 3),
+    };
+  }
+  else if (samples >= 32) // If >= AAx32
+  {
+    const auto r = right / 32.f;
+    const auto u = up / 32.f;
+    offsets = 
+    {
+      // LeftDown
+      fo(r, 1, u, 5), fo(r, 3, u, 13), fo(r, 5, u, 1), fo(r, 7, u, 9),
+      fo(r, 9, u, 15), fo(r, 11, u, 7), fo(r, 13, u, 3), fo(r, 15, u, 11),
+      // LeftUp
+      fo(r, 1, u, 21), fo(r, 3, u, 29), fo(r, 5, u, 17), fo(r, 7, u, 25),
+      fo(r, 9, u, 31), fo(r, 11, u, 23), fo(r, 13, u, 19), fo(r, 15, u, 27),
+      // RightUp
+      fo(r, 17, u, 21), fo(r, 19, u, 29), fo(r, 21, u, 17), fo(r, 23, u, 25),
+      fo(r, 25, u, 31), fo(r, 27, u, 23), fo(r, 29, u, 19), fo(r, 31, u, 27),
+      // RightDown
+      fo(r, 17, u, 5), fo(r, 19, u, 13), fo(r, 21, u, 1), fo(r, 23, u, 9),
+      fo(r, 25, u, 15), fo(r, 27, u, 7), fo(r, 29, u, 3), fo(r, 31, u, 11)
+    };
+  }
+  else if (samples >= 16) // If >= AAx16
   {
     const DVec3 r = right / 16.f;
     const DVec3 u = up / 16.f;
