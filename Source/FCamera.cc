@@ -114,23 +114,40 @@ std::vector<DRay> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
 std::vector<DVec3> FCamera::GetSampleOffsetsOf(const DVec3& right, const DVec3& up, TU32 samples) const
 {
   std::vector<DVec3> offsets;
-
-  if (samples >= 8) // If >= AAx8
+  static auto fo = [](DVec3 right, TU32 r, DVec3 up, TU32 u) -> DVec3
   {
-    const auto r = right / 16.f;
-    const auto u = this->mCellUp / 16.f;
+    return right * r + up * u; 
+  };
+
+  if (samples >= 16) // If >= AAx16
+  {
+    const DVec3 r = right / 16.f;
+    const DVec3 u = up / 16.f;
     offsets = 
     {
-      r * 1, u * 5,   r * 3, u * 13, r * 5, u * 1,  r * 7, u * 9,
-      r * 9, u * 15,  r * 11, u * 7, r * 13, u * 3, r * 15, u * 11
+      fo(r, 1, u, 5), fo(r, 3, u, 1), fo(r, 5, u, 7), fo(r, 7, u, 3),       // LeftDown
+      fo(r, 1, u, 13), fo(r, 3, u, 9), fo(r, 5, u, 15), fo(r, 7, u, 11),    // LeftUp
+      fo(r, 9, u, 13), fo(r, 11, u, 9), fo(r, 13, u, 15), fo(r, 15, u, 11), // RightUp
+      fo(r, 9, u, 5), fo(r, 11, u, 1), fo(r, 13, u, 7), fo(r, 15, u, 3)     // RightDown
+    };
+  }
+  else if (samples >= 8) // If >= AAx8
+  {
+    const auto r = right / 16.f;
+    const auto u = up / 16.f;
+    offsets = 
+    {
+      fo(r, 1, u, 5), fo(r, 3, u, 13), fo(r, 5, u, 1), fo(r, 7, u, 9),
+      fo(r, 9, u, 15), fo(r, 11, u, 7), fo(r, 13, u, 3), fo(r, 15, u, 11)
     };
   }
   else if (samples >= 4) // If >= AAx4
   {
+    const DVec3 r = right / 8.f;
+    const DVec3 u = up / 8.f;
     offsets =
     {
-      right * 1.f / 8.f + up * 5.f / 8.f, right * 3.f / 8.f + up * 1.f / 8.f,
-      right * 5.f / 8.f + up * 7.f / 8.f, right * 7.f / 8.f + up * 3.f / 8.f,
+      fo(r, 1, u, 5), fo(r, 3, u, 1), fo(r, 5, u, 7), fo(r, 7, u, 3)
     };
   }
   else if (samples >= 2) // If >= AAx2
