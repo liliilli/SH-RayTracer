@@ -26,6 +26,7 @@
 #include <Shape/FPlane.hpp>
 #include <Shape/FBox.hpp>
 #include <Shape/FTorus.hpp>
+#include <Shape/FCone.hpp>
 #include <XHelperJson.hpp>
 
 #include <Manager/MMaterial.hpp>
@@ -88,7 +89,7 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   FMatMetal::PCtor metalCtor;
   {
     metalCtor.mId = ::dy::math::DUuid{true};
-    metalCtor.mColor = DVec3{1};
+    metalCtor.mColor = DVec3{1.f, 0.7f, 0.7f};
     metalCtor.mRoughness = 0.0f;
   }
   const auto metalId = *EXPR_SGT(MMaterial).AddMaterial<FMatMetal>(metalCtor);
@@ -101,7 +102,7 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   }
   {
     FBox::PCtor ctor; ctor.mCtorType = decltype(ctor.mCtorType)::_3;
-    FBox::PCtor::PType3 type; type.mOrigin = DVec3{1.5f, 0, -2.f}; type.mLength = 1.f; type.mAngle = DVec3{};
+    FBox::PCtor::PType3 type; type.mOrigin = DVec3{2.1f, 0, -2.5f}; type.mLength = 1.f; type.mAngle = DVec3{};
     ctor.mCtor = type;
     this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb1Id));
   }
@@ -113,14 +114,21 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   }
   {
     FSphere::PCtor ctor; 
-    ctor.mOrigin = DVec3{-1.5f, -.5f, -2.f}; ctor.mRadius = .5f;
+    ctor.mOrigin = DVec3{-2.1f, -.6f, -1.f}; ctor.mRadius = .4f;
     this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb3Id));
   }
   {
     FTorus::PCtor ctor; 
-    ctor.mAngle = {90, 30, 0}; ctor.mOrigin = DVec3{-2.f, 1.75f, -3.f};
-    ctor.mDistance = 1.0f; ctor.mRadius = 0.8f;
-    this->AddHitableObject<FTorus>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb1Id));
+    ctor.mAngle = {90, -10, 0}; ctor.mOrigin = {1.25f, 1.5f, -4.5f};
+    ctor.mDistance = 1.25f; ctor.mRadius = 1.0f;
+    this->AddHitableObject<FTorus>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb3Id));
+  }
+  {
+    FCone::PCtor ctor; ctor.mCtorType = FCone::PCtor::_1;
+    FCone::PCtor::PType1 ptor;
+    ptor.mAngle  = {0, 0, 2.5}; ptor.mOrigin = DVec3{-3.0f, -1.0f, -3.5f}; ptor.mHeight = 4.0f; ptor.mRadius = 1.5f;
+    ctor.mCtor = ptor;
+    this->AddHitableObject<FCone>(ctor, EXPR_SGT(MMaterial).GetMaterial(metalId));
   }
 }
 
@@ -418,6 +426,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
   using TPlane  = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Plane);
   using TBox    = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Box);
   using TTorus  = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Torus);
+  using TCone   = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Cone);
 
   if (++cnt; cnt <= limit)
   {
@@ -468,6 +477,17 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
             IsRayIntersected(ray, torus, torus.GetQuaternion()) == true)
         {
           for (const auto& t : GetTValuesOf(ray, torus, torus.GetQuaternion()))
+          {
+            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+          }
+        }
+      } break;
+      case EShapeType::Cone:
+      {
+        if (auto& cone = static_cast<TCone&>(*obj);
+            IsRayIntersected(ray, cone, cone.GetQuaternion()) == true)
+        {
+          for (const auto& t : GetTValuesOf(ray, cone, cone.GetQuaternion()))
           {
             if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
           }
@@ -549,6 +569,25 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
           auto optResult = pMat->Scatter(
             DRay{nextPos, ray.GetDirection()}, 
             *GetNormalOf(ray, torus, torus.GetQuaternion())
+          );
+          const auto& [refDir, attCol, isScattered] = *optResult;
+          if (isScattered == false) { return DVec3{0}; }
+
+          // Resursion...
+          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
+        }
+        else { return DVec3{0}; }
+      } break;
+      case EShapeType::Cone:
+      {
+        auto& cone = static_cast<TCone&>(*pObj);
+        if (auto* pMat = cone.GetMaterial(); pMat != nullptr)
+        {
+          const auto nextPos = ray.GetPointAtParam(t);
+          // Get result
+          auto optResult = pMat->Scatter(
+            DRay{nextPos, ray.GetDirection()}, 
+            *GetNormalOf(ray, cone, cone.GetQuaternion())
           );
           const auto& [refDir, attCol, isScattered] = *optResult;
           if (isScattered == false) { return DVec3{0}; }
