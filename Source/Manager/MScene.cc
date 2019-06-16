@@ -27,6 +27,7 @@
 #include <Shape/FBox.hpp>
 #include <Shape/FTorus.hpp>
 #include <Shape/FCone.hpp>
+#include <Shape/FCapsule.hpp>
 #include <XHelperJson.hpp>
 
 #include <Manager/MMaterial.hpp>
@@ -89,20 +90,39 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   FMatMetal::PCtor metalCtor;
   {
     metalCtor.mId = ::dy::math::DUuid{true};
-    metalCtor.mColor = DVec3{1.f, 0.7f, 0.7f};
+    metalCtor.mColor = DVec3{.7f, .7f, .7f};
+    metalCtor.mRoughness = 0.25f;
+  }
+  const auto metal1Id = *EXPR_SGT(MMaterial).AddMaterial<FMatMetal>(metalCtor);
+  {
+    metalCtor.mId = ::dy::math::DUuid{true};
+    metalCtor.mColor = DVec3{1.f, .7f, .7f};
     metalCtor.mRoughness = 0.0f;
   }
-  const auto metalId = *EXPR_SGT(MMaterial).AddMaterial<FMatMetal>(metalCtor);
+  const auto metal2Id = *EXPR_SGT(MMaterial).AddMaterial<FMatMetal>(metalCtor);
+  {
+    metalCtor.mId = ::dy::math::DUuid{true};
+    metalCtor.mColor = DVec3{0.25f};
+    metalCtor.mRoughness = 0.0f;
+  }
+  const auto metal3Id = *EXPR_SGT(MMaterial).AddMaterial<FMatMetal>(metalCtor);
 
   {
     FSphere::PCtor ctor;
     ctor.mOrigin = DVec3{0, -101.f, -1.f};
     ctor.mRadius = 100.0f;
-    this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(backLambId));
+    this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(metal1Id));
+  }
+  {
+    FCapsule::PCtor ctor; ctor.mCtorType = FCapsule::PCtor::_1;
+    FCapsule::PCtor::PType1 ptor;
+    ptor.mAngle = {0}; ptor.mOrigin = DVec3{-2.25f, 0.0f, -5.5f}; ptor.mHeight = 2.0f; ptor.mRadius = 0.75f;
+    ctor.mCtor = ptor;
+    this->AddHitableObject<FCapsule>(ctor, EXPR_SGT(MMaterial).GetMaterial(metal3Id));
   }
   {
     FBox::PCtor ctor; ctor.mCtorType = decltype(ctor.mCtorType)::_3;
-    FBox::PCtor::PType3 type; type.mOrigin = DVec3{2.1f, 0, -2.5f}; type.mLength = 1.f; type.mAngle = DVec3{};
+    FBox::PCtor::PType3 type; type.mOrigin = DVec3{2.3f, 0, -2.5f}; type.mLength = 1.f; type.mAngle = DVec3{};
     ctor.mCtor = type;
     this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(lamb1Id));
   }
@@ -128,7 +148,7 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
     FCone::PCtor::PType1 ptor;
     ptor.mAngle  = {0, 0, 2.5}; ptor.mOrigin = DVec3{-3.0f, -1.0f, -3.5f}; ptor.mHeight = 4.0f; ptor.mRadius = 1.5f;
     ctor.mCtor = ptor;
-    this->AddHitableObject<FCone>(ctor, EXPR_SGT(MMaterial).GetMaterial(metalId));
+    this->AddHitableObject<FCone>(ctor, EXPR_SGT(MMaterial).GetMaterial(metal2Id));
   }
 }
 
@@ -445,6 +465,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
   using TBox    = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Box);
   using TTorus  = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Torus);
   using TCone   = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Cone);
+  using TCapsule= EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Capsule);
 
   if (++cnt; cnt <= limit)
   {
@@ -506,6 +527,17 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
             IsRayIntersected(ray, cone, cone.GetQuaternion()) == true)
         {
           for (const auto& t : GetTValuesOf(ray, cone, cone.GetQuaternion()))
+          {
+            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+          }
+        }
+      } break;
+      case EShapeType::Capsule:
+      {
+        if (auto& capsule = static_cast<TCapsule&>(*obj);
+            IsRayIntersected(ray, capsule, capsule.GetQuaternion()) == true)
+        {
+          for (const auto& t : GetTValuesOf(ray, capsule, capsule.GetQuaternion()))
           {
             if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
           }
@@ -606,6 +638,25 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
           auto optResult = pMat->Scatter(
             DRay{nextPos, ray.GetDirection()}, 
             *GetNormalOf(ray, cone, cone.GetQuaternion())
+          );
+          const auto& [refDir, attCol, isScattered] = *optResult;
+          if (isScattered == false) { return DVec3{0}; }
+
+          // Resursion...
+          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
+        }
+        else { return DVec3{0}; }
+      } break;
+      case EShapeType::Capsule:
+      {
+        auto& capsule = static_cast<TCapsule&>(*pObj);
+        if (auto* pMat = capsule.GetMaterial(); pMat != nullptr)
+        {
+          const auto nextPos = ray.GetPointAtParam(t);
+          // Get result
+          auto optResult = pMat->Scatter(
+            DRay{nextPos, ray.GetDirection()}, 
+            *GetNormalOf(ray, capsule, capsule.GetQuaternion())
           );
           const auto& [refDir, attCol, isScattered] = *optResult;
           if (isScattered == false) { return DVec3{0}; }

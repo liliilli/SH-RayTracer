@@ -24,7 +24,7 @@
       "configurationType": "Debug",
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DUTIL_TEST_MATH=ON -DMATH_BUILD_WITH_EXPR=ON",
+      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_EXPR=ON",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "msvc_x64_x64" ],
