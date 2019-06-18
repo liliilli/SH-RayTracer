@@ -16,6 +16,7 @@
 #include <nlohmann/json.hpp>
 #include <Math/Utility/XLinearMath.h>
 #include <Math/Utility/XGraphicsMath.h>
+#include <Math/Utility/XShapeMath.h>
 #include <Math/Utility/XRandom.h>
 #include <XHelperJson.hpp>
 
