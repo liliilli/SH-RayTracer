@@ -47,7 +47,13 @@ public:
   FBox(const PCtor& ctor, IMaterial* mat);
   virtual ~FBox() = default;
 
-  DQuat GetQuaternion() const noexcept { return this->mRotQuat; }
+  const DQuat& GetQuaternion() const noexcept { return this->mRotQuat; }
+
+  /// @brief Try to getting ray intersected t value list.
+  /// If this shape is not intersected with given ray, just return null value.
+  /// @param ray Ray of worls-space.
+  /// @return When ray intersected to ray, returns TReal list.
+  std::optional<std::vector<TReal>> GetRayIntersectedTValues(const DRay& ray) const override final;
 
 private:
   DQuat mRotQuat;

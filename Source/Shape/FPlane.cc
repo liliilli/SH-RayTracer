@@ -13,6 +13,7 @@
 
 #include <Shape/FPlane.hpp>
 
+#include <Math/Utility/XShapeMath.h>
 #include <nlohmann/json.hpp>
 #include <XHelperJson.hpp>
 
@@ -71,12 +72,18 @@ void from_json(const nlohmann::json& json, FPlane::PCtor::PType2& oCtor)
 FPlane::FPlane(const DVec3& normal, TReal d, IMaterial* mat)
   : IHitable{EShapeType::Plane, mat},
     DPlane<TReal>{normal, d}
-{ }
+{ 
+  using ::dy::math::GetDBounds3DOf;
+  this->mAABB = std::make_unique<DAABB>(GetDBounds3DOf(*this));
+}
 
 FPlane::FPlane(const DVec3& pos1, const DVec3& pos2, const DVec3& pos3, IMaterial* mat)
   : IHitable{EShapeType::Plane, mat},
     DPlane<TReal>{pos1, pos2, pos3}
-{ }
+{ 
+  using ::dy::math::GetDBounds3DOf;
+  this->mAABB = std::make_unique<DAABB>(GetDBounds3DOf(*this));
+}
 
 FPlane::FPlane(const FPlane::PCtor& arg, IMaterial* mat)
   : IHitable{EShapeType::Plane, mat},
@@ -99,6 +106,16 @@ FPlane::FPlane(const FPlane::PCtor& arg, IMaterial* mat)
     this->mD        = Dot(this->mNormal, ctor.mPos1) * TValueType(-1);
   } break;
   }
+
+  using ::dy::math::GetDBounds3DOf;
+  this->mAABB = std::make_unique<DAABB>(GetDBounds3DOf(*this));
+}
+
+std::optional<std::vector<TReal>> FPlane::GetRayIntersectedTValues(const DRay& ray) const
+{
+  if (IsRayIntersected(ray, *this) == false) { return std::nullopt; }
+
+  return GetTValuesOf(ray, *this);
 }
 
 } /// ::ray namespace

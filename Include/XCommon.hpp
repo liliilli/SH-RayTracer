@@ -20,6 +20,7 @@
 #include <Math/Type/Shape/DRay.h>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
 #include <Math/Type/Micellanous/DClamp.h>
+#include <Math/Type/Micellanous/DBounds3D.h>
 #include <Expr/FCmdArguments.h>
 #include <Expr/ESuccess.h>
 
@@ -42,6 +43,7 @@ using DIVec2 = ::dy::math::DVector2<TI32>;
 using DUVec2 = ::dy::math::DVector2<TU32>;
 using DIVec3 = ::dy::math::DVector3<TI32>;
 using DQuat = ::dy::math::DQuaternion<TReal>;
+using DAABB = ::dy::math::DBounds3D<TReal>;
 
 extern std::unique_ptr<::dy::expr::FCmdArguments> sArguments;
 

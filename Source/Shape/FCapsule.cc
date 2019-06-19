@@ -13,6 +13,7 @@
 
 #include <Shape/FCapsule.hpp>
 #include <nlohmann/json.hpp>
+#include <Math/Utility/XShapeMath.h>
 #include <XHelperJson.hpp>
 
 namespace ray
@@ -94,6 +95,17 @@ FCapsule::FCapsule(const FCapsule::PCtor& arg, IMaterial* mat)
     this->mRotQuat  = DQuat{ctor.mAngle};
   } break;
   }
+
+  using ::dy::math::GetDBounds3DOf;
+  this->mAABB = std::make_unique<DAABB>(GetDBounds3DOf(*this));
+}
+
+std::optional<std::vector<TReal>> FCapsule::GetRayIntersectedTValues(const DRay& ray) const
+{
+  if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
+  if (IsRayIntersected(ray, *this, this->GetQuaternion()) == false) { return std::nullopt; }
+
+  return GetTValuesOf(ray, *this, this->GetQuaternion());
 }
 
 } /// ::ray namespace

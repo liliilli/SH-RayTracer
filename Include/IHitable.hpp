@@ -34,10 +34,22 @@ public:
   EShapeType GetType() const noexcept { return this->mType; }
   /// @brief Get pointer instance of material.
   IMaterial* GetMaterial() const noexcept { return this->mpMaterial; }
+  /// @brief Check hitable object has 3D AABB.
+  bool HasAABB() const noexcept { return this->mAABB != nullptr; }
+  /// @brief Get AABB pointer of hitable object.
+  const DAABB* GetAABB() const noexcept { return this->mAABB.get(); }
 
-private:
+  /// @brief Try to getting ray intersected t value list.
+  /// If this shape is not intersected with given ray, just return null value.
+  /// @param ray Ray of worls-space.
+  /// @return When ray intersected to ray, returns TReal list.
+  virtual std::optional<std::vector<TReal>> GetRayIntersectedTValues(const DRay& ray) const = 0;
+
+protected:
   EShapeType mType;
   IMaterial* mpMaterial = nullptr;
+
+  std::unique_ptr<DAABB> mAABB = nullptr;
 };
 
 inline IHitable::~IHitable() = default;

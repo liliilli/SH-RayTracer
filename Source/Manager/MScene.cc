@@ -488,12 +488,28 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
 
   if (++cnt; cnt <= limit)
   {
-    // Get closest SDF value.
+    // Process culling to all objects with DAABB.
     std::vector<std::pair<TReal, ray::IHitable*>> tPairList; 
+    // Get closest SDF value.
     for (auto& obj : this->mObjects)
     {
       assert(obj != nullptr);
+      const auto tValues = obj->GetRayIntersectedTValues(ray);
+      if (tValues.has_value() == false) { continue; } 
+      for (const auto& t : *tValues)
+      {
+        if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+      }
+    }
+#if 0
+    for (auto& smtObj : this->mObjects)
+    {
+#if 1
+      assert(smtObj != nullptr);
+      auto* obj = smtObj.get();
+#endif
       const auto type = obj->GetType();
+
       switch (type)
       {
       case EShapeType::Sphere:
@@ -503,7 +519,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
         {
           for (const auto& t : GetTValuesOf(ray, sphere))
           {
-            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+            if (t > 0.0f) { tPairList.emplace_back(t, obj); }
           }
         }
       } break;
@@ -514,7 +530,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
         {
           for (const auto& t : GetTValuesOf(ray, plane))
           {
-            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+            if (t > 0.0f) { tPairList.emplace_back(t, obj); }
           }
         }
       } break;
@@ -525,7 +541,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
         {
           for (const auto& t : GetTValuesOf(ray, box, box.GetQuaternion()))
           {
-            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+            if (t > 0.0f) { tPairList.emplace_back(t, obj); }
           }
         }
       } break;
@@ -536,7 +552,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
         {
           for (const auto& t : GetTValuesOf(ray, torus, torus.GetQuaternion()))
           {
-            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+            if (t > 0.0f) { tPairList.emplace_back(t, obj); }
           }
         }
       } break;
@@ -547,7 +563,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
         {
           for (const auto& t : GetTValuesOf(ray, cone, cone.GetQuaternion()))
           {
-            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+            if (t > 0.0f) { tPairList.emplace_back(t, obj); }
           }
         }
       } break;
@@ -558,13 +574,14 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
         {
           for (const auto& t : GetTValuesOf(ray, capsule, capsule.GetQuaternion()))
           {
-            if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+            if (t > 0.0f) { tPairList.emplace_back(t, obj); }
           }
         }
       } break;
       default: break;
       }
     }
+#endif
 
     // Sort and get only shortest T one.
     std::sort(

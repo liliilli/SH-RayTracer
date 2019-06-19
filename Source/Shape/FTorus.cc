@@ -13,6 +13,7 @@
 
 #include <Shape/FTorus.hpp>
 #include <nlohmann/json.hpp>
+#include <Math/Utility/XShapeMath.h>
 #include <XHelperJson.hpp>
 
 namespace ray
@@ -35,6 +36,17 @@ FTorus::FTorus(const FTorus::PCtor& arg, IMaterial* mat)
   : IHitable{EShapeType::Torus, mat},
     ::dy::math::DTorus<TReal>{arg.mOrigin, arg.mDistance, arg.mRadius},
     mRotQuat{arg.mAngle}
-{ }
+{ 
+  using ::dy::math::GetDBounds3DOf;
+  this->mAABB = std::make_unique<DAABB>(GetDBounds3DOf(*this, this->GetQuaternion()));
+}
+
+std::optional<std::vector<TReal>> FTorus::GetRayIntersectedTValues(const DRay& ray) const
+{
+  //if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
+  if (IsRayIntersected(ray, *this, this->GetQuaternion()) == false) { return std::nullopt; }
+
+  return GetTValuesOf(ray, *this, this->GetQuaternion());
+}
 
 } /// ::ray namespace
