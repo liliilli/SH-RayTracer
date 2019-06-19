@@ -43,7 +43,7 @@ FTorus::FTorus(const FTorus::PCtor& arg, IMaterial* mat)
 
 std::optional<std::vector<TReal>> FTorus::GetRayIntersectedTValues(const DRay& ray) const
 {
-  //if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
+  if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
   if (IsRayIntersected(ray, *this, this->GetQuaternion()) == false) { return std::nullopt; }
 
   return GetTValuesOf(ray, *this, this->GetQuaternion());
