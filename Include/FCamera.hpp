@@ -18,13 +18,14 @@
 
 #include <Math/Type/Shape/DRay.h>
 #include <Math/Type/Micellanous/DClamp.h>
+#include <Interface/IObject.hpp>
 
 namespace ray
 {
 
 /// @class FCamera
 /// @brief Camera class that manage image size, eye / forward and screen size to focus.
-class FCamera final
+class FCamera final : public IObject
 {
 public:
   /// @brief Constructor instance type of FCamera.

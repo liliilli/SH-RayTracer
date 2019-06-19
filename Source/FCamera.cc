@@ -40,7 +40,8 @@ void from_json(const nlohmann::json& item, FCamera::PCtor& oCtor)
 }
 
 FCamera::FCamera(const FCamera::PCtor& arg)
-  : mOrigin{ arg.mOrigin },
+  : IObject { EObject::Camera },
+    mOrigin{ arg.mOrigin },
     mForward{ (arg.mForwardTo - arg.mOrigin).Normalize() },
     mSide{ Cross(this->mForward, decltype(mForward){0, 1, 0}) },
     mUp{ Cross(this->mSide, this->mForward) },

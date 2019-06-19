@@ -15,23 +15,25 @@
 #include <memory>
 #include <IMaterial.hpp>
 #include <EShapeType.hpp>
+#include <Interface/IObject.hpp>
 
 namespace ray
 {
 
 /// @class IHitable
 /// @brief Hitable object interface.
-class IHitable
+class IHitable : public IObject
 {
 public:
   IHitable(EShapeType type, IMaterial*& pMaterial)
-    : mType { type },
+    : IObject { EObject::Hitable },
+      mMaterialType { type },
       mpMaterial{ pMaterial }
   { }
   virtual ~IHitable() = 0;
 
   /// @brief Get type.
-  EShapeType GetType() const noexcept { return this->mType; }
+  EShapeType GetType() const noexcept { return this->mMaterialType; }
   /// @brief Get pointer instance of material.
   IMaterial* GetMaterial() const noexcept { return this->mpMaterial; }
   /// @brief Check hitable object has 3D AABB.
@@ -46,7 +48,7 @@ public:
   virtual std::optional<std::vector<TReal>> GetRayIntersectedTValues(const DRay& ray) const = 0;
 
 protected:
-  EShapeType mType;
+  EShapeType mMaterialType;
   IMaterial* mpMaterial = nullptr;
 
   std::unique_ptr<DAABB> mAABB = nullptr;
