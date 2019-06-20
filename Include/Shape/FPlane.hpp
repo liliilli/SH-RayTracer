@@ -17,6 +17,8 @@
 #include <Math/Type/Shape/DPlane.h>
 #include <IHitable.hpp>
 #include <XCommon.hpp>
+#include <Helper/XJsonCallback.hpp>
+#include <Helper/EJsonExistance.hpp>
 
 namespace ray
 {
@@ -32,13 +34,24 @@ public:
     enum EType { _1, _2 };
     EXPR_INIT_ENUMTOTYPE(Type, EType);
 
-    struct PType1 final { DVec3 mNormal; TReal mD; };
-    struct PType2 final { DVec3 mPos1, mPos2, mPos3; };
+    struct PType1 final 
+    { 
+      DVec3 mNormal; TReal mD; 
+      PType1 Overwrite(const PType1& pctor, const json::FExistanceList& list) const;
+    };
+    struct PType2 final 
+    { 
+      DVec3 mPos1, mPos2, mPos3; 
+      PType2 Overwrite(const PType2& pctor, const json::FExistanceList& list) const;
+    };
     EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_1, PType1);
     EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_2, PType2);
 
     EType mCtorType = EType::_1;
     std::variant<PType1, PType2> mCtor;
+
+    /// @brief Overwrite with given pctor instance and create new PCtor.
+    PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
   /// @brief Construct DPlane with normalized vector and just d.
@@ -55,6 +68,10 @@ public:
   /// @param ray Ray of worls-space.
   /// @return When ray intersected to ray, returns TReal list.
   std::optional<std::vector<TReal>> GetRayIntersectedTValues(const DRay& ray) const override final;
+
+  /// @brief Get PCtor instance from instance, with given type value.
+  /// @param type Type value.
+  FPlane::PCtor GetPCtor(FPlane::PCtor::EType type) const noexcept;
 };
 
 /// @brief Template function for automatic parsing from json.
@@ -62,5 +79,10 @@ public:
 void from_json(const nlohmann::json& json, FPlane::PCtor& oCtor);
 void from_json(const nlohmann::json& json, FPlane::PCtor::PType1& oCtor);
 void from_json(const nlohmann::json& json, FPlane::PCtor::PType2& oCtor);
+
+/// @brief FPlane specialized function.
+template <> json::FExistanceList JsonCheckExistances<FPlane::PCtor>(const nlohmann::json& json);
+template <> json::FExistanceList JsonCheckExistances<FPlane::PCtor::PType1>(const nlohmann::json& json);
+template <> json::FExistanceList JsonCheckExistances<FPlane::PCtor::PType2>(const nlohmann::json& json);
 
 } /// ::ray namespace
