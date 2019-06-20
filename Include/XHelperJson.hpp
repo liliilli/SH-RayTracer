@@ -15,6 +15,8 @@
 #include <optional>
 #include <filesystem>
 #include <nlohmann/json.hpp>
+#include <Helper/EJsonExistance.hpp>
+#include <Helper/XJsonCallback.hpp>
 
 //!
 //! Implementation
@@ -47,6 +49,29 @@ TReturnType GetValueFrom(const TParam1& jsonAtlas, const std::string_view& name)
 
 template <typename TReturnType, typename TJsonParam>
 TReturnType GetValue(const TJsonParam& jsonAtlas);
+
+/// @brief This functions requires additional callback function that checks whether key is exist or not exist.
+/// @param jsonAtlas Immutable valid json atlas.
+/// @param name Key name to get value from.
+/// @return First value is returned value and second is Existance flag list.
+template <typename TReturnType, typename TJsonParam>
+std::pair<TReturnType, FExistanceList> 
+GetValueFromOptionally(const TJsonParam& jsonAtlas, const char* name); 
+
+/// @brief This functions requires additional callback function that checks whether key is exist or not exist.
+/// @param jsonAtlas Immutable valid json atlas.
+/// @param name Key name to get value from.
+/// @return First value is returned value and second is Existance flag list.
+template <typename TReturnType, typename TJsonParam>
+std::pair<TReturnType, FExistanceList> 
+GetValueFromOptionally(const TJsonParam& jsonAtlas, const std::string_view& name); 
+
+/// @brief This functions requires additional callback function that checks whether key is exist or not exist.
+/// @param jsonAtlas Immutable valid json atlas.
+/// @return First value is returned value and second is Existance flag list.
+template <typename TReturnType, typename TJsonParam>
+std::pair<TReturnType, FExistanceList> 
+GetValueOptionally(const TJsonParam& jsonAtlas); 
 
 /// @brief  Get value from json and bind value to oDestination automatically.
 /// Destination type must implement copy assignment operator or default behavior.

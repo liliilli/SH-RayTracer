@@ -46,4 +46,39 @@ void GetValueFromTo(const TJsonAtlas& jsonAtlas, const std::string& iKey, TRetur
   }
 }
 
+template <typename TReturnType, typename TJsonParam>
+std::pair<TReturnType, FExistanceList> 
+GetValueFromOptionally(const TJsonParam& jsonAtlas, const char* name)
+{
+  // Matching order of each member variable must have same order.
+  const auto& valueAtlas = jsonAtlas.at(name);
+  const FExistanceList list = JsonCheckExistances<TReturnType>(valueAtlas);
+
+  // Return
+  return std::pair{GetValue<TReturnType>(valueAtlas), list};
+}
+
+template <typename TReturnType, typename TJsonParam>
+std::pair<TReturnType, FExistanceList> 
+GetValueFromOptionally(const TJsonParam& jsonAtlas, const std::string_view& name)
+{
+  // Matching order of each member variable must have same order.
+  const auto& valueAtlas = jsonAtlas.at(name.data());
+  const FExistanceList list = JsonCheckExistances<TReturnType>(valueAtlas);
+
+  // Return
+  return std::pair{GetValue<TReturnType>(valueAtlas), list};
+}
+
+template <typename TReturnType, typename TJsonParam>
+std::pair<TReturnType, FExistanceList> 
+GetValueOptionally(const TJsonParam& jsonAtlas)
+{
+  // Matching order of each member variable must have same order.
+  const FExistanceList list = JsonCheckExistances<TReturnType>(jsonAtlas);
+
+  // Return
+  return std::pair{jsonAtlas.template get<TReturnType>(), list};
+}
+
 } /// ::ray::json namespace

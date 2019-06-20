@@ -15,12 +15,14 @@
 #include <memory>
 #include <vector>
 #include <type_traits>
+#include <unordered_map>
 
 #include <Expr/ISingleton.h>
 
 #include <XCommon.hpp>
 #include <IHitable.hpp>
 #include <FCamera.hpp>
+#include <Interface/IObject.hpp>
 
 namespace ray
 {
@@ -72,9 +74,19 @@ public:
 private:
   /// @brief
   bool LoadOldSceneFile(const nlohmann::json& json, const DUVec2& imgSize, TU32 numSamples);
+
   /// @brief
   bool LoadSceneFile190710(const nlohmann::json& json, const PSceneDefaults& defaults);
+  /// @brief
+  bool AddMaterialsFromJson190710(const nlohmann::json& json);
+  /// @brief Add prefabs into container automatically.
+  /// @param json Json atlas of `prefabs`.
+  /// @return Success flag when returned true.
+  bool AddPrefabsFromJson190710(const nlohmann::json& json, const PSceneDefaults& defaults);
+  /// @brief 
+  bool AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDefaults& defaults);
 
+  std::unordered_map<std::string, std::unique_ptr<IObject>> mPrefabs;
   std::vector<std::unique_ptr<IHitable>> mObjects;
   std::unique_ptr<FCamera> mMainCamera;
 };
