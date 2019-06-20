@@ -16,6 +16,8 @@
 #include <Math/Type/Shape/DSphere.h>
 #include <IHitable.hpp>
 #include <XCommon.hpp>
+#include <Helper/XJsonCallback.hpp>
+#include <Helper/EJsonExistance.hpp>
 
 namespace ray
 {
@@ -30,6 +32,9 @@ public:
   {
     DVec3 mOrigin;
     TReal mRadius;
+
+    /// @brief Overwrite with given pctor instance and create new PCtor.
+    PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
   FSphere(const DVec3& origin, TReal radius, IMaterial* mat);
@@ -41,10 +46,16 @@ public:
   /// @param ray Ray of worls-space.
   /// @return When ray intersected to ray, returns TReal list.
   std::optional<std::vector<TReal>> GetRayIntersectedTValues(const DRay& ray) const override final;
+  
+  /// @brief Get PCtor instance from FSphere instance.
+  FSphere::PCtor GetPCtor() const noexcept;
 };
 
 /// @brief Template function for automatic parsing from json.
 /// This initialize FSphere::PCtor instance, except some elements.
 void from_json(const nlohmann::json& json, FSphere::PCtor& oCtor);
+
+/// @brief FSphere specialized function.
+template <> json::FExistanceList JsonCheckExistances<FSphere::PCtor>(const nlohmann::json& json);
 
 } /// ::ray namespace

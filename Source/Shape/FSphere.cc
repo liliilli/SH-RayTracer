@@ -19,13 +19,34 @@
 namespace ray
 {
 
+template <> json::FExistanceList JsonCheckExistances<FSphere::PCtor>(const nlohmann::json& json)
+{
+  using json::EExistance;
+  json::FExistanceList result(2, EExistance::NotExist);
+
+  if (json::HasJsonKey(json, "pos") == true) { result[0] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "radius") == true) { result[1] = EExistance::Exist; }
+
+  return result;
+}
+
+FSphere::PCtor FSphere::PCtor::Overwrite(const PCtor& pctor, const json::FExistanceList& list) const
+{
+  PCtor result = *this;
+  using json::EExistance;
+  
+  OverwriteWhenExist(list[0], result.mOrigin, pctor.mOrigin);
+  OverwriteWhenExist(list[1], result.mRadius, pctor.mRadius);
+
+  return result;
+}
+
 void from_json(const nlohmann::json& json, FSphere::PCtor& oCtor)
 {
-  assert(json::HasJsonKey(json, "pos") == true);
-  assert(json::HasJsonKey(json, "radius") == true); 
-
-  oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos");
-  oCtor.mRadius = json::GetValueFrom<TReal>(json, "radius");
+  if (json::HasJsonKey(json, "pos") == true) 
+  { oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos"); }
+  if (json::HasJsonKey(json, "radius") == true) 
+  { oCtor.mRadius = json::GetValueFrom<TReal>(json, "radius"); }
 }
 
 FSphere::FSphere(const DVec3& origin, TReal radius, IMaterial* mat)
@@ -42,6 +63,15 @@ FSphere::FSphere(const FSphere::PCtor& arg, IMaterial* mat)
 { 
   using ::dy::math::GetDBounds3DOf;
   this->mAABB = std::make_unique<DAABB>(GetDBounds3DOf(*this));
+}
+
+FSphere::PCtor FSphere::GetPCtor() const noexcept
+{
+  FSphere::PCtor result;
+  result.mOrigin = this->GetOrigin();
+  result.mRadius = this->GetRadius();
+
+  return result;
 }
 
 std::optional<std::vector<TReal>> FSphere::GetRayIntersectedTValues(const DRay& ray) const
