@@ -18,6 +18,8 @@
 #include <Expr/XEnumConversion.h>
 #include <IHitable.hpp>
 #include <XCommon.hpp>
+#include <Helper/XJsonCallback.hpp>
+#include <Helper/EJsonExistance.hpp>
 
 namespace ray
 {
@@ -33,15 +35,30 @@ public:
     enum EType { _1, _2, _3 };
     EXPR_INIT_ENUMTOTYPE(Type, EType);
 
-    struct PType1 final { DVec3 mOrigin; std::array<TReal, 6> mLength; DVec3 mAngle; };
-    struct PType2 final { DVec3 mOrigin, mLength, mAngle; };
-    struct PType3 final { DVec3 mOrigin; TReal mLength; DVec3 mAngle; };
+    struct PType1 final 
+    { 
+      DVec3 mOrigin; std::array<TReal, 6> mLength; DVec3 mAngle; 
+      PType1 Overwrite(const PType1& pctor, const json::FExistanceList& list) const;
+    };
+    struct PType2 final 
+    { 
+      DVec3 mOrigin, mLength, mAngle; 
+      PType2 Overwrite(const PType2& pctor, const json::FExistanceList& list) const;
+    };
+    struct PType3 final 
+    { 
+      DVec3 mOrigin; TReal mLength; DVec3 mAngle; 
+      PType3 Overwrite(const PType3& pctor, const json::FExistanceList& list) const;
+    };
     EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_1, PType1);
     EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_2, PType2);
     EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_3, PType3);
 
     EType mCtorType = EType::_1;
     std::variant<PType1, PType2, PType3> mCtor;
+
+    /// @brief Overwrite with given pctor instance and create new PCtor.
+    PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
   FBox(const PCtor& ctor, IMaterial* mat);
@@ -55,6 +72,10 @@ public:
   /// @return When ray intersected to ray, returns TReal list.
   std::optional<std::vector<TReal>> GetRayIntersectedTValues(const DRay& ray) const override final;
 
+  /// @brief Get PCtor instance from instance, with given type value.
+  /// @param type Type value.
+  FBox::PCtor GetPCtor(FBox::PCtor::EType type) const noexcept;
+
 private:
   DQuat mRotQuat;
 };
@@ -65,5 +86,11 @@ void from_json(const nlohmann::json& json, FBox::PCtor& oCtor);
 void from_json(const nlohmann::json& json, FBox::PCtor::PType1& oCtor);
 void from_json(const nlohmann::json& json, FBox::PCtor::PType2& oCtor);
 void from_json(const nlohmann::json& json, FBox::PCtor::PType3& oCtor);
+
+/// @brief FBox specialized function.
+template <> json::FExistanceList JsonCheckExistances<FBox::PCtor>(const nlohmann::json& json);
+template <> json::FExistanceList JsonCheckExistances<FBox::PCtor::PType1>(const nlohmann::json& json);
+template <> json::FExistanceList JsonCheckExistances<FBox::PCtor::PType2>(const nlohmann::json& json);
+template <> json::FExistanceList JsonCheckExistances<FBox::PCtor::PType3>(const nlohmann::json& json);
 
 } /// ::ray namespace

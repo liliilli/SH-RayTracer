@@ -19,6 +19,39 @@
 namespace ray
 {
 
+template <> json::FExistanceList JsonCheckExistances<FBox::PCtor>(const nlohmann::json& json)
+{
+  assert(json::HasJsonKey(json, "type") == true);
+  switch (json::GetValueFrom<TU32>(json, "type"))
+  {
+  case 1: return JsonCheckExistances<FBox::PCtor::PType1>(json);
+  case 2: return JsonCheckExistances<FBox::PCtor::PType2>(json);
+  case 3: return JsonCheckExistances<FBox::PCtor::PType3>(json);
+  default: break;
+  }
+
+  return {};
+}
+
+FBox::PCtor FBox::PCtor::Overwrite(const FBox::PCtor& pctor, const json::FExistanceList& list) const
+{
+  PCtor result = *this;
+
+  // I do not check result and newValue's type value is same or not, just for simplicity.
+  switch (result.mCtorType)
+  {
+  case PCtor::_1:
+  { result.mCtor = std::get<PCtor::PType1>(result.mCtor).Overwrite(std::get<PCtor::PType1>(pctor.mCtor), list); } break;
+  case PCtor::_2:
+  { result.mCtor = std::get<PCtor::PType2>(result.mCtor).Overwrite(std::get<PCtor::PType2>(pctor.mCtor), list); } break;
+  case PCtor::_3:
+  { result.mCtor = std::get<PCtor::PType3>(result.mCtor).Overwrite(std::get<PCtor::PType3>(pctor.mCtor), list); } break;
+  default: break;
+  }
+
+  return result;
+}
+
 void from_json(const nlohmann::json& json, FBox::PCtor& oCtor)
 {
   /// Type 1 ("type": 1)
@@ -46,22 +79,68 @@ void from_json(const nlohmann::json& json, FBox::PCtor& oCtor)
   }
 }
 
+template <> json::FExistanceList JsonCheckExistances<FBox::PCtor::PType1>(const nlohmann::json& json)
+{
+  using json::EExistance;
+  json::FExistanceList result(3, EExistance::NotExist);
+
+  if (json::HasJsonKey(json, "pos") == true) { result[0] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "length") == true) { result[1] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "angle") == true) { result[2] = EExistance::Exist; }
+
+  return result;
+}
+
+FBox::PCtor::PType1 FBox::PCtor::PType1::Overwrite(const PType1& pctor, const json::FExistanceList& list) const
+{
+  PCtor::PType1 result = *this;
+  using json::EExistance;
+  
+  OverwriteWhenExist(list[0], result.mOrigin, pctor.mOrigin);
+  OverwriteWhenExist(list[1], result.mLength, pctor.mLength);
+  OverwriteWhenExist(list[2], result.mAngle, pctor.mAngle);
+  return result;
+}
+
 void from_json(const nlohmann::json& json, FBox::PCtor::PType1& oCtor)
 {
   /// Type 1
   /// {
   ///   "detail": { "type": 1, "pos": [ 0, 1, 0 ], "length": [1, 2, 3, 4, 5, 6], "angle": [45, 0, 45] },
   /// }
-  assert(json::HasJsonKey(json, "pos") == true); 
-  assert(json::HasJsonKey(json, "length") == true);
-  assert(json::HasJsonKey(json, "angle") == true);
-  
-  oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos");
-  oCtor.mAngle  = json::GetValueFrom<DVec3>(json, "angle");
+  if (json::HasJsonKey(json, "pos") == true) 
+  { oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos"); }
+  if (json::HasJsonKey(json, "length") == true)
+  {
+    const auto lenVec = json::GetValueFrom<std::vector<TReal>>(json, "length");
+    assert(lenVec.size() == 6);
+    for (TIndex i = 0; i < 6; ++i) { oCtor.mLength[i] = lenVec[i]; }
+  }
+  if (json::HasJsonKey(json, "angle") == true) 
+  { oCtor.mAngle = json::GetValueFrom<DVec3>(json, "angle"); }
+}
 
-  const auto lenVec = json::GetValueFrom<std::vector<TReal>>(json, "length");
-  assert(lenVec.size() == 6);
-  for (TIndex i = 0; i < 6; ++i) { oCtor.mLength[i] = lenVec[i]; }
+template <> json::FExistanceList JsonCheckExistances<FBox::PCtor::PType2>(const nlohmann::json& json)
+{
+  using json::EExistance;
+  json::FExistanceList result(3, EExistance::NotExist);
+
+  if (json::HasJsonKey(json, "pos") == true) { result[0] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "length") == true) { result[1] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "angle") == true) { result[2] = EExistance::Exist; }
+
+  return result;
+}
+
+FBox::PCtor::PType2 FBox::PCtor::PType2::Overwrite(const PType2& pctor, const json::FExistanceList& list) const
+{
+  PCtor::PType2 result = *this;
+  using json::EExistance;
+  
+  OverwriteWhenExist(list[0], result.mOrigin, pctor.mOrigin);
+  OverwriteWhenExist(list[1], result.mLength, pctor.mLength);
+  OverwriteWhenExist(list[2], result.mAngle, pctor.mAngle);
+  return result;
 }
 
 void from_json(const nlohmann::json& json, FBox::PCtor::PType2& oCtor)
@@ -70,13 +149,35 @@ void from_json(const nlohmann::json& json, FBox::PCtor::PType2& oCtor)
   /// {
   ///   "detail": { "type": 2, "pos": [ 0, 1, 0 ], "length": [ 1, 2, 3 ], "angle": [45, 0, 45] },
   /// }
-  assert(json::HasJsonKey(json, "pos") == true); 
-  assert(json::HasJsonKey(json, "length") == true);
-  assert(json::HasJsonKey(json, "angle") == true);
+  if (json::HasJsonKey(json, "pos") == true) 
+  { oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos"); }
+  if (json::HasJsonKey(json, "length") == true)
+  { oCtor.mLength = json::GetValueFrom<DVec3>(json, "length"); }
+  if (json::HasJsonKey(json, "angle") == true) 
+  { oCtor.mAngle = json::GetValueFrom<DVec3>(json, "angle"); }
+}
+
+template <> json::FExistanceList JsonCheckExistances<FBox::PCtor::PType3>(const nlohmann::json& json)
+{
+  using json::EExistance;
+  json::FExistanceList result(3, EExistance::NotExist);
+
+  if (json::HasJsonKey(json, "pos") == true) { result[0] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "length") == true) { result[1] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "angle") == true) { result[2] = EExistance::Exist; }
+
+  return result;
+}
+
+FBox::PCtor::PType3 FBox::PCtor::PType3::Overwrite(const PType3& pctor, const json::FExistanceList& list) const
+{
+  PCtor::PType3 result = *this;
+  using json::EExistance;
   
-  oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos");
-  oCtor.mAngle  = json::GetValueFrom<DVec3>(json, "angle");
-  oCtor.mLength = json::GetValueFrom<DVec3>(json, "length");
+  OverwriteWhenExist(list[0], result.mOrigin, pctor.mOrigin);
+  OverwriteWhenExist(list[1], result.mLength, pctor.mLength);
+  OverwriteWhenExist(list[2], result.mAngle, pctor.mAngle);
+  return result;
 }
 
 void from_json(const nlohmann::json& json, FBox::PCtor::PType3& oCtor)
@@ -85,13 +186,12 @@ void from_json(const nlohmann::json& json, FBox::PCtor::PType3& oCtor)
   /// {
   ///   "detail": { "type": 3, "pos": [ 0, 1, 0 ], "length": 1, "angle": [45, 0, 45] },
   /// }
-  assert(json::HasJsonKey(json, "pos") == true); 
-  assert(json::HasJsonKey(json, "length") == true);
-  assert(json::HasJsonKey(json, "angle") == true);
-  
-  oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos");
-  oCtor.mAngle  = json::GetValueFrom<DVec3>(json, "angle");
-  oCtor.mLength = json::GetValueFrom<TReal>(json, "length");
+  if (json::HasJsonKey(json, "pos") == true) 
+  { oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos"); }
+  if (json::HasJsonKey(json, "length") == true)
+  { oCtor.mLength = json::GetValueFrom<TReal>(json, "length"); }
+  if (json::HasJsonKey(json, "angle") == true) 
+  { oCtor.mAngle = json::GetValueFrom<DVec3>(json, "angle"); }
 }
 
 FBox::FBox(const PCtor& arg, IMaterial* mat)
@@ -134,6 +234,40 @@ std::optional<std::vector<TReal>> FBox::GetRayIntersectedTValues(const DRay& ray
   if (IsRayIntersected(ray, *this, this->GetQuaternion()) == false) { return std::nullopt; }
 
   return GetTValuesOf(ray, *this, this->GetQuaternion());
+}
+
+FBox::PCtor FBox::GetPCtor(FBox::PCtor::EType type) const noexcept
+{
+  FBox::PCtor result; result.mCtorType = type;
+  switch (type)
+  {
+  case PCtor::_1:
+  {
+    FBox::PCtor::PType1 pctor;
+    pctor.mAngle  = this->mRotQuat.ToDegrees();
+    pctor.mLength = this->mLength;
+    pctor.mOrigin = this->mOrigin;
+    result.mCtor  = pctor;
+  } break;
+  case PCtor::_2:
+  {
+    FBox::PCtor::PType2 pctor;
+    pctor.mAngle  = this->mRotQuat.ToDegrees();
+    pctor.mLength = {this->mLength[0], this->mLength[2], this->mLength[4]};
+    pctor.mOrigin = this->mOrigin;
+    result.mCtor  = pctor;
+  } break;
+  case PCtor::_3:
+  {
+    FBox::PCtor::PType3 pctor;
+    pctor.mAngle  = this->mRotQuat.ToDegrees();
+    pctor.mLength = this->mLength.front();
+    pctor.mOrigin = this->mOrigin;
+    result.mCtor  = pctor;
+  } break;
+  }
+
+  return result;
 }
 
 } /// ::ray namespace
