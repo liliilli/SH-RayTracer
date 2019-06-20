@@ -300,14 +300,51 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
   using ::dy::expr::string::Input;
   using ::dy::expr::string::Case;
 
-  // Check there is `materials` header key.
+  // Check there is `materials` header key. First, get material informations from `materials`.
   if (json::HasJsonKey(json, "materials") == false)
   {
-    std::cerr << "Can not find `materials` list header.\n";
+    std::cerr << "Could not find `materials` list header.\n";
     return false;
   }
-  // First, get material informations from `materials`.
-  for (const auto& item : json["materials"])
+  if (this->AddMaterialsFromJson190710(json["materials"]) == false)
+  {
+    std::cerr << "Failed to create mateiral list.\n";
+    return false;
+  }
+
+  // Check there is `prefabs` header key. Second, get prefab information.
+  if (json::HasJsonKey(json, "prefabs") == false)
+  {
+    std::cerr << "Could not find `prefabs` list header.\n";
+    return false;
+  }
+  if (this->AddPrefabsFromJson190710(json["prefabs"], defaults) == false)
+  {
+    std::cerr << "Could not get informations from `prefabs`. Unexpected error occurred inside.\n";
+    return false;
+  }
+
+  // Check there is `objects` header key. Third, get object informations from `objects`.
+  if (json::HasJsonKey(json, "objects") == false)
+  {
+    std::cerr << "Can not find `objects` list header.\n";
+    return false;
+  }
+  if (this->AddObjectsFromJson190710(json["objects"], defaults) == false)
+  {
+    std::cerr << "Failed to create scene objects list. Unexpected error occurred inside.\n";
+    return false;
+  }
+  
+  return true;
+}
+
+bool MScene::AddMaterialsFromJson190710(const nlohmann::json& json)
+{
+  using ::dy::expr::string::Input;
+  using ::dy::expr::string::Case;
+
+  for (const auto& item : json)
   {
     // Check fundamental key headers.
     if (json::HasJsonKey(item, "name") == false) 
@@ -334,141 +371,339 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
     case Case("lambertian"):  { EXPR_SGT(MMaterial).AddMaterial<FMatLambertian>(item, name); } break;
     case Case("metal"):       { EXPR_SGT(MMaterial).AddMaterial<FMatMetal>(item, name); } break;
     case Case("dielectric"):  { EXPR_SGT(MMaterial).AddMaterial<FMatDielectric>(item, name); } break;
-    default: break;
+    default: 
+    {
+      std::cerr << "Failed to create material. Unexpected material type name is specified.\n";
+      return false;
+    }
     }
   }
 
-  // Check there is `objects` header key.
-  if (json::HasJsonKey(json, "objects") == false)
+  return true;
+}
+
+bool MScene::AddPrefabsFromJson190710(const nlohmann::json& json, const PSceneDefaults& defaults)
+{
+  using ::dy::expr::string::Case;
+  using ::dy::expr::string::Input;
+  for (const auto& item : json)
   {
-    std::cerr << "Can not find `objects` list header.\n";
-    return false;
-  }
-  // Second, get object informations from `objects`.
-  for (const auto& item : json["objects"])
-  {
-    const auto type = json::GetValueFrom<std::string>(item, "type"); 
-    switch (Input(type))
+    // Check key headers
+    if (json::HasJsonKey(item, "name") == false)
     {
-    case Case("camera"): // Create camera
+      std::cerr << "Given prefab item has not `name` key header.\n";
+      return false;
+    }
+    if (json::HasJsonKey(item, "type") == false)
+    {
+      std::cerr << "Given prefab item has not `type` key header.\n";
+      return false;
+    }
+    if (json::HasJsonKey(item, "detail") == false)
+    {
+      std::cerr << "Given prefab item has not `detail` key header.\n";
+      return false;
+    }
+
+    // Check duplicated name is already in given mPrefabs container.
+    const auto name = json::GetValueFrom<std::string>(item, "name");
+    const auto type = json::GetValueFrom<std::string>(item, "type"); 
+    if (this->mPrefabs.find(name) != this->mPrefabs.end())
+    {
+      std::cerr << "Prefab item's name `" << name << "` is duplicated to already inserted prefab.\n";
+      return false;
+    }
+
+    const auto typeHashValue = Input(type); // Create hash value from `type` std::string.
+    if (typeHashValue == Case("camera")) // Create camera prefab
     {
       auto ctor = json::GetValueFrom<FCamera::PCtor>(item, "detail");
       ctor.mImgSize = defaults.mImageSize;
       ctor.mSamples = defaults.mNumSamples;
       ctor.mScreenRatioXy = TReal(defaults.mImageSize.X) / defaults.mImageSize.Y;
-      this->mMainCamera = std::make_unique<FCamera>(ctor);
-    } break;
-    case Case("sphere"): // Create SDF Sphere
+      
+      const auto [_, isSuccessful] = this->mPrefabs.try_emplace(name, std::make_unique<FCamera>(ctor));
+      if (isSuccessful == false)
+      {
+        std::cerr << "Unexpected error occurred.\n";
+        return false;
+      }
+      continue;
+    }
+
+    // If given type is not `camera`, check there is also `material` key header.
+    if (json::HasJsonKey(item, "material") == false)
     {
-      // Check
-      if (json::HasJsonKey(item, "material") == false)
-      {
-        std::cerr << "Object Item has not `material` key header.\n";
-        return false;
-      }
-      const auto matId = json::GetValueFrom<std::string>(item, "material");
-      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
-      {
-        std::cerr << "Material `" << matId << "` not found.";
-        return false;
-      }
-      // Create Object with the pointer of material instance.
+      std::cerr << "Prefab object Item has not `material` key header.\n";
+      return false;
+    }
+    // If `material` key header is exist, check there is a material with given name `matId`.
+    const auto matId = json::GetValueFrom<std::string>(item, "material");
+    if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+    {
+      std::cerr << "Material `" << matId << "` not found.";
+      return false;
+    }
+
+    std::unique_ptr<IObject> psObject = nullptr; // Item (smtptr)
+    // Create prefab instance.
+    switch (typeHashValue)
+    {
+    case Case("sphere"): // Create SDF Sphere prefab
+    {
       const auto ctor = json::GetValueFrom<FSphere::PCtor>(item, "detail");
-      this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      psObject = std::make_unique<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
     case Case("plane"): // Create SDF plane
     {
-      // Check
-      if (json::HasJsonKey(item, "material") == false)
-      {
-        std::cerr << "Object Item has not `material` key header.\n";
-        return false;
-      }
-      const auto matId = json::GetValueFrom<std::string>(item, "material");
-      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
-      {
-        std::cerr << "Material `" << matId << "` not found.";
-        return false;
-      }
-      // Create Object with the pointer of material instance.
       const auto ctor = json::GetValueFrom<FPlane::PCtor>(item, "detail");
-      this->AddHitableObject<FPlane>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      psObject = std::make_unique<FPlane>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
     case Case("box"): // Create SDF box
     {
-      // Check
-      if (json::HasJsonKey(item, "material") == false)
-      {
-        std::cerr << "Object Item has not `material` key header.\n";
-        return false;
-      }
-      const auto matId = json::GetValueFrom<std::string>(item, "material");
-      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
-      {
-        std::cerr << "Material `" << matId << "` not found.";
-        return false;
-      }
-      // Create Object with the pointer of material instance.
       const auto ctor = json::GetValueFrom<FBox::PCtor>(item, "detail");
-      this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      psObject = std::make_unique<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
     case Case("torus"): // Create SDF torus
     {
-      // Check
-      if (json::HasJsonKey(item, "material") == false)
-      {
-        std::cerr << "Object Item has not `material` key header.\n";
-        return false;
-      }
-      const auto matId = json::GetValueFrom<std::string>(item, "material");
-      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
-      {
-        std::cerr << "Material `" << matId << "` not found.";
-        return false;
-      }
-      // Create Object with the pointer of material instance.
       const auto ctor = json::GetValueFrom<FTorus::PCtor>(item, "detail");
-      this->AddHitableObject<FTorus>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      psObject = std::make_unique<FTorus>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
     case Case("cone"): // Create SDF cone
     {
-      // Check
-      if (json::HasJsonKey(item, "material") == false)
-      {
-        std::cerr << "Object Item has not `material` key header.\n";
-        return false;
-      }
-      const auto matId = json::GetValueFrom<std::string>(item, "material");
-      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
-      {
-        std::cerr << "Material `" << matId << "` not found.";
-        return false;
-      }
-      // Create Object with the pointer of material instance.
       const auto ctor = json::GetValueFrom<FCone::PCtor>(item, "detail");
-      this->AddHitableObject<FCone>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      psObject = std::make_unique<FCone>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
     case Case("capsule"): // Create SDF capsule
     {
-      // Check
-      if (json::HasJsonKey(item, "material") == false)
-      {
-        std::cerr << "Object Item has not `material` key header.\n";
-        return false;
-      }
-      const auto matId = json::GetValueFrom<std::string>(item, "material");
-      if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
-      {
-        std::cerr << "Material `" << matId << "` not found.";
-        return false;
-      }
-      // Create Object with the pointer of material instance.
       const auto ctor = json::GetValueFrom<FCapsule::PCtor>(item, "detail");
-      this->AddHitableObject<FCapsule>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      psObject = std::make_unique<FCapsule>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
+    default:
+    {
+      std::cerr << "Failed to create prefab instance. type is not matched to anyting.\n";
+      return false;
     }
-  }
-  
+    }
+
+    // Insert shape instance.
+    const auto [_, isSuccessful] = this->mPrefabs.try_emplace(name, psObject.release());
+    if (isSuccessful == false)
+    {
+      std::cerr << "Unexpected error occurred.\n";
+      return false;
+    }
+  } // for (const auto& item : json)
+
+  return true;
+}
+
+bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDefaults& defaults)
+{
+  using ::dy::expr::string::Case;
+  using ::dy::expr::string::Input;
+
+  for (const auto& item : json)
+  {
+    // Branch. If item has `name` key header, regard item as prefab referencing object item.
+    // If not, just create new object.
+    if (json::HasJsonKey(item, "name") == true)
+    {
+      // Get prefab overwritten object.
+      const auto name = json::GetValueFrom<std::string>(item, "name");
+      const auto itPrefab = this->mPrefabs.find(name);
+      if (itPrefab == this->mPrefabs.end())
+      {
+        std::cerr << "Failed to getting instance from given prefab name, `" << name << "`\n";
+        return false;
+      }
+
+      const auto& [prefabName, prefabObject] = *itPrefab;
+      switch (prefabObject->GetObjectType())
+      {
+      case EObject::Camera:
+      {
+        const auto& camera = static_cast<FCamera&>(*prefabObject);
+        const auto [ctor, list] = json::GetValueFromOptionally<FCamera::PCtor>(item, "detail");
+        this->mMainCamera = std::make_unique<FCamera>(camera.GetPCtor().Overwrite(ctor, list));
+      } break;
+      case EObject::Hitable:
+      {
+        const auto& hitable = static_cast<IHitable&>(*prefabObject);
+        switch (hitable.GetType())
+        {
+        case EShapeType::Box:
+        {
+          using TObject = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Box);
+          const auto& prefab = static_cast<const TObject&>(hitable);
+          const auto [ctor, list] = json::GetValueFromOptionally<typename TObject::PCtor>(item, "detail");
+          this->AddHitableObject<TObject>(prefab.GetPCtor(ctor.mCtorType).Overwrite(ctor, list), prefab.GetMaterial());
+        } break;
+        case EShapeType::Capsule:
+        {
+          using TObject = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Capsule);
+          const auto& prefab = static_cast<const TObject&>(hitable);
+          const auto [ctor, list] = json::GetValueFromOptionally<typename TObject::PCtor>(item, "detail");
+          this->AddHitableObject<TObject>(prefab.GetPCtor(ctor.mCtorType).Overwrite(ctor, list), prefab.GetMaterial());
+        } break;
+        case EShapeType::Cone:
+        {
+          using TObject = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Cone);
+          const auto& prefab = static_cast<const TObject&>(hitable);
+          const auto [ctor, list] = json::GetValueFromOptionally<typename TObject::PCtor>(item, "detail");
+          this->AddHitableObject<TObject>(prefab.GetPCtor(ctor.mCtorType).Overwrite(ctor, list), prefab.GetMaterial());
+        } break;
+        case EShapeType::Plane:
+        {
+          using TObject = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Plane);
+          const auto& prefab = static_cast<const TObject&>(hitable);
+          const auto [ctor, list] = json::GetValueFromOptionally<typename TObject::PCtor>(item, "detail");
+          this->AddHitableObject<TObject>(prefab.GetPCtor(ctor.mCtorType).Overwrite(ctor, list), prefab.GetMaterial());
+        } break;
+        case EShapeType::Sphere:
+        {
+          using TObject = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Sphere);
+          const auto& prefab = static_cast<const TObject&>(hitable);
+          const auto [ctor, list] = json::GetValueFromOptionally<typename TObject::PCtor>(item, "detail");
+          this->AddHitableObject<TObject>(prefab.GetPCtor().Overwrite(ctor, list), prefab.GetMaterial());
+        } break;
+        case EShapeType::Torus:
+        {
+          using TObject = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Torus);
+          const auto& prefab = static_cast<const TObject&>(hitable);
+          const auto [ctor, list] = json::GetValueFromOptionally<typename TObject::PCtor>(item, "detail");
+          this->AddHitableObject<TObject>(prefab.GetPCtor().Overwrite(ctor, list), prefab.GetMaterial());
+        } break;
+        }
+      } break;
+      }
+    }
+    else
+    {
+      // Just create new object.
+      const auto type = json::GetValueFrom<std::string>(item, "type"); 
+      switch (Input(type))
+      {
+      case Case("camera"): // Create camera
+      {
+        auto ctor = json::GetValueFrom<FCamera::PCtor>(item, "detail");
+        ctor.mImgSize = defaults.mImageSize;
+        ctor.mSamples = defaults.mNumSamples;
+        ctor.mScreenRatioXy = TReal(defaults.mImageSize.X) / defaults.mImageSize.Y;
+        this->mMainCamera = std::make_unique<FCamera>(ctor);
+      } break;
+      case Case("sphere"): // Create SDF Sphere
+      {
+        // Check
+        if (json::HasJsonKey(item, "material") == false)
+        {
+          std::cerr << "Object Item has not `material` key header.\n";
+          return false;
+        }
+        const auto matId = json::GetValueFrom<std::string>(item, "material");
+        if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+        {
+          std::cerr << "Material `" << matId << "` not found.";
+          return false;
+        }
+        // Create Object with the pointer of material instance.
+        const auto ctor = json::GetValueFrom<FSphere::PCtor>(item, "detail");
+        this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      } break;
+      case Case("plane"): // Create SDF plane
+      {
+        // Check
+        if (json::HasJsonKey(item, "material") == false)
+        {
+          std::cerr << "Object Item has not `material` key header.\n";
+          return false;
+        }
+        const auto matId = json::GetValueFrom<std::string>(item, "material");
+        if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+        {
+          std::cerr << "Material `" << matId << "` not found.";
+          return false;
+        }
+        // Create Object with the pointer of material instance.
+        const auto ctor = json::GetValueFrom<FPlane::PCtor>(item, "detail");
+        this->AddHitableObject<FPlane>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      } break;
+      case Case("box"): // Create SDF box
+      {
+        // Check
+        if (json::HasJsonKey(item, "material") == false)
+        {
+          std::cerr << "Object Item has not `material` key header.\n";
+          return false;
+        }
+        const auto matId = json::GetValueFrom<std::string>(item, "material");
+        if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+        {
+          std::cerr << "Material `" << matId << "` not found.";
+          return false;
+        }
+        // Create Object with the pointer of material instance.
+        const auto ctor = json::GetValueFrom<FBox::PCtor>(item, "detail");
+        this->AddHitableObject<FBox>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      } break;
+      case Case("torus"): // Create SDF torus
+      {
+        // Check
+        if (json::HasJsonKey(item, "material") == false)
+        {
+          std::cerr << "Object Item has not `material` key header.\n";
+          return false;
+        }
+        const auto matId = json::GetValueFrom<std::string>(item, "material");
+        if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+        {
+          std::cerr << "Material `" << matId << "` not found.";
+          return false;
+        }
+        // Create Object with the pointer of material instance.
+        const auto ctor = json::GetValueFrom<FTorus::PCtor>(item, "detail");
+        this->AddHitableObject<FTorus>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      } break;
+      case Case("cone"): // Create SDF cone
+      {
+        // Check
+        if (json::HasJsonKey(item, "material") == false)
+        {
+          std::cerr << "Object Item has not `material` key header.\n";
+          return false;
+        }
+        const auto matId = json::GetValueFrom<std::string>(item, "material");
+        if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+        {
+          std::cerr << "Material `" << matId << "` not found.";
+          return false;
+        }
+        // Create Object with the pointer of material instance.
+        const auto ctor = json::GetValueFrom<FCone::PCtor>(item, "detail");
+        this->AddHitableObject<FCone>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      } break;
+      case Case("capsule"): // Create SDF capsule
+      {
+        // Check
+        if (json::HasJsonKey(item, "material") == false)
+        {
+          std::cerr << "Object Item has not `material` key header.\n";
+          return false;
+        }
+        const auto matId = json::GetValueFrom<std::string>(item, "material");
+        if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+        {
+          std::cerr << "Material `" << matId << "` not found.";
+          return false;
+        }
+        // Create Object with the pointer of material instance.
+        const auto ctor = json::GetValueFrom<FCapsule::PCtor>(item, "detail");
+        this->AddHitableObject<FCapsule>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      } break;
+      }
+    }
+  } 
+
   return true;
 }
 
