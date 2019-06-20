@@ -26,17 +26,63 @@ namespace ray
 
 void from_json(const nlohmann::json& item, FCamera::PCtor& oCtor)
 {
-  assert(json::HasJsonKey(item, "pos") == true); 
-  assert(json::HasJsonKey(item, "eye") == true);
-  assert(json::HasJsonKey(item, "focus_dist") == true); 
-  assert(json::HasJsonKey(item, "sensor_size") == true); 
-  assert(json::HasJsonKey(item, "aperture") == true); 
+  if (json::HasJsonKey(item, "aperture") == true) 
+  { oCtor.mAperture = json::GetValueFrom<TReal>(item, "aperture"); }
+  if (json::HasJsonKey(item, "focus_dist") == true) 
+  { oCtor.mFocusDistance = json::GetValueFrom<TReal>(item, "focus_dist"); }
+  if (json::HasJsonKey(item, "eye") == true) 
+  { oCtor.mForwardTo = json::GetValueFrom<DVec3>(item, "eye"); }
+  if (json::HasJsonKey(item, "pos") == true) 
+  { oCtor.mOrigin = json::GetValueFrom<DVec3>(item, "pos"); }
+  if (json::HasJsonKey(item, "sensor_size") == true) 
+  { oCtor.mSensorSize = json::GetValueFrom<TReal>(item, "sensor_size"); }
+}
 
-  oCtor.mAperture      = json::GetValueFrom<TReal>(item, "aperture");
-  oCtor.mFocusDistance = json::GetValueFrom<TReal>(item, "focus_dist");
-  oCtor.mForwardTo     = json::GetValueFrom<DVec3>(item, "eye");
-  oCtor.mOrigin        = json::GetValueFrom<DVec3>(item, "pos");
-  oCtor.mSensorSize    = json::GetValueFrom<TReal>(item, "sensor_size");
+template <>
+json::FExistanceList JsonCheckExistances<FCamera::PCtor>(const nlohmann::json& json)
+{
+  using json::EExistance;
+  json::FExistanceList result(8, EExistance::NotExist);
+
+  if (json::HasJsonKey(json, "aperture") == true) { result[0] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "focus_dist") == true) { result[1] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "eye") == true) { result[2] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "pos") == true) { result[4] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "sensor_size") == true) { result[7] = EExistance::Exist; }
+
+  return result;
+}
+
+FCamera::PCtor FCamera::PCtor::Overwrite(const PCtor& pctor, const json::FExistanceList& list) const
+{
+  PCtor result = *this;
+  using json::EExistance;
+  
+  OverwriteWhenExist(list[0], result.mAperture, pctor.mAperture);
+  OverwriteWhenExist(list[1], result.mFocusDistance, pctor.mFocusDistance);
+  OverwriteWhenExist(list[2], result.mForwardTo, pctor.mForwardTo);
+  OverwriteWhenExist(list[3], result.mImgSize, pctor.mImgSize);
+  OverwriteWhenExist(list[4], result.mOrigin, pctor.mOrigin);
+  OverwriteWhenExist(list[5], result.mSamples, pctor.mSamples);
+  OverwriteWhenExist(list[6], result.mScreenRatioXy, pctor.mScreenRatioXy);
+  OverwriteWhenExist(list[7], result.mSensorSize, pctor.mSensorSize);
+
+  return result;
+} 
+
+FCamera::PCtor FCamera::GetPCtor() const noexcept
+{
+  PCtor result;
+  result.mAperture = this->mAperture;
+  result.mFocusDistance = this->mDistance;
+  result.mForwardTo = this->mForward + this->mOrigin;
+  result.mImgSize = this->mScreenSize;
+  result.mOrigin = this->mOrigin;
+  result.mSamples = this->mSamples;
+  result.mScreenRatioXy = TReal(result.mImgSize.X) / result.mImgSize.Y;
+  result.mSensorSize = this->mSensorSize;
+
+  return result;
 }
 
 FCamera::FCamera(const FCamera::PCtor& arg)

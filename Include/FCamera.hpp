@@ -19,6 +19,8 @@
 #include <Math/Type/Shape/DRay.h>
 #include <Math/Type/Micellanous/DClamp.h>
 #include <Interface/IObject.hpp>
+#include <Helper/EJsonExistance.hpp>
+#include <Helper/XJsonCallback.hpp>
 
 namespace ray
 {
@@ -39,6 +41,10 @@ public:
     DClamp<0, 100> mAperture;
     DClamp<0, 100> mFocusDistance;
     DClamp<0, 100> mSensorSize;
+
+    /// @brief Overwrite with given pctor instance and crate new PCtor.
+    /// member variable matching order must be same to `JsonCheckExistances` function matching order.
+    PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
   FCamera(const FCamera::PCtor& arg);
@@ -53,6 +59,8 @@ public:
   void SetSamples(TU32 sample);
   /// @brief Get rendering samples of each pixel.
   TU32 GetSamples() const noexcept;
+  /// @brief Get PCtor instance from instance.
+  FCamera::PCtor GetPCtor() const noexcept;
 
 private:
   /// @brief Get sample offset list of given anti-aliasing sample count.
@@ -81,5 +89,8 @@ private:
 /// @brief Template function for automatic parsing from json.
 /// This initialize FCamera::PCtor instance, except some elements.
 void from_json(const nlohmann::json& json, FCamera::PCtor& oCtor);
+
+template <>
+json::FExistanceList JsonCheckExistances<FCamera::PCtor>(const nlohmann::json& json);
 
 } /// ::ray namespace
