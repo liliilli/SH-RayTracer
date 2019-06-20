@@ -19,17 +19,42 @@
 namespace ray
 {
 
+template <> json::FExistanceList JsonCheckExistances<FTorus::PCtor>(const nlohmann::json& json)
+{
+  using json::EExistance;
+  json::FExistanceList result(4, EExistance::NotExist);
+
+  if (json::HasJsonKey(json, "pos") == true) { result[0] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "distance") == true) { result[1] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "radius") == true) { result[2] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "angle") == true) { result[3] = EExistance::Exist; }
+
+  return result;
+}
+
+FTorus::PCtor FTorus::PCtor::Overwrite(const PCtor& pctor, const json::FExistanceList& list) const
+{
+  PCtor result = *this;
+  using json::EExistance;
+  
+  OverwriteWhenExist(list[0], result.mOrigin, pctor.mOrigin);
+  OverwriteWhenExist(list[1], result.mDistance, pctor.mDistance);
+  OverwriteWhenExist(list[2], result.mRadius, pctor.mRadius);
+  OverwriteWhenExist(list[3], result.mAngle, pctor.mAngle);
+
+  return result;
+}
+
 void from_json(const nlohmann::json& json, FTorus::PCtor& oCtor)
 {
-  assert(json::HasJsonKey(json, "pos") == true);
-  assert(json::HasJsonKey(json, "distance") == true); 
-  assert(json::HasJsonKey(json, "radius") == true); 
-  assert(json::HasJsonKey(json, "angle") == true);
-
-  oCtor.mOrigin   = json::GetValueFrom<DVec3>(json, "pos");
-  oCtor.mDistance = json::GetValueFrom<TReal>(json, "distance"); 
-  oCtor.mRadius   = json::GetValueFrom<TReal>(json, "radius"); 
-  oCtor.mAngle    = json::GetValueFrom<DVec3>(json, "angle"); 
+  if (json::HasJsonKey(json, "pos") == true) 
+  { oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos"); }
+  if (json::HasJsonKey(json, "distance") == true) 
+  { oCtor.mDistance = json::GetValueFrom<TReal>(json, "distance"); }
+  if (json::HasJsonKey(json, "radius") == true) 
+  { oCtor.mRadius = json::GetValueFrom<TReal>(json, "radius"); }
+  if (json::HasJsonKey(json, "angle") == true) 
+  { oCtor.mAngle = json::GetValueFrom<DVec3>(json, "angle"); }
 }
 
 FTorus::FTorus(const FTorus::PCtor& arg, IMaterial* mat)
@@ -39,6 +64,17 @@ FTorus::FTorus(const FTorus::PCtor& arg, IMaterial* mat)
 { 
   using ::dy::math::GetDBounds3DOf;
   this->mAABB = std::make_unique<DAABB>(GetDBounds3DOf(*this, this->GetQuaternion()));
+}
+
+FTorus::PCtor FTorus::GetPCtor() const noexcept
+{
+  FTorus::PCtor result;
+  result.mOrigin    = this->GetOrigin();
+  result.mDistance  = this->GetDistance();
+  result.mRadius    = this->GetRadius();
+  result.mAngle     = this->mRotQuat.ToDegrees();
+
+  return result;
 }
 
 std::optional<std::vector<TReal>> FTorus::GetRayIntersectedTValues(const DRay& ray) const

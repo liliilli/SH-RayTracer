@@ -16,6 +16,8 @@
 #include <Math/Type/Shape/DTorus.h>
 #include <IHitable.hpp>
 #include <XCommon.hpp>
+#include <Helper/XJsonCallback.hpp>
+#include <Helper/EJsonExistance.hpp>
 
 namespace ray
 {
@@ -32,6 +34,9 @@ public:
     TReal mDistance;
     TReal mRadius;
     DVec3 mAngle;
+
+    /// @brief Overwrite with given pctor instance and create new PCtor.
+    PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
   FTorus(const FTorus::PCtor& arg, IMaterial* mat);
@@ -45,6 +50,9 @@ public:
   /// @return When ray intersected to ray, returns TReal list.
   std::optional<std::vector<TReal>> GetRayIntersectedTValues(const DRay& ray) const override final;
 
+  /// @brief Get PCtor instance from FTorus instance.
+  FTorus::PCtor GetPCtor() const noexcept;
+
 private:
   DQuat mRotQuat;
 };
@@ -52,5 +60,8 @@ private:
 /// @brief Template function for automatic parsing from json.
 /// This initialize FTorus::PCtor instance, except some elements.
 void from_json(const nlohmann::json& json, FTorus::PCtor& oCtor);
+
+/// @brief FTorus specialized function.
+template <> json::FExistanceList JsonCheckExistances<FTorus::PCtor>(const nlohmann::json& json);
 
 } /// ::ray namespace
