@@ -70,6 +70,11 @@ public:
   /// @param id Id of material to find.
   /// @return If found, return true or false.
   bool HasMaterial(const DMatId& id) const noexcept;
+  
+  /// @brief Check candidate container has material that named `id`.
+  /// @param id Id of material candidate to find.
+  /// @return If found, return true or false.
+  bool HasMaterialCandidate(const DMatId& id) const noexcept;
 
   /// @brief Get pointer of material that has id.
   /// @param id Id of material.

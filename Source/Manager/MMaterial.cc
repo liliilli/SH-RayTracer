@@ -52,6 +52,11 @@ bool MMaterial::HasMaterial(const DMatId& id) const noexcept
   return it != this->mContainer.end(); 
 }
 
+bool MMaterial::HasMaterialCandidate(const DMatId& id) const noexcept
+{
+  return this->mCandidates.find(id) != this->mCandidates.end();
+}
+
 IMaterial* MMaterial::GetMaterial(const DMatId& id)
 {
   if (this->HasMaterial(id) == false) { return nullptr; }
