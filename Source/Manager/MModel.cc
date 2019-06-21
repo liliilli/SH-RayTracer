@@ -65,13 +65,23 @@ std::optional<DModelId> MModel::AddModel(const std::filesystem::path& path)
   if (error.empty() == false)
   {
     std::cerr << error << "\n";
-    return std::nullopt;
   }
-  if (ret == 0)
+  if (ret == false)
   {
     std::cerr << "Failed to load model `" << path << "`. Unexpected error occurred.\n";
     return std::nullopt;
   }
+
+  // Create DModelBuffer with attrib.
+  const DModelBufferId mId = ::dy::math::DUuid{true};
+  const auto [it, isSuccessful] = this->mBufferContainer.try_emplace(mId, mId, attrib);
+  if (isSuccessful == false)
+  {
+    std::cerr << "Failed to load model `" << path << "`. Unexpected error occurred.\n";
+    return std::nullopt;
+  }
+
+
 
   // Temporary code.
   return std::nullopt;

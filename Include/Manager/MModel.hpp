@@ -22,6 +22,9 @@
 #include <Math/Type/Micellanous/DUuid.h>
 #include <IMaterial.hpp>
 #include <DModelId.hpp>
+#include <Id/DModelBufferId.hpp>
+#include <Id/DMeshId.hpp>
+#include <Resource/DModelBuffer.hpp>
 
 namespace ray
 {
@@ -46,8 +49,14 @@ public:
 private:
   using TModelKey = DModelId; 
   using TModelContainer = std::unordered_map<TModelKey, std::string>;
-  
   TModelContainer mModelContainer;
+
+  using TModelBufferKey = DModelBufferId;
+  using TBufferContainer = std::unordered_map<TModelBufferKey, DModelBuffer>;
+  TBufferContainer mBufferContainer;
+
+  using TMeshKey = DMeshId;
+
 };
 
 } /// ::ray namespace
