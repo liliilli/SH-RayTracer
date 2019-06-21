@@ -20,6 +20,11 @@ if(Clang)
 	set(CMKAE_CXX_FLAGS_RELEASE "-s -O2 -DNDEBUG -march=native")
 endif(Clang)
 
+set(ASSIMP_NO_EXPORT "ON")
+set(ASSIMP_BUILD_ASSIMP_TOOLS "OFF")
+set(ASSIMP_WERROR "ON")
+set(ASSIMP_BUILD_TESTS "OFF")
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 add_subdirectory(DyUtils)
 
@@ -30,6 +35,7 @@ set(SOURCE
 
     "${SOURCE_DIRECTORY}/Manager/MScene.cc"
     "${SOURCE_DIRECTORY}/Manager/MMaterial.cc"
+    "${SOURCE_DIRECTORY}/Manager/MModel.cc"
 
     "${SOURCE_DIRECTORY}/OldMaterial/FMatLambertian.cc"
     "${SOURCE_DIRECTORY}/OldMaterial/FMatDielectric.cc"
@@ -43,6 +49,8 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/Shape/FCapsule.cc"
 
     "${SOURCE_DIRECTORY}/DMatId.cc"
+    "${SOURCE_DIRECTORY}/DModelId.cc"
+
     "${SOURCE_DIRECTORY}/FCamera.cc"
     "${SOURCE_DIRECTORY}/FRenderWorker.cc"
     "${SOURCE_DIRECTORY}/XMain.cc"
@@ -63,6 +71,7 @@ PUBLIC
 
 PRIVATE
 	${CMAKE_SOURCE_DIR}/ThirdParty
+	${CMAKE_SOURCE_DIR}/assimp500/include
     ${CMAKE_SOURCE_DIR}/DyUtils/DyExpression/Include
     ${CMAKE_SOURCE_DIR}/DyUtils/DyStringUtil/Include
     ${CMAKE_SOURCE_DIR}/DyUtils/DyMath/Include
