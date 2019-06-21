@@ -74,11 +74,13 @@ std::optional<DModelId> MModel::AddModel(const std::filesystem::path& path)
 
   // Create DModelBuffer with attrib.
   const DModelBufferId mId = ::dy::math::DUuid{true};
-  const auto [it, isSuccessful] = this->mBufferContainer.try_emplace(mId, mId, attrib);
-  if (isSuccessful == false)
   {
-    std::cerr << "Failed to load model `" << path << "`. Unexpected error occurred.\n";
-    return std::nullopt;
+    const auto [it, isSuccessful] = this->mBufferContainer.try_emplace(mId, mId, attrib);
+    if (isSuccessful == false)
+    {
+      std::cerr << "Failed to load model `" << path << "`. Unexpected error occurred.\n";
+      return std::nullopt;
+    }
   }
 
   // If external material is exist, create candidate material instance into MMaterial.
@@ -86,13 +88,90 @@ std::optional<DModelId> MModel::AddModel(const std::filesystem::path& path)
   for (const auto& material : materials)
   {
     const auto optId = EXPR_SGT(MMaterial).AddCandidateMaterial(material);
+    if (optId.has_value() == false)
+    {
+      std::cerr << "Failed to load model `" << path << "`. Unexpected error occurred.\n";
+      return std::nullopt;
+    }
     candidateMaterials.emplace_back(*optId);
   }
 
-  // 
+  // Create shape meshes with given id from index of material, and model buffer id.
+  std::vector<DMeshId> meshes;
+  for (const auto& shape : shapes)
+  {
+    DModelMesh::PCtor pctor;
+    pctor.mId = ::dy::math::DUuid{true};
+    pctor.mBufferId = mId;
+    pctor.mpShape   = &shape;
+    // If shape has metarial index (default), get id from material id list.
+    const auto matIndex = shape.mesh.material_ids.front();
+    pctor.mpMatId   = matIndex != -1 ? &candidateMaterials[matIndex] : nullptr;
+    // Insert it.
+    const auto [it, isSuccessful] = this->mMeshContainer.try_emplace(pctor.mId, pctor);
+    if (isSuccessful == false)
+    {
+      std::cerr << "Failed to load model `" << path << "`. Unexpected error occurred.\n";
+      return std::nullopt;
+    }
+    meshes.emplace_back(pctor.mId);
+  }
 
-  // Temporary code.
-  return std::nullopt;
+  // Check buffer has not normals. If true, create normals with shape lists.
+  auto* pBuffer = EXPR_SGT(MModel).GetModelBuffer(mId);
+  if (pBuffer->HasNormals() == false)
+  {
+    const auto flag = pBuffer->CreateNormalsWith(meshes);
+    if (flag == false)
+    {
+      std::cerr << "Failed to load model `" << path << "`. Unexpected error occurred.\n";
+      return std::nullopt;
+    }
+  }
+
+  // Create model instance into container, with every id list.
+  DModelId mModelId = ::dy::math::DUuid{true};
+  {
+    DModel::PCtor pctor;
+    pctor.mId           = mModelId;
+    pctor.mBufferId     = mId;
+    pctor.mMeshIds      = meshes;
+    pctor.mMaterialIds  = candidateMaterials;
+    const auto [it, isSuccessful] = this->mModelContainer.try_emplace(pctor.mId, pctor);
+    if (isSuccessful == false)
+    {
+      std::cerr << "Failed to load model `" << path << "`. Unexpected error occurred.\n";
+      return std::nullopt;
+    }
+  }
+
+  return mModelId;
+}
+
+bool MModel::HasModel(const DModelId & id) const noexcept
+{
+  return this->mModelContainer.find(id) != this->mModelContainer.end();
+}
+
+bool MModel::HasModelBuffer(const DModelBufferId& id) const noexcept
+{
+  return this->mBufferContainer.find(id) != this->mBufferContainer.end();
+}
+
+DModelBuffer* MModel::GetModelBuffer(const DModelBufferId& id) noexcept
+{
+  if (this->HasModelBuffer(id) == false) { return nullptr; }
+
+  auto& [_, modelBuffer] = *this->mBufferContainer.find(id);
+  return &modelBuffer;
+}
+
+const DModelBuffer* MModel::GetModelBuffer(const DModelBufferId& id) const noexcept
+{
+  if (this->HasModelBuffer(id) == false) { return nullptr; }
+
+  const auto& [_, modelBuffer] = *this->mBufferContainer.find(id);
+  return &modelBuffer;
 }
 
 } /// ::ray namespace

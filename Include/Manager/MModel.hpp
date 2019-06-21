@@ -25,6 +25,8 @@
 #include <Id/DModelBufferId.hpp>
 #include <Id/DMeshId.hpp>
 #include <Resource/DModelBuffer.hpp>
+#include <Resource/DModelMesh.hpp>
+#include <Resource/DModel.hpp>
 
 namespace ray
 {
@@ -42,13 +44,20 @@ public:
 
   /// @brief 
   bool HasModel(const DModelId& id) const noexcept;
-
   /// @brief 
-
+  bool HasModelBuffer(const DModelBufferId& id) const noexcept;
+  /// @brief Get pointer of model buffer that has given id.
+  /// @param id Model Buffer Id.
+  /// @return The pointer of DModelBuffer when found, If not find just return nullptr.
+  DModelBuffer* GetModelBuffer(const DModelBufferId& id) noexcept;
+  /// @brief Get pointer of model buffer that has given id.
+  /// @param id Model Buffer Id.
+  /// @return The pointer of DModelBuffer when found, If not find just return nullptr.
+  const DModelBuffer* GetModelBuffer(const DModelBufferId& id) const noexcept;
 
 private:
   using TModelKey = DModelId; 
-  using TModelContainer = std::unordered_map<TModelKey, std::string>;
+  using TModelContainer = std::unordered_map<TModelKey, DModel>;
   TModelContainer mModelContainer;
 
   using TModelBufferKey = DModelBufferId;
@@ -56,7 +65,8 @@ private:
   TBufferContainer mBufferContainer;
 
   using TMeshKey = DMeshId;
-
+  using TMeshContainer = std::unordered_map<TMeshKey, DModelMesh>;
+  TMeshContainer mMeshContainer;
 };
 
 } /// ::ray namespace
