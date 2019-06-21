@@ -42,6 +42,7 @@ using DVec3 = ::dy::math::DVector3<TReal>;
 using DIVec2 = ::dy::math::DVector2<TI32>;
 using DUVec2 = ::dy::math::DVector2<TU32>;
 using DIVec3 = ::dy::math::DVector3<TI32>;
+using DVec2 = ::dy::math::DVector2<TReal>;
 using DQuat = ::dy::math::DQuaternion<TReal>;
 using DAABB = ::dy::math::DBounds3D<TReal>;
 
