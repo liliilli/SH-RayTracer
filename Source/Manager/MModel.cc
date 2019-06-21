@@ -174,4 +174,25 @@ const DModelBuffer* MModel::GetModelBuffer(const DModelBufferId& id) const noexc
   return &modelBuffer;
 }
 
+bool MModel::HasMesh(const DMeshId& id) const noexcept
+{
+  return this->mMeshContainer.find(id) != this->mMeshContainer.end();
+}
+
+DModelMesh* MModel::GetMesh(const DMeshId& id) noexcept
+{
+  if (this->HasMesh(id) == false) { return nullptr; }
+
+  auto& [_, mesh] = *this->mMeshContainer.find(id);
+  return &mesh;
+}
+
+const DModelMesh* MModel::GetMesh(const DMeshId& id) const noexcept
+{
+  if (this->HasMesh(id) == false) { return nullptr; }
+
+  auto& [_, mesh] = *this->mMeshContainer.find(id);
+  return &mesh;
+}
+
 } /// ::ray namespace

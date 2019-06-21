@@ -44,6 +44,7 @@ public:
 
   /// @brief 
   bool HasModel(const DModelId& id) const noexcept;
+
   /// @brief 
   bool HasModelBuffer(const DModelBufferId& id) const noexcept;
   /// @brief Get pointer of model buffer that has given id.
@@ -54,6 +55,19 @@ public:
   /// @param id Model Buffer Id.
   /// @return The pointer of DModelBuffer when found, If not find just return nullptr.
   const DModelBuffer* GetModelBuffer(const DModelBufferId& id) const noexcept;
+
+  /// @brief Check given id has valid, so DModelMesh is in container.
+  /// @param id Model Mesh Id.
+  /// @return If found, return true. Otherwise, return false.
+  bool HasMesh(const DMeshId& id) const noexcept;
+  /// @brief Get pointer of mesh that has given id.
+  /// @param id Model Mesh Id.
+  /// @return The pointer of DModelMesh when found, If not find just return nullptr.
+  DModelMesh* GetMesh(const DMeshId& id) noexcept;
+  /// @brief Get pointer of mesh that has given id.
+  /// @param id Model Mesh Id.
+  /// @return The pointer of DModelMesh when found, If not find just return nullptr.
+  const DModelMesh* GetMesh(const DMeshId& id) const noexcept;
 
 private:
   using TModelKey = DModelId; 
