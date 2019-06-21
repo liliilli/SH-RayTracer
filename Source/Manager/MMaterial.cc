@@ -33,6 +33,19 @@ ESuccess MMaterial::pfRelease()
   return ESuccess::DY_SUCCESS;
 }
 
+std::optional<DMatId> MMaterial::AddCandidateMaterial(const tinyobj::material_t& materialInfo)
+{
+  DMatId id = ::dy::math::DUuid{true};
+  const auto [it, isSuccessful] = this->mCandidates.try_emplace(id, id, materialInfo);
+  if (isSuccessful == false)
+  {
+    std::cerr << "Unexpected error occurred.\n";
+    return std::nullopt;
+  }
+
+  return id;
+}
+
 bool MMaterial::HasMaterial(const DMatId& id) const noexcept
 {
   const auto it = this->mContainer.find(id);

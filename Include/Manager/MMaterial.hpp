@@ -17,11 +17,13 @@
 #include <optional>
 #include <iostream>
 
+#include <tinyobj/tiny_obj_loader.h>
 #include <nlohmann/json_fwd.hpp>
 #include <Expr/ISingleton.h>
 #include <Math/Type/Micellanous/DUuid.h>
 #include <IMaterial.hpp>
 #include <DMatId.hpp>
+#include <Material/DMatMetaExternal.hpp>
 
 namespace ray
 {
@@ -59,6 +61,11 @@ public:
   template <typename TType>
   std::optional<DMatId> AddMaterial(const typename TType::PCtor& ctor);
 
+  /// @brief Add external candidate material with outer library material information.
+  /// @param materialInfo
+  /// @return Material ID.
+  std::optional<DMatId> AddCandidateMaterial(const tinyobj::material_t& materialInfo);
+
   /// @brief Check container has material that named `id`.
   /// @param id Id of material to find.
   /// @return If found, return true or false.
@@ -81,8 +88,12 @@ private:
   using TKey = DMatId; 
   using TValue = std::unique_ptr<IMaterial>;
   using TContainer = std::unordered_map<TKey, TValue>;
+  using TCandMaterials = std::unordered_map<TKey, DMatMetaExternal>;
 
+  /// @brief Material containers that is ready to be used.
   TContainer mContainer;
+  /// @brief External Material containers that is not ready but have meta informations of meterial.
+  TCandMaterials mCandidates;
 };
 
 } /// ::ray namespace

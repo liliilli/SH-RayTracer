@@ -14,11 +14,11 @@
 #include <Manager/MModel.hpp>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <tinyobj/tiny_obj_loader.h>
 
+#include <Manager/MMaterial.hpp>
 #include <XCommon.hpp>
 #include <XHelperJson.hpp>
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tinyobj/tiny_obj_loader.h>
 
 namespace ray
 {
@@ -81,7 +81,15 @@ std::optional<DModelId> MModel::AddModel(const std::filesystem::path& path)
     return std::nullopt;
   }
 
+  // If external material is exist, create candidate material instance into MMaterial.
+  std::vector<DMatId> candidateMaterials;
+  for (const auto& material : materials)
+  {
+    const auto optId = EXPR_SGT(MMaterial).AddCandidateMaterial(material);
+    candidateMaterials.emplace_back(*optId);
+  }
 
+  // 
 
   // Temporary code.
   return std::nullopt;
