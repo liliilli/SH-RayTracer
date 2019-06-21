@@ -16,6 +16,7 @@
 #include <tinyobj/tiny_obj_loader.h>
 #include <XCommon.hpp>
 #include <Id/DModelBufferId.hpp>
+#include <Id/DMeshId.hpp>
 
 namespace ray
 {
@@ -29,25 +30,29 @@ public:
   DModelBuffer(const tinyobj::attrib_t& attrib);
   DModelBuffer(const DModelBufferId& id, const tinyobj::attrib_t& attrib);
 
-  /// @brief
+  /// @brief Get count of vertices.
   TIndex GetCountOfVertices() const noexcept;
-
-  /// @brief
+  /// @brief Get count of normals.
   TIndex GetCountOfNormals() const noexcept;
-
-  /// @brief
+  /// @brief Get count of UV0 texture coordinate.
   TIndex GetCountOfUv0s() const noexcept;
-
-  /// @brief
+  
+  /// @brief Check buffer has vertices.
+  bool HasVertices() const noexcept;
+  /// @brief Check buffer has normals.
   bool HasNormals() const noexcept;
+  /// @brief Check buffer has uv.
+  bool HasUv0s() const noexcept;
 
-  /// @brief 
+  /// @brief Get model buffer id.
   DModelBufferId GetId() const noexcept;
 
-private:
-  /// @brief Create normals from given geomtery `mVertices`, with triangle.
-  void CreateNormals();
+  /// @brief Create normals from given geometry `mVertices`, with triangle.
+  /// @param meshIds Valid mesh id list.
+  /// @return If successful, return true.
+  bool CreateNormalsWith(const std::vector<DMeshId>& meshIds);
 
+private:
   using TPointVertices = std::vector<DVec3>;
   using TNormals = std::vector<DVec3>;
   using TUVs = std::vector<DVec2>;

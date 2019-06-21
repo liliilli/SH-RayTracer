@@ -48,8 +48,15 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/Shape/FCone.cc"
     "${SOURCE_DIRECTORY}/Shape/FCapsule.cc"
 
-    "${SOURCE_DIRECTORY}/DMatId.cc"
-    "${SOURCE_DIRECTORY}/DModelId.cc"
+    "${SOURCE_DIRECTORY}/Id/DMatId.cc"
+    "${SOURCE_DIRECTORY}/Id/DMeshId.cc"
+    "${SOURCE_DIRECTORY}/Id/DModelId.cc"
+    "${SOURCE_DIRECTORY}/Id/DModelBufferId.cc"
+
+    "${SOURCE_DIRECTORY}/Resource/DModel.cc"
+    "${SOURCE_DIRECTORY}/Resource/DModelBuffer.cc"
+    "${SOURCE_DIRECTORY}/Resource/DModelMesh.cc"
+    "${SOURCE_DIRECTORY}/Material/DMatMetaExternal.cc"
 
     "${SOURCE_DIRECTORY}/FCamera.cc"
     "${SOURCE_DIRECTORY}/FRenderWorker.cc"
@@ -58,6 +65,7 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/XHelperIO.cc"
     "${SOURCE_DIRECTORY}/XHelperJson.cc"
     "${SOURCE_DIRECTORY}/XSamples.cc"
+    "${SOURCE_DIRECTORY}/XTinyObj.cc"
 )
 
 find_package(Threads REQUIRED)

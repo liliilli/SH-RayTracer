@@ -41,18 +41,20 @@ public:
 
   DModelMesh(const PCtor& ctor);
 
-  /// @brief
+  /// @brief Get Model Mesh ID.
   const DMeshId& GetId() const noexcept;
-  /// @brief 
+  /// @brief Check model mesh has default metarial.
   bool HasDefaultMaterial() const noexcept;
-  /// @brief
+  /// @brief Get default material id. This function does not guarantee that returned DMatId is valid or not.
   const DMatId& GetDefaultMaterialId() const noexcept;
-  /// @brief
+  /// @brief Get Model Buffer Id that this mesh forwards to.
   const DModelBufferId& GetModelBufferId() const noexcept;
 
-  /// @brief
+  /// @brief Get name of mesh. Name may be empty by loaded model file.
   const std::string& GetName() const noexcept;
-  /// @brief
+  /// @brief Get index list of mesh.
+  std::vector<DModelIndex>& GetIndices() noexcept;
+  /// @brief Get index list of mesh.
   const std::vector<DModelIndex>& GetIndices() const noexcept;
 
 private:

@@ -68,6 +68,11 @@ const std::string& DModelMesh::GetName() const noexcept
   return this->mName;
 }
 
+std::vector<DModelIndex>& DModelMesh::GetIndices() noexcept
+{
+  return this->mIndices;
+}
+
 const std::vector<DModelIndex>& DModelMesh::GetIndices() const noexcept
 {
   return this->mIndices;
