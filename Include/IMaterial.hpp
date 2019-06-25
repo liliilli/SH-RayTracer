@@ -33,7 +33,7 @@ public:
 
   /// @brief Diffuse scattering function.
   virtual std::optional<std::tuple<DVec3, DVec3, bool>> 
-  Scatter(const DRay& intersectedRay, const DVec3& normal) = 0;
+  Scatter(const DRay& intersectedRay, const DVec3& normal) const = 0;
 
   /// @brief Get ID instance.
   const DMatId& GetId() const noexcept;

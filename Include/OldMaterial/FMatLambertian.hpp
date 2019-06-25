@@ -38,7 +38,7 @@ public:
   virtual ~FMatLambertian() = default;
 
   virtual std::optional<std::tuple<DVec3, DVec3, bool>> 
-  Scatter(const DRay& intersectedRay, const DVec3& normal) override final;
+  Scatter(const DRay& intersectedRay, const DVec3& normal) const override final;
 
 private:
   DVec3 mColor;

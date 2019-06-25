@@ -33,7 +33,7 @@ void from_json(const nlohmann::json& json, FMatMetal::PCtor& oCtor)
 }
 
 std::optional<std::tuple<DVec3, DVec3, bool>> 
-FMatMetal::Scatter(const DRay& intersectedRay, const DVec3& normal)
+FMatMetal::Scatter(const DRay& intersectedRay, const DVec3& normal) const
 {
   using ::dy::math::Dot;
   using ::dy::math::Reflect;

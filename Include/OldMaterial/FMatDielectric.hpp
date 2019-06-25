@@ -41,7 +41,7 @@ public:
   virtual ~FMatDielectric() = default;
 
   virtual std::optional<std::tuple<DVec3, DVec3, bool>> 
-  Scatter(const DRay& intersectedRay, const DVec3& normal) override final;
+  Scatter(const DRay& intersectedRay, const DVec3& normal) const override final;
 
 private:
   ::dy::math::DClamp<TReal, 0, 100> mIor;

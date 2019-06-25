@@ -31,7 +31,7 @@ void from_json(const nlohmann::json& json, FMatLambertian::PCtor& oCtor)
 }
 
 std::optional<std::tuple<DVec3, DVec3, bool>> 
-FMatLambertian::Scatter([[maybe_unused]] const DRay& intersectedRay, const DVec3& normal)
+FMatLambertian::Scatter([[maybe_unused]] const DRay& intersectedRay, const DVec3& normal) const 
 {
   using ::dy::math::GetClosestTValueOf;
   using ::dy::math::RandomVector3Length;
