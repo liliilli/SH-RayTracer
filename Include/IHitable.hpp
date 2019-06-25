@@ -20,6 +20,24 @@
 namespace ray
 {
 
+class IHitable; // Forward declaration
+
+/// @class PTValueResult
+/// @brief GetRayIntersectedTValues returning type.
+class PTValueResult final
+{
+public:
+  TReal       mT;
+  EShapeType  mShapeType;
+  const IHitable* mpHitable;
+
+  PTValueResult(TReal t, EShapeType type, const IHitable* pHitable)
+    : mT { t },
+      mShapeType { type },
+      mpHitable { pHitable }
+  { };
+};
+
 /// @class IHitable
 /// @brief Hitable object interface.
 class IHitable : public IObject
@@ -45,7 +63,8 @@ public:
   /// If this shape is not intersected with given ray, just return null value.
   /// @param ray Ray of worls-space.
   /// @return When ray intersected to ray, returns TReal list.
-  virtual std::optional<std::vector<TReal>> GetRayIntersectedTValues(const DRay& ray) const = 0;
+  using TValueResults = std::vector<PTValueResult>;
+  virtual std::optional<TValueResults> GetRayIntersectedTValues(const DRay& ray) const = 0;
 
 protected:
   EShapeType mMaterialType;

@@ -229,11 +229,19 @@ FBox::FBox(const PCtor& arg, IMaterial* mat)
   this->mAABB = std::make_unique<DAABB>(GetDBounds3DOf(*this, this->GetQuaternion()));
 }
 
-std::optional<std::vector<TReal>> FBox::GetRayIntersectedTValues(const DRay& ray) const
+std::optional<IHitable::TValueResults> FBox::GetRayIntersectedTValues(const DRay& ray) const
 {
   if (IsRayIntersected(ray, *this, this->GetQuaternion()) == false) { return std::nullopt; }
 
-  return GetTValuesOf(ray, *this, this->GetQuaternion());
+  using TResult = IHitable::TValueResults::value_type;
+  const auto tValues = GetTValuesOf(ray, *this, this->GetQuaternion());
+
+  IHitable::TValueResults results;
+  for (const auto& t : tValues)
+  {
+    results.emplace_back(t, this->GetType(), this);
+  }
+  return results;
 }
 
 FBox::PCtor FBox::GetPCtor(FBox::PCtor::EType type) const noexcept

@@ -203,11 +203,19 @@ FCone::PCtor FCone::GetPCtor(FCone::PCtor::EType type) const noexcept
   return result;
 }
 
-std::optional<std::vector<TReal>> FCone::GetRayIntersectedTValues(const DRay& ray) const
+std::optional<IHitable::TValueResults> FCone::GetRayIntersectedTValues(const DRay& ray) const
 {
   if (IsRayIntersected(ray, *this, this->GetQuaternion()) == false) { return std::nullopt; }
 
-  return GetTValuesOf(ray, *this, this->GetQuaternion());
+  using TResult = IHitable::TValueResults::value_type;
+  const auto tValues = GetTValuesOf(ray, *this, this->GetQuaternion());
+
+  IHitable::TValueResults results;
+  for (const auto& t : tValues)
+  {
+    results.emplace_back(t, this->GetType(), this);
+  }
+  return results;
 }
 
 } /// ::ray namespace

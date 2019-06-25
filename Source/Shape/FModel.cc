@@ -90,7 +90,7 @@ const DQuat& FModel::GetQuaternion() const noexcept
   return this->mRotQuat;  
 }
 
-std::optional<std::vector<TReal>> FModel::GetRayIntersectedTValues(const DRay& ) const
+std::optional<IHitable::TValueResults> FModel::GetRayIntersectedTValues(const DRay& ) const
 {
   return std::nullopt;
 }

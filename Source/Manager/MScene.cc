@@ -745,16 +745,17 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
   if (++cnt; cnt <= limit)
   {
     // Process culling to all objects with DAABB.
-    std::vector<std::pair<TReal, ray::IHitable*>> tPairList; 
+    std::vector<std::pair<TReal, const ray::IHitable*>> tPairList; 
     // Get closest SDF value.
     for (auto& obj : this->mObjects)
     {
       assert(obj != nullptr);
       const auto tValues = obj->GetRayIntersectedTValues(ray);
       if (tValues.has_value() == false) { continue; } 
-      for (const auto& t : *tValues)
+
+      for (const auto& [t, type, pHitable] : *tValues)
       {
-        if (t > 0.0f) { tPairList.emplace_back(t, obj.get()); }
+        if (t > 0.0f) { tPairList.emplace_back(t, pHitable); }
       }
     }
 
@@ -771,7 +772,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
       {
       case EShapeType::Sphere:
       {
-        auto& sphere = static_cast<TSphere&>(*pObj);
+        auto& sphere = static_cast<const TSphere&>(*pObj);
         if (auto* pMat = sphere.GetMaterial(); pMat != nullptr)
         {
           const auto nextPos = ray.GetPointAtParam(t);
@@ -787,7 +788,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
       } break;
       case EShapeType::Plane:
       {
-        auto& plane = static_cast<TPlane&>(*pObj);
+        auto& plane = static_cast<const TPlane&>(*pObj);
         if (auto* pMat = plane.GetMaterial(); pMat != nullptr)
         {
           const auto nextPos = ray.GetPointAtParam(t);
@@ -803,7 +804,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
       } break;
       case EShapeType::Box:
       {
-        auto& box = static_cast<TBox&>(*pObj);
+        auto& box = static_cast<const TBox&>(*pObj);
         if (auto* pMat = box.GetMaterial(); pMat != nullptr)
         {
           const auto nextPos = ray.GetPointAtParam(t);
@@ -822,7 +823,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
       } break;
       case EShapeType::Torus:
       {
-        auto& torus = static_cast<TTorus&>(*pObj);
+        auto& torus = static_cast<const TTorus&>(*pObj);
         if (auto* pMat = torus.GetMaterial(); pMat != nullptr)
         {
           const auto nextPos = ray.GetPointAtParam(t);
@@ -841,7 +842,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
       } break;
       case EShapeType::Cone:
       {
-        auto& cone = static_cast<TCone&>(*pObj);
+        auto& cone = static_cast<const TCone&>(*pObj);
         if (auto* pMat = cone.GetMaterial(); pMat != nullptr)
         {
           const auto nextPos = ray.GetPointAtParam(t);
@@ -860,7 +861,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
       } break;
       case EShapeType::Capsule:
       {
-        auto& capsule = static_cast<TCapsule&>(*pObj);
+        auto& capsule = static_cast<const TCapsule&>(*pObj);
         if (auto* pMat = capsule.GetMaterial(); pMat != nullptr)
         {
           const auto nextPos = ray.GetPointAtParam(t);
