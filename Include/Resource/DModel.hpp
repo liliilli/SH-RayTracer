@@ -14,10 +14,10 @@
 
 #include <vector>
 #include <XCommon.hpp>
-#include <DModelId.hpp>
+#include <Id/DModelId.hpp>
 #include <Id/DMeshId.hpp>
 #include <Id/DModelBufferId.hpp>
-#include <DMatId.hpp>
+#include <Id/DMatId.hpp>
 
 namespace ray
 {

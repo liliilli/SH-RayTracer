@@ -11,7 +11,7 @@
 /// SOFTWARE.
 ///
 
-#include <DMatId.hpp>
+#include <Id/DMatId.hpp>
 
 namespace ray
 {

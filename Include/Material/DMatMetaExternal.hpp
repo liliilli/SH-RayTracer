@@ -18,7 +18,7 @@
 
 #include <IMaterial.hpp>
 #include <XCommon.hpp>
-#include <DMatId.hpp>
+#include <Id/DMatId.hpp>
 #include <Resource/DMaterialProperty.hpp>
 
 namespace ray

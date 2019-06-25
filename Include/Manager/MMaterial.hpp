@@ -22,7 +22,7 @@
 #include <Expr/ISingleton.h>
 #include <Math/Type/Micellanous/DUuid.h>
 #include <IMaterial.hpp>
-#include <DMatId.hpp>
+#include <Id/DMatId.hpp>
 #include <Material/DMatMetaExternal.hpp>
 
 namespace ray

@@ -17,7 +17,7 @@
 #include <tinyobj/tiny_obj_loader.h>
 #include <Id/DMeshId.hpp>
 #include <Id/DModelBufferId.hpp>
-#include <DMatId.hpp>
+#include <Id/DMatId.hpp>
 
 #include <XCommon.hpp>
 #include <Resource/DModelIndex.hpp>
