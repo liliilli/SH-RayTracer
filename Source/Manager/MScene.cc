@@ -29,6 +29,7 @@
 #include <Shape/FTorus.hpp>
 #include <Shape/FCone.hpp>
 #include <Shape/FCapsule.hpp>
+#include <Shape/FModel.hpp>
 #include <XHelperJson.hpp>
 
 #include <Manager/MMaterial.hpp>
@@ -438,10 +439,17 @@ bool MScene::AddPrefabsFromJson190710(const nlohmann::json& json, const PSceneDe
       return false;
     }
     // If `material` key header is exist, check there is a material with given name `matId`.
+    // If matId (string) is `internal` (from 3d model), just pass it.
     const auto matId = json::GetValueFrom<std::string>(item, "material");
-    if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+    if (EXPR_SGT(MMaterial).HasMaterial(matId) == false && matId != "internal")
     {
-      std::cerr << "Material `" << matId << "` not found.";
+      std::cerr << "Material `" << matId << "` not found.\n";
+      return false;
+    }
+    // Check matId is `internal` but type value is not `model`.
+    if (matId == "internal" && typeHashValue != Case("model"))
+    {
+      std::cerr << "Material `" << matId << "` can only be applied to type `model`.\n";
       return false;
     }
 
@@ -478,6 +486,11 @@ bool MScene::AddPrefabsFromJson190710(const nlohmann::json& json, const PSceneDe
     {
       const auto ctor = json::GetValueFrom<FCapsule::PCtor>(item, "detail");
       psObject = std::make_unique<FCapsule>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+    } break;
+    case Case("model"): // Create 3D Model
+    {
+      const auto ctor = json::GetValueFrom<FModel::PCtor>(item, "detail");
+      psObject = std::make_unique<FModel>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
     default:
     {
@@ -574,6 +587,14 @@ bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDe
           const auto [ctor, list] = json::GetValueFromOptionally<typename TObject::PCtor>(item, "detail");
           this->AddHitableObject<TObject>(prefab.GetPCtor().Overwrite(ctor, list), prefab.GetMaterial());
         } break;
+        case EShapeType::Model:
+        {
+          using TObject = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Model);
+          const auto& prefab = static_cast<const TObject&>(hitable);
+          const auto [ctor, list] = json::GetValueFromOptionally<typename TObject::PCtor>(item, "detail");
+          this->AddHitableObject<TObject>(prefab.GetPCtor().Overwrite(ctor, list), prefab.GetMaterial());
+        } break;
+        default: break;
         }
       } break;
       }
