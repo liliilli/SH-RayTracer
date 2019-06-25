@@ -52,6 +52,8 @@ public:
   /// @return When ray intersected to ray, returns TReal list.
   std::optional<TValueResults> GetRayIntersectedTValues(const DRay& ray) const override final;
 
+  std::optional<PScatterResult> TryScatter(const DRay& ray, TReal t) const override final;
+
   /// @brief Get PCtor instance from instance.
   /// @param type Type value.
   FModel::PCtor GetPCtor() const noexcept;

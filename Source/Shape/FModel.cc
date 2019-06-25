@@ -95,4 +95,9 @@ std::optional<IHitable::TValueResults> FModel::GetRayIntersectedTValues(const DR
   return std::nullopt;
 }
 
+std::optional<PScatterResult> FModel::TryScatter(const DRay& , TReal ) const
+{
+  return std::nullopt;
+}
+
 } /// ::ray namespace

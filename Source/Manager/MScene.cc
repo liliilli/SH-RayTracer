@@ -730,18 +730,6 @@ bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDe
 
 DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
 {
-  using ::dy::math::DSphere;
-  using ::dy::math::IsRayIntersected;
-  using ::dy::math::GetNormalOf;
-  using ::dy::math::GetTValuesOf;
-  using ::dy::math::RandomVector3Length;
-  using TSphere = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Sphere);
-  using TPlane  = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Plane);
-  using TBox    = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Box);
-  using TTorus  = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Torus);
-  using TCone   = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Cone);
-  using TCapsule= EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Capsule);
-
   if (++cnt; cnt <= limit)
   {
     // Process culling to all objects with DAABB.
@@ -768,117 +756,14 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
     if (tPairList.empty() == false)
     {
       auto& [t, pObj] = tPairList.front();
-      switch(pObj->GetType())
-      {
-      case EShapeType::Sphere:
-      {
-        auto& sphere = static_cast<const TSphere&>(*pObj);
-        if (auto* pMat = sphere.GetMaterial(); pMat != nullptr)
-        {
-          const auto nextPos = ray.GetPointAtParam(t);
-          // Get result
-          auto optResult = pMat->Scatter({nextPos, ray.GetDirection()}, *GetNormalOf(ray, sphere));
-          const auto& [refDir, attCol, isScattered] = *optResult;
-          if (isScattered == false) { return DVec3{0}; }
+      auto optResult = pObj->TryScatter(ray, t);
+      const auto& [refDir, attCol, isScattered] = *optResult;
 
-          // Resursion...
-          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
-        }
-        else { return DVec3{0}; }
-      } break;
-      case EShapeType::Plane:
-      {
-        auto& plane = static_cast<const TPlane&>(*pObj);
-        if (auto* pMat = plane.GetMaterial(); pMat != nullptr)
-        {
-          const auto nextPos = ray.GetPointAtParam(t);
-          // Get result
-          auto optResult = pMat->Scatter({nextPos, ray.GetDirection()}, *GetNormalOf(ray, plane));
-          const auto& [refDir, attCol, isScattered] = *optResult;
-          if (isScattered == false) { return DVec3{0}; }
+      if (isScattered == false) { return DVec3{0}; }
 
-          // Resursion...
-          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
-        }
-        else { return DVec3{0}; }
-      } break;
-      case EShapeType::Box:
-      {
-        auto& box = static_cast<const TBox&>(*pObj);
-        if (auto* pMat = box.GetMaterial(); pMat != nullptr)
-        {
-          const auto nextPos = ray.GetPointAtParam(t);
-          // Get result
-          auto optResult = pMat->Scatter(
-            DRay{nextPos, ray.GetDirection()}, 
-            *GetNormalOf(ray, box, box.GetQuaternion())
-          );
-          const auto& [refDir, attCol, isScattered] = *optResult;
-          if (isScattered == false) { return DVec3{0}; }
-
-          // Resursion...
-          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
-        }
-        else { return DVec3{0}; }
-      } break;
-      case EShapeType::Torus:
-      {
-        auto& torus = static_cast<const TTorus&>(*pObj);
-        if (auto* pMat = torus.GetMaterial(); pMat != nullptr)
-        {
-          const auto nextPos = ray.GetPointAtParam(t);
-          // Get result
-          auto optResult = pMat->Scatter(
-            DRay{nextPos, ray.GetDirection()}, 
-            *GetNormalOf(ray, torus, torus.GetQuaternion())
-          );
-          const auto& [refDir, attCol, isScattered] = *optResult;
-          if (isScattered == false) { return DVec3{0}; }
-
-          // Resursion...
-          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
-        }
-        else { return DVec3{0}; }
-      } break;
-      case EShapeType::Cone:
-      {
-        auto& cone = static_cast<const TCone&>(*pObj);
-        if (auto* pMat = cone.GetMaterial(); pMat != nullptr)
-        {
-          const auto nextPos = ray.GetPointAtParam(t);
-          // Get result
-          auto optResult = pMat->Scatter(
-            DRay{nextPos, ray.GetDirection()}, 
-            *GetNormalOf(ray, cone, cone.GetQuaternion())
-          );
-          const auto& [refDir, attCol, isScattered] = *optResult;
-          if (isScattered == false) { return DVec3{0}; }
-
-          // Resursion...
-          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
-        }
-        else { return DVec3{0}; }
-      } break;
-      case EShapeType::Capsule:
-      {
-        auto& capsule = static_cast<const TCapsule&>(*pObj);
-        if (auto* pMat = capsule.GetMaterial(); pMat != nullptr)
-        {
-          const auto nextPos = ray.GetPointAtParam(t);
-          // Get result
-          auto optResult = pMat->Scatter(
-            DRay{nextPos, ray.GetDirection()}, 
-            *GetNormalOf(ray, capsule, capsule.GetQuaternion())
-          );
-          const auto& [refDir, attCol, isScattered] = *optResult;
-          if (isScattered == false) { return DVec3{0}; }
-
-          // Resursion...
-          return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
-        }
-        else { return DVec3{0}; }
-      } break;
-      }
+      // Resursion...
+      const auto nextPos = ray.GetPointAtParam(t);
+      return attCol * this->ProceedRay(DRay{nextPos, refDir}, cnt, limit);
     }
   }
 

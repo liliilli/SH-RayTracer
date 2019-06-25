@@ -35,8 +35,24 @@ public:
     : mT { t },
       mShapeType { type },
       mpHitable { pHitable }
-  { };
+  { }
 };
+static_assert(sizeof(PTValueResult) == 16);
+
+class PScatterResult final
+{
+public:
+  DVec3 mReflectionDir;
+  DVec3 mAttenuationCol;
+  alignas(8) bool mIsScattered;
+
+  PScatterResult(const DVec3& refDir, const DVec3& attCol, bool isScattered)
+    : mReflectionDir { refDir },
+      mAttenuationCol { attCol },
+      mIsScattered { isScattered }
+  { }
+};
+static_assert(sizeof(PScatterResult) == 32);
 
 /// @class IHitable
 /// @brief Hitable object interface.
@@ -65,6 +81,12 @@ public:
   /// @return When ray intersected to ray, returns TReal list.
   using TValueResults = std::vector<PTValueResult>;
   virtual std::optional<TValueResults> GetRayIntersectedTValues(const DRay& ray) const = 0;
+
+  /// @brief Diffuse scattering function.
+  /// @param ray 
+  /// @param t
+  /// @return 
+  virtual std::optional<PScatterResult> TryScatter(const DRay& ray, TReal t) const = 0;
 
 protected:
   EShapeType mMaterialType;

@@ -203,6 +203,19 @@ FCone::PCtor FCone::GetPCtor(FCone::PCtor::EType type) const noexcept
   return result;
 }
 
+std::optional<PScatterResult> FCone::TryScatter(const DRay& ray, TReal t) const
+{
+  if (this->GetMaterial() == nullptr) { return std::nullopt; }
+
+  // Get result
+  const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
+
+  const auto optResult = this->GetMaterial()->Scatter(nextRay, *GetNormalOf(ray, *this, this->GetQuaternion()));
+  const auto& [refDir, attCol, isScattered] = *optResult;
+
+  return PScatterResult{refDir, attCol, isScattered};
+}
+
 std::optional<IHitable::TValueResults> FCone::GetRayIntersectedTValues(const DRay& ray) const
 {
   if (IsRayIntersected(ray, *this, this->GetQuaternion()) == false) { return std::nullopt; }

@@ -66,17 +66,6 @@ FTorus::FTorus(const FTorus::PCtor& arg, IMaterial* mat)
   this->mAABB = std::make_unique<DAABB>(GetDBounds3DOf(*this, this->GetQuaternion()));
 }
 
-FTorus::PCtor FTorus::GetPCtor() const noexcept
-{
-  FTorus::PCtor result;
-  result.mOrigin    = this->GetOrigin();
-  result.mDistance  = this->GetDistance();
-  result.mRadius    = this->GetRadius();
-  result.mAngle     = this->mRotQuat.ToDegrees();
-
-  return result;
-}
-
 std::optional<IHitable::TValueResults> FTorus::GetRayIntersectedTValues(const DRay& ray) const
 {
   if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
@@ -91,6 +80,30 @@ std::optional<IHitable::TValueResults> FTorus::GetRayIntersectedTValues(const DR
     results.emplace_back(t, this->GetType(), this);
   }
   return results;
+}
+
+std::optional<PScatterResult> FTorus::TryScatter(const DRay& ray, TReal t) const
+{
+  if (this->GetMaterial() == nullptr) { return std::nullopt; }
+
+  // Get result
+  const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
+
+  const auto optResult = this->GetMaterial()->Scatter(nextRay, *GetNormalOf(ray, *this, this->GetQuaternion()));
+  const auto& [refDir, attCol, isScattered] = *optResult;
+
+  return PScatterResult{refDir, attCol, isScattered};
+}
+
+FTorus::PCtor FTorus::GetPCtor() const noexcept
+{
+  FTorus::PCtor result;
+  result.mOrigin    = this->GetOrigin();
+  result.mDistance  = this->GetDistance();
+  result.mRadius    = this->GetRadius();
+  result.mAngle     = this->mRotQuat.ToDegrees();
+
+  return result;
 }
 
 } /// ::ray namespace
