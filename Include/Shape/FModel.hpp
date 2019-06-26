@@ -13,12 +13,16 @@
 ///
 
 #include <array>
+#include <filesystem>
+
 #include <nlohmann/json_fwd.hpp>
 #include <Expr/XEnumConversion.h>
 #include <IHitable.hpp>
 #include <XCommon.hpp>
 #include <Helper/XJsonCallback.hpp>
 #include <Helper/EJsonExistance.hpp>
+#include <Id/DModelId.hpp>
+#include <Shape/FModelMesh.hpp>
 
 namespace ray
 {
@@ -31,7 +35,12 @@ public:
   /// @brief Constructor type of FModel.
   struct PCtor final
   {
-    DVec3 mOrigin; TReal mScale; DVec3 mAngle; std::string mPath;
+    DVec3 mOrigin; 
+    TReal mScale; 
+    DVec3 mAngle; 
+    std::string mPath;
+    DModelId    mModelId;
+
     /// @brief Overwrite with given pctor instance and create new PCtor.
     PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
@@ -58,10 +67,28 @@ public:
   /// @param type Type value.
   FModel::PCtor GetPCtor() const noexcept;
 
+  /// @brief Try populate resource when resource is not populated yet.
+  /// If populated, just return true.
+  bool TryPopulateResource();
+  /// @brief Check model resource is populated or not.
+  /// @return If resource is populated, just return true.
+  bool IsResourcePopulated() const noexcept;
+  /// @brief 
+  /// @return If `IsResourcePopulated()` returned value is false, path will be returned.
+  std::optional<std::filesystem::path> TryGetResourcePath() const noexcept;
+  /// @brief
+  /// @return If `IsResourcePopulated()` returned value is true, model id will be returned.
+  std::optional<DModelId> TryGetResourceId() const noexcept;
+
 private:
   DVec3 mOrigin;
   TReal mScale;
   DQuat mRotQuat;
+
+  std::variant<std::filesystem::path, DModelId> mResource;
+  bool mIsPopulated = false;
+
+  std::vector<std::unique_ptr<FModelMesh>> mpMeshes;
 };
 
 /// @brief Template function for automatic parsing from json.

@@ -42,8 +42,18 @@ public:
   /// @brief Create Model
   std::optional<DModelId> AddModel(const std::filesystem::path& path);
 
-  /// @brief 
+  /// @brief Check given id has valid, so DModel is exist in container.
+  /// @param id Model id.
+  /// @return If found, return true. Otherwise, return false.
   bool HasModel(const DModelId& id) const noexcept;
+  /// @brief Get pointer of model that has given id.
+  /// @param id Model id.
+  /// @return The pointer of DModel when found, If not find just return nullptr.
+  DModel* GetModel(const DModelId& id) noexcept;
+  /// @brief Get pointer of model that has given id.
+  /// @param id Model id.
+  /// @return The pointer of DModel when found, If not find just return nullptr.
+  const DModel* GetModel(const DModelId& id) const noexcept;
 
   /// @brief 
   bool HasModelBuffer(const DModelBufferId& id) const noexcept;

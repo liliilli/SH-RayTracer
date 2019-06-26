@@ -104,7 +104,7 @@ bool DModelBuffer::CreateNormalsWith([[maybe_unused]] const std::vector<DMeshId>
     }
   }
 
-  return false;
+  return true;
 }
 
 TIndex DModelBuffer::GetCountOfVertices() const noexcept
@@ -135,6 +135,21 @@ bool DModelBuffer::HasNormals() const noexcept
 bool DModelBuffer::HasUv0s() const noexcept
 {
   return this->mUV0s.empty() == false;
+}
+
+const DModelBuffer::TPointVertices& DModelBuffer::GetVertices() const noexcept
+{
+  return this->mVertices;
+}
+
+const DModelBuffer::TNormals& DModelBuffer::GetNormals() const noexcept
+{
+  return this->mNormals;
+}
+
+const DModelBuffer::TUVs& DModelBuffer::GetUV0s() const noexcept
+{
+  return this->mUV0s;
 }
 
 DModelBufferId DModelBuffer::GetId() const noexcept

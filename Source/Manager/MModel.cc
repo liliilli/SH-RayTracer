@@ -153,6 +153,22 @@ bool MModel::HasModel(const DModelId & id) const noexcept
   return this->mModelContainer.find(id) != this->mModelContainer.end();
 }
 
+DModel* MModel::GetModel(const DModelId& id) noexcept
+{
+  if (this->HasModel(id) == false) { return nullptr; }
+
+  auto& [_, model] = *this->mModelContainer.find(id);
+  return &model;  
+}
+
+const DModel* MModel::GetModel(const DModelId& id) const noexcept
+{
+  if (this->HasModel(id) == false) { return nullptr; }
+
+  auto& [_, model] = *this->mModelContainer.find(id);
+  return &model;  
+}
+
 bool MModel::HasModelBuffer(const DModelBufferId& id) const noexcept
 {
   return this->mBufferContainer.find(id) != this->mBufferContainer.end();

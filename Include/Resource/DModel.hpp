@@ -38,6 +38,12 @@ public:
 
   DModel(const PCtor& ctor); 
 
+  /// @brief
+  const std::vector<DMeshId>& GetMeshIds() const noexcept;
+
+  /// @brief
+  const std::vector<DMatId>& GetInternalMaterials() const noexcept;
+
 private:
   DModelId              mId;
   DModelBufferId        mBufferId;

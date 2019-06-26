@@ -23,4 +23,14 @@ DModel::DModel(const PCtor& ctor)
     mMaterials { ctor.mMaterialIds }
 { }
 
+const std::vector<DMeshId>& DModel::GetMeshIds() const noexcept
+{
+  return this->mMeshes;
+}
+
+const std::vector<DMatId>& DModel::GetInternalMaterials() const noexcept
+{
+  return this->mMaterials;
+}
+
 } /// ::ray namespace

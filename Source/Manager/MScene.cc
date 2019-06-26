@@ -591,6 +591,12 @@ bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDe
         {
           using TObject = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Model);
           const auto& prefab = static_cast<const TObject&>(hitable);
+          if (auto& cPrefab = const_cast<TObject&>(prefab); prefab.IsResourcePopulated() == false)
+          {
+            const auto flag = cPrefab.TryPopulateResource();
+            assert(flag == true);
+          }
+
           const auto [ctor, list] = json::GetValueFromOptionally<typename TObject::PCtor>(item, "detail");
           this->AddHitableObject<TObject>(prefab.GetPCtor().Overwrite(ctor, list), prefab.GetMaterial());
         } break;

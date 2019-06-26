@@ -28,6 +28,7 @@ enum class EShapeType
   Cone,
   Capsule,
   Model,
+  ModelMesh
 };
 
 //!
@@ -41,6 +42,7 @@ class FTorus;
 class FCone;
 class FCapsule;
 class FModel;
+class FModelMesh;
 
 EXPR_INIT_ENUMTOTYPE(ShapeType, EShapeType);
 EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Sphere, FSphere);
@@ -50,5 +52,6 @@ EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Torus, FTorus);
 EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Cone, FCone);
 EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Capsule, FCapsule);
 EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::Model, FModel);
+EXPR_SET_ENUMTOTYPE_CONVERSION(ShapeType, EShapeType::ModelMesh, FModelMesh);
 
 } /// ::ray namespace

@@ -27,6 +27,10 @@ namespace ray
 class DModelBuffer final
 {
 public:
+  using TPointVertices = std::vector<DVec3>;
+  using TNormals = std::vector<DVec3>;
+  using TUVs = std::vector<DVec2>;
+
   DModelBuffer(const tinyobj::attrib_t& attrib);
   DModelBuffer(const DModelBufferId& id, const tinyobj::attrib_t& attrib);
 
@@ -44,6 +48,13 @@ public:
   /// @brief Check buffer has uv.
   bool HasUv0s() const noexcept;
 
+  /// @brief 
+  const TPointVertices& GetVertices() const noexcept;
+  /// @brief
+  const TNormals& GetNormals() const noexcept;
+  /// @brief
+  const TUVs& GetUV0s() const noexcept;
+
   /// @brief Get model buffer id.
   DModelBufferId GetId() const noexcept;
 
@@ -53,10 +64,6 @@ public:
   bool CreateNormalsWith(const std::vector<DMeshId>& meshIds);
 
 private:
-  using TPointVertices = std::vector<DVec3>;
-  using TNormals = std::vector<DVec3>;
-  using TUVs = std::vector<DVec2>;
-
   DModelBufferId  mId;
   TPointVertices  mVertices;
   TNormals        mNormals;

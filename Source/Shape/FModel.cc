@@ -14,6 +14,7 @@
 #include <Shape/FModel.hpp>
 #include <nlohmann/json.hpp>
 #include <XHelperJson.hpp>
+#include <Manager/MModel.hpp>
 
 namespace ray
 {
@@ -62,7 +63,28 @@ FModel::FModel(const PCtor& ctor, IMaterial* mat)
     mScale { ctor.mScale },
     mRotQuat { ctor.mAngle }
 {
-  
+  if (ctor.mModelId.HasId() == false)
+  {
+    assert(ctor.mPath.empty() == false);
+    this->mResource = std::filesystem::path(ctor.mPath);
+  }
+  else
+  {
+    this->mResource = ctor.mModelId;
+    this->mIsPopulated = true;
+
+    const auto* pModel = EXPR_SGT(MModel).GetModel(ctor.mModelId);
+    for (const auto& meshId : pModel->GetMeshIds())
+    {
+      FModelMesh::PCtor meshCtor;
+      meshCtor.mOrigin  = this->mOrigin;
+      meshCtor.mScale   = this->mScale;
+      meshCtor.mAngle   = this->mRotQuat.ToDegrees();
+      meshCtor.mMeshId  = meshId;
+
+      mpMeshes.emplace_back(std::make_unique<FModelMesh>(meshCtor, this->GetMaterial()));
+    }
+  }
 }
 
 FModel::PCtor FModel::GetPCtor() const noexcept
@@ -71,6 +93,11 @@ FModel::PCtor FModel::GetPCtor() const noexcept
   result.mOrigin = this->GetOrigin();
   result.mScale = this->GetScale();
   result.mAngle = this->GetQuaternion().ToDegrees();
+  if (this->IsResourcePopulated() == true)
+  {
+    result.mModelId = *this->TryGetResourceId();
+    assert(result.mModelId.HasId() == true);
+  }
 
   return result;
 }
@@ -90,14 +117,74 @@ const DQuat& FModel::GetQuaternion() const noexcept
   return this->mRotQuat;  
 }
 
-std::optional<IHitable::TValueResults> FModel::GetRayIntersectedTValues(const DRay& ) const
+std::optional<IHitable::TValueResults> FModel::GetRayIntersectedTValues(const DRay& ray) const
 {
+  if (this->IsResourcePopulated() == false) { return std::nullopt; }
+  // Check Overall AABB of Model.
+
+  // Call `GetRayIntersectedTValues` with mesh instances.
+  IHitable::TValueResults results;
+  for (const auto& smtMesh : this->mpMeshes)
+  {
+    const auto optResult = smtMesh->GetRayIntersectedTValues(ray);
+    if (optResult.has_value() == true)
+    {
+      results.insert(results.end(), (*optResult).begin(), (*optResult).end());
+    }
+  }
+
+  return results;
+}
+
+std::optional<PScatterResult> FModel::TryScatter(const DRay&, TReal) const
+{
+  // This must not be called. Need to be refactored.
+  assert(false);
   return std::nullopt;
 }
 
-std::optional<PScatterResult> FModel::TryScatter(const DRay& , TReal ) const
+bool FModel::TryPopulateResource()
 {
-  return std::nullopt;
+  if (this->IsResourcePopulated() == true) { return false; }
+
+  const auto optId = EXPR_SGT(MModel).AddModel(*this->TryGetResourcePath());
+  if (optId.has_value() == false)
+  {
+    return false;
+  }
+  this->mResource = *optId;
+  this->mIsPopulated = true;
+
+  const auto* pModel = EXPR_SGT(MModel).GetModel(*this->TryGetResourceId());
+  for (const auto& meshId : pModel->GetMeshIds())
+  {
+    FModelMesh::PCtor ctor;
+    ctor.mOrigin  = this->mOrigin;
+    ctor.mScale   = this->mScale;
+    ctor.mAngle   = this->mRotQuat.ToDegrees();
+    ctor.mMeshId  = meshId;
+
+    mpMeshes.emplace_back(std::make_unique<FModelMesh>(ctor, this->GetMaterial()));
+  }
+
+  return true;
+}
+
+bool FModel::IsResourcePopulated() const noexcept
+{
+  return this->mIsPopulated;
+}
+
+std::optional<std::filesystem::path> FModel::TryGetResourcePath() const noexcept
+{
+  if (this->IsResourcePopulated() == true) { return std::nullopt; }
+  return std::get<std::filesystem::path>(this->mResource);
+}
+
+std::optional<DModelId> FModel::TryGetResourceId() const noexcept
+{
+  if (this->IsResourcePopulated() == false) { return std::nullopt; }
+  return std::get<DModelId>(this->mResource);
 }
 
 } /// ::ray namespace
