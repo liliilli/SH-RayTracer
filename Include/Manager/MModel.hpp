@@ -27,6 +27,7 @@
 #include <Resource/DModelBuffer.hpp>
 #include <Resource/DModelMesh.hpp>
 #include <Resource/DModel.hpp>
+#include <Resource/DModelPrefab.hpp>
 
 namespace ray
 {
@@ -38,6 +39,21 @@ class MModel final : public ::dy::expr::ISingleton<MModel>
 public:
   EXPR_SINGLETON_DERIVED(MModel);
   EXPR_SINGLETON_PROPERTIES(MModel);
+
+  /// @brief Try add model prefab with model id.
+  /// If successful, return true. Otherwise, return false.
+  /// @param id Model id to use.
+  /// @param prefab Prefab.
+  /// @return If successful, return true. Otherwise, return false.
+  bool AddModelPrefab(const DModelId& id, const DModelPrefab& prefab);
+  /// @brief Check given id has valid, so DModelPrefab is exist in container.
+  /// @param id Model id.
+  /// @return If found, return true. Otherwise, return false.
+  bool HasModelPrefab(const DModelId& id) const noexcept;
+  /// @brief Get pointer of model prefab that has given id.
+  /// @param id Model id.
+  /// @return The pointer of DModelPrefab when find, If not find just return nullptr.
+  const DModelPrefab* GetModelPrefab(const DModelId& id) const noexcept;
 
   /// @brief Create Model
   std::optional<DModelId> AddModel(const std::filesystem::path& path);
@@ -91,6 +107,9 @@ private:
   using TMeshKey = DMeshId;
   using TMeshContainer = std::unordered_map<TMeshKey, DModelMesh>;
   TMeshContainer mMeshContainer;
+
+  using TModelPrefabs = std::unordered_map<TModelKey, DModelPrefab>;
+  TModelPrefabs mModelPrefabs;
 };
 
 } /// ::ray namespace

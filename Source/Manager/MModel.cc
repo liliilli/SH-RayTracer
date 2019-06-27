@@ -33,6 +33,31 @@ ESuccess MModel::pfRelease()
   return ESuccess::DY_SUCCESS;
 }
 
+bool MModel::AddModelPrefab(const DModelId& id, const DModelPrefab& prefab)
+{
+  if (this->HasModelPrefab(id) == true)
+  {
+    return false;
+  }
+
+  const auto [it, isSuccessful] = this->mModelPrefabs.try_emplace(id, prefab);
+  assert(isSuccessful == true);
+  if (isSuccessful == false) { return false; }
+
+  return true;
+}
+
+bool MModel::HasModelPrefab(const DModelId& id) const noexcept
+{
+  return this->mModelPrefabs.find(id) != this->mModelPrefabs.end();
+}
+
+const DModelPrefab* MModel::GetModelPrefab(const DModelId& id) const noexcept
+{
+  if (this->HasModelPrefab(id) == false) { return nullptr; }
+  return &this->mModelPrefabs.find(id)->second;
+}
+
 std::optional<DModelId> MModel::AddModel(const std::filesystem::path& path)
 {
   // Check file is not exist on given path.

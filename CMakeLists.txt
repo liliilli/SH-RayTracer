@@ -58,6 +58,7 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/Resource/DModel.cc"
     "${SOURCE_DIRECTORY}/Resource/DModelBuffer.cc"
     "${SOURCE_DIRECTORY}/Resource/DModelMesh.cc"
+    "${SOURCE_DIRECTORY}/Resource/DModelPrefab.cc"
     "${SOURCE_DIRECTORY}/Material/DMatMetaExternal.cc"
 
     "${SOURCE_DIRECTORY}/FCamera.cc"

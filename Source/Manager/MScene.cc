@@ -33,9 +33,11 @@
 #include <XHelperJson.hpp>
 
 #include <Manager/MMaterial.hpp>
+#include <Manager/MModel.hpp>
 #include <OldMaterial/FMatLambertian.hpp>
 #include <OldMaterial/FMatMetal.hpp>
 #include <OldMaterial/FMatDielectric.hpp>
+#include <Resource/DModelPrefab.hpp>
 
 namespace ray
 {
@@ -301,6 +303,18 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
   using ::dy::expr::string::Input;
   using ::dy::expr::string::Case;
 
+  // Check there is `models` header key.
+  if (json::HasJsonKey(json, "models") == false)
+  {
+    std::cerr << "Could not find `models` list header.\n";
+    return false;
+  }
+  if (this->AddModelsFromJson190710(json["models"]) == false)
+  {
+    std::cerr << "Failed to create model list.\n";
+    return false;
+  }
+
   // Check there is `materials` header key. First, get material informations from `materials`.
   if (json::HasJsonKey(json, "materials") == false)
   {
@@ -337,6 +351,48 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
     return false;
   }
   
+  return true;
+}
+
+bool MScene::AddModelsFromJson190710(const nlohmann::json& json)
+{
+  using ::dy::expr::string::Input;
+  using ::dy::expr::string::Case;
+
+  for (const auto& item : json)
+  {
+    // Check fundamental key headers.
+    if (json::HasJsonKey(item, "name") == false)
+    {
+      std::cerr << "Item has not `name` key header.\n";
+      return false;
+    }
+    if (json::HasJsonKey(item, "detail") == false)
+    {
+      std::cerr << "Item has not `detail` key header.\n";
+      return false;
+    }
+
+    // Get model information.
+    const auto modelName = json::GetValueFrom<std::string>(item, "name");
+    const auto modelInfo = json::GetValueFrom<DModelPrefab>(item, "detail");
+    if (std::filesystem::exists(modelInfo.mModelPath) == false)
+    {
+      std::cerr << "Failed to load model prefab. Model path is not valid. `" << modelInfo.mModelPath << "`\n"; 
+      return false;
+    }
+    if (EXPR_SGT(MModel).HasModelPrefab(modelName) == true)
+    {
+      std::cerr << "Failed to load model prefab. Model prefab name is duplicated.\n";
+      return false;
+    }
+    if (EXPR_SGT(MModel).AddModelPrefab(modelName, modelInfo) == false)
+    {
+      std::cerr << "Failed to load model prefab. Unexpected error occurred.\n";
+      return false;
+    }
+  }
+
   return true;
 }
 

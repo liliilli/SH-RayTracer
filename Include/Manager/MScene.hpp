@@ -78,6 +78,8 @@ private:
   /// @brief
   bool LoadSceneFile190710(const nlohmann::json& json, const PSceneDefaults& defaults);
   /// @brief
+  bool AddModelsFromJson190710(const nlohmann::json& json);
+  /// @brief
   bool AddMaterialsFromJson190710(const nlohmann::json& json);
   /// @brief Add prefabs into container automatically.
   /// @param json Json atlas of `prefabs`.
