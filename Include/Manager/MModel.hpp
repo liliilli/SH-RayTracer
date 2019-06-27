@@ -57,6 +57,8 @@ public:
 
   /// @brief Create Model
   std::optional<DModelId> AddModel(const std::filesystem::path& path);
+  /// @brief Create Model with prefab (resource prefab) model.
+  std::optional<DModelId> AddModel(const DModelPrefab& prefab, const DModelId* preparedId = nullptr);
 
   /// @brief Check given id has valid, so DModel is exist in container.
   /// @param id Model id.

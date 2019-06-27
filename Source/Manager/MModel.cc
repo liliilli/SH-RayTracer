@@ -60,8 +60,19 @@ const DModelPrefab* MModel::GetModelPrefab(const DModelId& id) const noexcept
 
 std::optional<DModelId> MModel::AddModel(const std::filesystem::path& path)
 {
-  // Check file is not exist on given path.
-  if (std::filesystem::exists(path) == false)
+  DModelPrefab prefab;
+  prefab.mModelPath     = path;
+  prefab.mScale         = 1;
+  prefab.mIsNormalized  = false;
+
+  return this->AddModel(prefab);
+}
+
+std::optional<DModelId> MModel::AddModel(const DModelPrefab& prefab, const DModelId* preparedId)
+{
+    // Check file is not exist on given path.
+  const auto& path = prefab.mModelPath;
+  if (std::filesystem::exists(prefab.mModelPath) == false)
   {
     std::cerr << "Failed to load model `" << path << "`. File is not exist on the path.\n";
     return std::nullopt;
@@ -85,6 +96,27 @@ std::optional<DModelId> MModel::AddModel(const std::filesystem::path& path)
   std::vector<tinyobj::material_t> materials;
   std::string error;
   bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &error, path.string().c_str());
+
+  // Check prefab.mIsNormalized is checked.
+  if (prefab.mIsNormalized == true)
+  {
+    // If checked, normalize tinyobj::attrib_t::vertices with maximum value.
+    // Get maximum value. 
+    TReal maximum = ::dy::math::kMinValueOf<TReal>;
+    for (TIndex i = 0, size = attrib.vertices.size(); i < size; i += 3)
+    {
+      const auto length = DVec3{attrib.vertices[i], attrib.vertices[i+1], attrib.vertices[i+2]}.GetLength();
+      maximum = std::max(maximum, length);
+    }
+
+    // Apply it into list.
+    for (auto& value : attrib.vertices) { value /= maximum; }
+  }
+  else if (prefab.mScale != 1.0f)
+  {
+    // If not checked, just scale tinyobj::attrib_t::vertices with prefab.mScale value that is not 1.0f.
+    for (auto& value : attrib.vertices) { value *= prefab.mScale; }
+  }
 
   // Check error and ret flag.
   if (error.empty() == false)
@@ -155,7 +187,9 @@ std::optional<DModelId> MModel::AddModel(const std::filesystem::path& path)
   }
 
   // Create model instance into container, with every id list.
-  DModelId mModelId = ::dy::math::DUuid{true};
+  DModelId mModelId;
+  if (preparedId != nullptr)  { mModelId = *preparedId; }
+  else                        { mModelId = ::dy::math::DUuid{true}; }
   {
     DModel::PCtor pctor;
     pctor.mId           = mModelId;
