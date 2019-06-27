@@ -47,8 +47,10 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/Shape/FBox.cc"
     "${SOURCE_DIRECTORY}/Shape/FModel.cc"
     "${SOURCE_DIRECTORY}/Shape/FModelMesh.cc"
+    "${SOURCE_DIRECTORY}/Shape/FModelPrefab.cc"
     "${SOURCE_DIRECTORY}/Shape/FCone.cc"
     "${SOURCE_DIRECTORY}/Shape/FCapsule.cc"
+    "${SOURCE_DIRECTORY}/Shape/PModelCtor.cc"
 
     "${SOURCE_DIRECTORY}/Id/DMatId.cc"
     "${SOURCE_DIRECTORY}/Id/DMeshId.cc"

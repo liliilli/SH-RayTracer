@@ -30,6 +30,7 @@
 #include <Shape/FCone.hpp>
 #include <Shape/FCapsule.hpp>
 #include <Shape/FModel.hpp>
+#include <Shape/FModelPrefab.hpp>
 #include <XHelperJson.hpp>
 
 #include <Manager/MMaterial.hpp>
@@ -543,10 +544,18 @@ bool MScene::AddPrefabsFromJson190710(const nlohmann::json& json, const PSceneDe
       const auto ctor = json::GetValueFrom<FCapsule::PCtor>(item, "detail");
       psObject = std::make_unique<FCapsule>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
-    case Case("model"): // Create 3D Model
+    case Case("model"): // Create 3D Model Prefab (not populated yet)
     {
-      const auto ctor = json::GetValueFrom<FModel::PCtor>(item, "detail");
-      psObject = std::make_unique<FModel>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      const auto ctor = json::GetValueFrom<PModelCtor>(item, "detail");
+      // Check ctor.mModelPrefabName id is exist on model prefab.
+      if (EXPR_SGT(MModel).HasModelPrefab(ctor.mModelResourceName) == false)
+      {
+        std::cerr 
+          << "Failed to create model prefab instance. given model resource name is not valid. `" 
+          << ctor.mModelResourceName << "`\n";
+        return false;
+      }
+      psObject = std::make_unique<FModelPrefab>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
     } break;
     default:
     {
@@ -646,15 +655,35 @@ bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDe
         case EShapeType::Model:
         {
           using TObject = EXPR_CONVERT_ENUMTOTYPE(ShapeType, EShapeType::Model);
-          const auto& prefab = static_cast<const TObject&>(hitable);
-          if (auto& cPrefab = const_cast<TObject&>(prefab); prefab.IsResourcePopulated() == false)
+          const auto [ctor, list] = json::GetValueFromOptionally<PModelCtor>(item, "detail");
+          // Get model prefab from hitable, and override first.
+          const auto& modelPrefab     = static_cast<const FModelPrefab&>(hitable);
+          const auto overwrittenCtor  = modelPrefab.GetPCtor().Overwrite(ctor, list);
+          const auto& modelRescName   = overwrittenCtor.mModelResourceName;
+          if (EXPR_SGT(MModel).HasModelPrefab(modelRescName) == false)
           {
-            const auto flag = cPrefab.TryPopulateResource();
-            assert(flag == true);
+            std::cerr 
+              << "Failed to create model instance. given model resource name is not valid. `" 
+              << modelRescName << "`\n";
+            return false;
           }
+          if (EXPR_SGT(MModel).HasModel(modelRescName) == false)
+          {
+            const auto modelId = DModelId{modelRescName};
+            const auto* pResc = EXPR_SGT(MModel).GetModelPrefab(modelId);
+            assert(pResc != nullptr);
 
-          const auto [ctor, list] = json::GetValueFromOptionally<typename TObject::PCtor>(item, "detail");
-          this->AddHitableObject<TObject>(prefab.GetPCtor().Overwrite(ctor, list), prefab.GetMaterial());
+            // Add resource from model prefab instance.
+            const auto optResult = EXPR_SGT(MModel).AddModel(*pResc, &modelId);
+            if (optResult.has_value() == false)
+            {
+              std::cerr << "Failed to create model resource. Unexpected error occurred.\n";
+              return false;
+            }
+            assert(*optResult == modelId);
+          }
+          // Add object.
+          this->AddHitableObject<TObject>(overwrittenCtor, modelPrefab.GetMaterial());
         } break;
         default: break;
         }
@@ -782,6 +811,48 @@ bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDe
         // Create Object with the pointer of material instance.
         const auto ctor = json::GetValueFrom<FCapsule::PCtor>(item, "detail");
         this->AddHitableObject<FCapsule>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
+      } break;
+      case Case("model") : // Create 3D model instantly.
+      {
+        // Check
+        if (json::HasJsonKey(item, "material") == false)
+        {
+          std::cerr << "Object Item has not `material` key header.\n";
+          return false;
+        }
+        const auto matId = json::GetValueFrom<std::string>(item, "material");
+        if (EXPR_SGT(MMaterial).HasMaterial(matId) == false)
+        {
+          std::cerr << "Material `" << matId << "` not found.";
+          return false;
+        }
+
+        const auto ctor = json::GetValueFrom<PModelCtor>(item, "detail");
+        // Get model prefab from hitable, and override first.
+        const auto modelRescId = DModelId{ctor.mModelResourceName};
+        if (EXPR_SGT(MModel).HasModelPrefab(modelRescId) == false)
+        {
+          std::cerr
+            << "Failed to create model instance. given model resource name is not valid. `"
+            << ctor.mModelResourceName << "`\n";
+          return false;
+        }
+        if (EXPR_SGT(MModel).HasModel(modelRescId) == false)
+        {
+          const auto* pResc = EXPR_SGT(MModel).GetModelPrefab(modelRescId);
+          assert(pResc != nullptr);
+
+          // Add resource from model prefab instance.
+          const auto optResult = EXPR_SGT(MModel).AddModel(*pResc, &modelRescId);
+          if (optResult.has_value() == false)
+          {
+            std::cerr << "Failed to create model resource. Unexpected error occurred.\n";
+            return false;
+          }
+          assert(*optResult == modelRescId);
+        }
+        // Add object.
+        this->AddHitableObject<FModel>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
       } break;
       }
     }
