@@ -23,6 +23,7 @@
 #include <Helper/EJsonExistance.hpp>
 #include <Id/DModelId.hpp>
 #include <Shape/FModelMesh.hpp>
+#include <Shape/PModelCtor.hpp>
 
 namespace ray
 {
@@ -32,6 +33,7 @@ namespace ray
 class FModel final : public IHitable
 {
 public:
+#if 0
   /// @brief Constructor type of FModel.
   struct PCtor final
   {
@@ -39,13 +41,15 @@ public:
     TReal mScale; 
     DVec3 mAngle; 
     std::string mPath;
-    DModelId    mModelId;
+    DModelId mModelId;
 
     /// @brief Overwrite with given pctor instance and create new PCtor.
     PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
+#endif
 
-  FModel(const PCtor& ctor, IMaterial* mat);
+  //FModel(const PCtor& ctor, IMaterial* mat);
+  FModel(const PModelCtor& ctor, IMaterial* mat);
   virtual ~FModel() = default;
 
   /// @brief Get (x, y, z) position value.
@@ -65,8 +69,9 @@ public:
 
   /// @brief Get PCtor instance from instance.
   /// @param type Type value.
-  FModel::PCtor GetPCtor() const noexcept;
+  PModelCtor GetPCtor() const noexcept;
 
+#if 0
   /// @brief Try populate resource when resource is not populated yet.
   /// If populated, just return true.
   bool TryPopulateResource();
@@ -79,23 +84,24 @@ public:
   /// @brief
   /// @return If `IsResourcePopulated()` returned value is true, model id will be returned.
   std::optional<DModelId> TryGetResourceId() const noexcept;
+#endif
 
 private:
   DVec3 mOrigin;
   TReal mScale;
   DQuat mRotQuat;
 
-  std::variant<std::filesystem::path, DModelId> mResource;
-  bool mIsPopulated = false;
-
+  DModelId mModelId;
   std::vector<std::unique_ptr<FModelMesh>> mpMeshes;
 };
 
+#if 0
 /// @brief Template function for automatic parsing from json.
 /// This initialize FModel::PCtor instance, except some elements.
 void from_json(const nlohmann::json& json, FModel::PCtor& oCtor);
 
 /// @brief FModel specialized function.
 template <> json::FExistanceList JsonCheckExistances<FModel::PCtor>(const nlohmann::json& json);
+#endif
 
 } /// ::ray namespace

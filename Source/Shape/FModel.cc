@@ -19,6 +19,7 @@
 namespace ray
 {
 
+#if 0
 template <> json::FExistanceList JsonCheckExistances<FModel::PCtor>(const nlohmann::json& json)
 {
   using json::EExistance;
@@ -86,18 +87,37 @@ FModel::FModel(const PCtor& ctor, IMaterial* mat)
     }
   }
 }
+#endif
 
-FModel::PCtor FModel::GetPCtor() const noexcept
+FModel::FModel(const PModelCtor& ctor, IMaterial* mat)
+  : IHitable{EShapeType::Model, mat},
+    mOrigin { ctor.mOrigin },
+    mScale { ctor.mScale },
+    mRotQuat { ctor.mAngle }
 {
-  FModel::PCtor result;
-  result.mOrigin = this->GetOrigin();
-  result.mScale = this->GetScale();
-  result.mAngle = this->GetQuaternion().ToDegrees();
-  if (this->IsResourcePopulated() == true)
+  this->mModelId = DModelId{ctor.mModelResourceName};
+  assert(EXPR_SGT(MModel).HasModel(this->mModelId) == true);
+
+  const auto* pModel = EXPR_SGT(MModel).GetModel(this->mModelId);
+  for (const auto& meshId : pModel->GetMeshIds())
   {
-    result.mModelId = *this->TryGetResourceId();
-    assert(result.mModelId.HasId() == true);
+    FModelMesh::PCtor meshCtor;
+    meshCtor.mOrigin  = this->mOrigin;
+    meshCtor.mScale   = this->mScale;
+    meshCtor.mAngle   = this->mRotQuat.ToDegrees();
+    meshCtor.mMeshId  = meshId;
+
+    mpMeshes.emplace_back(std::make_unique<FModelMesh>(meshCtor, this->GetMaterial()));
   }
+}
+
+PModelCtor FModel::GetPCtor() const noexcept
+{
+  PModelCtor result;
+  result.mOrigin  = this->GetOrigin();
+  result.mScale   = this->GetScale();
+  result.mAngle   = this->GetQuaternion().ToDegrees();
+  result.mModelResourceName = this->mModelId.ToString();
 
   return result;
 }
@@ -119,7 +139,6 @@ const DQuat& FModel::GetQuaternion() const noexcept
 
 std::optional<IHitable::TValueResults> FModel::GetRayIntersectedTValues(const DRay& ray) const
 {
-  if (this->IsResourcePopulated() == false) { return std::nullopt; }
   // Check Overall AABB of Model.
 
   // Call `GetRayIntersectedTValues` with mesh instances.
@@ -143,6 +162,7 @@ std::optional<PScatterResult> FModel::TryScatter(const DRay&, TReal) const
   return std::nullopt;
 }
 
+#if 0
 bool FModel::TryPopulateResource()
 {
   if (this->IsResourcePopulated() == true) { return false; }
@@ -186,5 +206,6 @@ std::optional<DModelId> FModel::TryGetResourceId() const noexcept
   if (this->IsResourcePopulated() == false) { return std::nullopt; }
   return std::get<DModelId>(this->mResource);
 }
+#endif
 
 } /// ::ray namespace
