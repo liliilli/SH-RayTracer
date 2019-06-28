@@ -16,6 +16,71 @@ struct TriangleResult
   std::array<TIndex, 3> mIndex;
 };
 
+std::optional<std::pair<ray::TReal, const ray::DModelFace*>> RayIntersectTriangle(
+  const ray::DRay& localRay,
+  const ray::DModelFace& face) 
+{
+  using dy::math::Cross;
+  using dy::math::Dot;
+  using dy::math::IsNearlyZero;
+  using ray::TReal;
+  using ray::DVec3;
+  constexpr ray::TReal e = ray::TReal(1e-5);
+
+  const DVec3 edge1 = *face.mVertex[1] - *face.mVertex[0];
+  const DVec3 edge2 = *face.mVertex[2] - *face.mVertex[0];
+
+  const DVec3 h = Cross(localRay.GetDirection(), edge2);
+  const auto a = Dot(edge1, h);
+
+  // If ray is parallel, just do next triangle.
+  if (IsNearlyZero(a) == true) { return std::nullopt; }
+
+  const TReal f = 1 / a;
+  const DVec3 s = localRay.GetOrigin() - *face.mVertex[0];
+  const TReal u = f * Dot(s, h);
+  if (u < 0 || u > 1) { return std::nullopt; }
+
+  const DVec3 q = Cross(s, edge1);
+  const TReal v = f * Dot(localRay.GetDirection(), q);
+  if (v < 0 || u + v > 1) { return std::nullopt; }
+
+  // We can find `t` to find out where the intersection point is on the line.
+  const TReal t = f * Dot(edge2, q);
+  if (t < 0) { return std::nullopt; }
+
+  return std::pair{t, &face};
+}
+
+std::vector<TriangleResult> RayIntersectTriangle(
+  const ray::DRay& localRay,
+  const std::vector<ray::DModelFace>& faces)
+{
+  using dy::math::Cross;
+  using dy::math::Dot;
+  using dy::math::IsNearlyZero;
+  using ray::TReal;
+  using ray::DVec3;
+  constexpr ray::TReal e = ray::TReal(1e-5);
+
+  std::vector<TriangleResult> result;
+  for (const auto& face : faces)
+  {
+    //if (::dy::math::IsRayIntersected(localRay, face.mTriangleAABB) == false) { continue; }
+
+    const auto optResult = RayIntersectTriangle(localRay, face);
+    if (optResult.has_value() == false) { continue; }
+
+    const auto& [t, pFace] = *optResult;
+    TriangleResult item;
+    item.mT = t;
+    item.mIndex = {pFace->mIndex[0], pFace->mIndex[1], pFace->mIndex[2]};
+    result.emplace_back(std::move(item));
+  }
+
+  return result;
+}
+
 std::vector<TriangleResult> RayIntersectTriangle(
   const ray::DRay& localRay, 
   const std::vector<ray::DModelIndex>& indices,
@@ -118,8 +183,7 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntersectedTValues(cons
   if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
 
   // Convert world-space ray into local space.
-  const auto matLocalToWorld = this->mRotQuat.ToMatrix3();
-  const auto matWorldToLocal = matLocalToWorld.Transpose();
+  const auto matWorldToLocal = this->mRotQuat.ToMatrix3().Transpose();
   const auto offsetedRay = DRay
   {
     matWorldToLocal * (ray.GetOrigin() - this->mOrigin),
@@ -128,9 +192,9 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntersectedTValues(cons
 
   // Use Möller–Trumbore intersection algorithm
   // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-  const auto& indices   = this->mpMesh->GetIndices();
-  const auto& vertices  = this->mpModelBuffer->GetVertices();
-  const auto tResults = RayIntersectTriangle(offsetedRay, indices, vertices);
+  //const auto& indices   = this->mpMesh->GetIndices();
+  //const auto& vertices  = this->mpModelBuffer->GetVertices();
+  const auto tResults = RayIntersectTriangle(offsetedRay, this->mpMesh->GetFaces());
   if (tResults.empty() == true)
   {
     return std::nullopt;
@@ -138,10 +202,7 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntersectedTValues(cons
 
   IHitable::TValueResults results;
   results.reserve(tResults.size());
-  for (const auto& [t, _] : tResults)
-  {
-    results.emplace_back(t, EShapeType::ModelMesh, this);
-  }
+  for (const auto& [t, _] : tResults) { results.emplace_back(t, EShapeType::ModelMesh, this); }
   return results;
 }
 
@@ -160,10 +221,10 @@ std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t) c
 
   // Get result (bruteforce temporary)
   const auto& indices   = this->mpMesh->GetIndices();
-  const auto& vertices  = this->mpModelBuffer->GetVertices();
+  //const auto& vertices  = this->mpModelBuffer->GetVertices();
   const auto& normals   = this->mpModelBuffer->GetNormals();
 
-  auto tResults = RayIntersectTriangle(offsetedRay, indices, vertices);
+  auto tResults = RayIntersectTriangle(offsetedRay, this->mpMesh->GetFaces());
   assert(tResults.empty() == false);
   std::sort(
     tResults.begin(), tResults.end(), 
