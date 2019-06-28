@@ -15,6 +15,7 @@
 #include <nlohmann/json.hpp>
 #include <XHelperJson.hpp>
 #include <Manager/MModel.hpp>
+#include <Math/Utility/XShapeMath.h>
 
 namespace ray
 {
@@ -109,6 +110,16 @@ FModel::FModel(const PModelCtor& ctor, IMaterial* mat)
 
     mpMeshes.emplace_back(std::make_unique<FModelMesh>(meshCtor, this->GetMaterial()));
   }
+
+  // Make Overall AABB from pMesh.
+  if (this->mpMeshes.empty() == true) { return; }
+
+  DAABB aabb = *this->mpMeshes.front()->GetAABB();
+  for (const auto& pMesh : this->mpMeshes)
+  {
+    aabb = ::dy::math::GetUnionOf(aabb, *pMesh->GetAABB());
+  }
+  this->mAABB = std::make_unique<DAABB>(aabb);
 }
 
 PModelCtor FModel::GetPCtor() const noexcept
@@ -140,6 +151,7 @@ const DQuat& FModel::GetQuaternion() const noexcept
 std::optional<IHitable::TValueResults> FModel::GetRayIntersectedTValues(const DRay& ray) const
 {
   // Check Overall AABB of Model.
+  if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
 
   // Call `GetRayIntersectedTValues` with mesh instances.
   IHitable::TValueResults results;

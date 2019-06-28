@@ -3,6 +3,7 @@
 #include <Manager/MModel.hpp>
 #include <Resource/DModelMesh.hpp>
 #include <Shape/FPlane.hpp>
+#include <Math/Utility/XShapeMath.h>
 
 namespace 
 {
@@ -81,12 +82,40 @@ ray::FModelMesh::FModelMesh(const PCtor& ctor, IMaterial* mat)
   this->mpMesh          = EXPR_SGT(MModel).GetMesh(this->mMeshId);
   this->mModelBufferId  = this->mpMesh->GetModelBufferId();
   this->mpModelBuffer   = EXPR_SGT(MModel).GetModelBuffer(this->mModelBufferId);
+
+  // Make local-space AABB from mpModelBuffer.
+  const auto& indices   = this->mpMesh->GetIndices();
+  const auto& vertices  = this->mpModelBuffer->GetVertices();
+
+  // First, get first triangle and make basis meshLocalAABB.
+  const DVec3& tp0 = vertices[ indices[0].mVertexIndex ];
+  const DVec3& tp1 = vertices[ indices[1].mVertexIndex ];
+  const DVec3& tp2 = vertices[ indices[2].mVertexIndex ];
+  DAABB meshLocalAABB = {{tp0, tp1, tp2}};
+
+  for (TIndex i = 3, size = indices.size(); i < size; i += 3)
+  {
+    const DVec3& p0 = vertices[ indices[i+0].mVertexIndex ];
+    const DVec3& p1 = vertices[ indices[i+1].mVertexIndex ];
+    const DVec3& p2 = vertices[ indices[i+2].mVertexIndex ];
+
+    const DAABB triangleAABB = {{p0, p1, p2}};
+    meshLocalAABB = ::dy::math::GetUnionOf(meshLocalAABB, triangleAABB);
+  }
+
+  // Scale, Rotate with this->mRotQuat and offset with this->mOrigin.
+  meshLocalAABB = {
+    meshLocalAABB.GetMaximumPoint() * this->mScale,
+    meshLocalAABB.GetMinimumPoint() * this->mScale
+  };
+  meshLocalAABB = this->mRotQuat * meshLocalAABB;
+  this->mAABB = std::make_unique<DAABB>(::dy::math::GetMovedOf(meshLocalAABB, this->mOrigin));
 }
 
 std::optional<IHitable::TValueResults> FModelMesh::GetRayIntersectedTValues(const DRay& ray) const
 {
   // Check AABB.
-
+  if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
 
   // Convert world-space ray into local space.
   const auto matLocalToWorld = this->mRotQuat.ToMatrix3();
