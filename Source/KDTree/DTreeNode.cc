@@ -126,4 +126,67 @@ void DTreeNode::BuildTree(const std::vector<const DModelFace*>& pTriangles)
   }
 }
 
+std::vector<TriangleResult> DTreeNode::TempGetTValues(const DRay& localRay) const
+{
+  // Check AABB. If not passed, regard ray as not intersecting potential overall AABB region.
+  using ::dy::math::IsRayIntersected;
+  if (IsRayIntersected(localRay, this->mOverallBoundingBox) == false) { return {}; }
+
+  // Check It is leaf node or not. If leaf node, we can use moller algorithm to find T.
+  // If not, we just forward `localRay` into children.
+  if (this->mLeftNode != nullptr || this->mRightNode != nullptr)
+  {
+    assert(this->mLeftNode != nullptr);
+    assert(this->mRightNode != nullptr);
+    const auto leftTs   = this->mLeftNode->TempGetTValues(localRay);
+    const auto rightTs  = this->mRightNode->TempGetTValues(localRay);
+
+    std::vector<TriangleResult> tResult;
+    tResult.insert(tResult.end(), EXPR_BIND_BEGIN_END(leftTs));
+    tResult.insert(tResult.end(), EXPR_BIND_BEGIN_END(rightTs));
+    return tResult;
+  }
+
+  // If node is left, use moller algorithm to triangles.
+  std::vector<TriangleResult> tResult;
+  for (const auto& pTriangle : this->mTriangles)
+  {
+    using dy::math::Cross;
+    using dy::math::Dot;
+    using dy::math::IsNearlyZero;
+    using ray::TReal;
+    using ray::DVec3;
+    constexpr ray::TReal e = ray::TReal(1e-5);
+
+    const DVec3 edge1 = *pTriangle->mVertex[1] - *pTriangle->mVertex[0];
+    const DVec3 edge2 = *pTriangle->mVertex[2] - *pTriangle->mVertex[0];
+
+    const DVec3 h = Cross(localRay.GetDirection(), edge2);
+    const auto a = Dot(edge1, h);
+
+    // If ray is parallel, just do next triangle.
+    if (IsNearlyZero(a) == true) { continue; }
+
+    const TReal f = 1 / a;
+    const DVec3 s = localRay.GetOrigin() - *pTriangle->mVertex[0];
+    const TReal u = f * Dot(s, h);
+    if (u < 0 || u > 1) { continue; }
+
+    const DVec3 q = Cross(s, edge1);
+    const TReal v = f * Dot(localRay.GetDirection(), q);
+    if (v < 0 || u + v > 1) { continue; }
+
+    // We can find `t` to find out where the intersection point is on the line.
+    const TReal t = f * Dot(edge2, q);
+    if (t < 0) { continue; }
+
+    TriangleResult result;
+    result.mT = t;
+    result.mIndex = pTriangle->mIndex;
+    tResult.emplace_back(std::move(result));
+  }
+  
+  return tResult;
+}
+
 } /// ::ray namespace

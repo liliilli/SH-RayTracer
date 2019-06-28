@@ -55,6 +55,8 @@ public:
   /// @return When ray intersected to ray, returns TReal list.
   std::optional<TValueResults> GetRayIntersectedTValues(const DRay& ray) const override final;
 
+  std::optional<TValueResults> GetRayIntserectedTValues2(const DRay& ray);
+
   ///
   std::optional<PScatterResult> TryScatter(const DRay& ray, TReal t) const override final;
 

@@ -15,6 +15,14 @@
 #include <memory>
 #include <XCommon.hpp>
 
+struct TriangleResult 
+{
+  using TReal   = ray::TReal;
+  using TIndex  = ray::TIndex;
+  TReal mT;
+  std::array<TIndex, 3> mIndex;
+};
+
 namespace ray
 {
 
@@ -28,6 +36,9 @@ public:
   /// @brief 
   /// @param
   void BuildTree(const std::vector<const DModelFace*>& pTriangles);
+
+  /// @brief
+  std::vector<TriangleResult> TempGetTValues(const DRay& localRay) const;
 
 private:
   DAABB mOverallBoundingBox;

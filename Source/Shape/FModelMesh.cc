@@ -8,14 +8,6 @@
 namespace 
 {
 
-struct TriangleResult 
-{
-  using TReal   = ray::TReal;
-  using TIndex  = ray::TIndex;
-  TReal mT;
-  std::array<TIndex, 3> mIndex;
-};
-
 std::optional<std::pair<ray::TReal, const ray::DModelFace*>> RayIntersectTriangle(
   const ray::DRay& localRay,
   const ray::DModelFace& face) 
@@ -186,15 +178,40 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntersectedTValues(cons
   const auto matWorldToLocal = this->mRotQuat.ToMatrix3().Transpose();
   const auto offsetedRay = DRay
   {
-    matWorldToLocal * (ray.GetOrigin() - this->mOrigin),
+    (matWorldToLocal * (ray.GetOrigin() - this->mOrigin)) * this->mScale,
     matWorldToLocal * ray.GetDirection()
   };
 
   // Use Möller–Trumbore intersection algorithm
   // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-  //const auto& indices   = this->mpMesh->GetIndices();
-  //const auto& vertices  = this->mpModelBuffer->GetVertices();
   const auto tResults = RayIntersectTriangle(offsetedRay, this->mpMesh->GetFaces());
+  if (tResults.empty() == true)
+  {
+    return std::nullopt;
+  }
+
+  IHitable::TValueResults results;
+  results.reserve(tResults.size());
+  for (const auto& [t, _] : tResults) { results.emplace_back(t, EShapeType::ModelMesh, this); }
+  return results;
+}
+
+std::optional<IHitable::TValueResults> FModelMesh::GetRayIntserectedTValues2(const DRay& ray)
+{
+  // Check AABB.
+  if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
+  
+   // Convert world-space ray into local space.
+  const auto matWorldToLocal = this->mRotQuat.ToMatrix3().Transpose();
+  const auto offsetedRay = DRay
+  {
+    (matWorldToLocal * (ray.GetOrigin() - this->mOrigin)) * this->mScale,
+    matWorldToLocal * ray.GetDirection()
+  };
+
+  // Get T value (temporary) [#6? Need to be refactored more clean way.]
+  const auto& header = this->mpMesh->GetTreeHeader();
+  const auto tResults = header.TempGetTValues(offsetedRay);
   if (tResults.empty() == true)
   {
     return std::nullopt;
@@ -215,7 +232,7 @@ std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t) c
   const auto matWorldToLocal = matLocalToWorld.Transpose();
   const auto offsetedRay = DRay
   {
-    matWorldToLocal * (ray.GetOrigin() - this->mOrigin),
+    (matWorldToLocal * (ray.GetOrigin() - this->mOrigin)) * this->mScale,
     matWorldToLocal * ray.GetDirection()
   };
 
@@ -224,7 +241,8 @@ std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t) c
   //const auto& vertices  = this->mpModelBuffer->GetVertices();
   const auto& normals   = this->mpModelBuffer->GetNormals();
 
-  auto tResults = RayIntersectTriangle(offsetedRay, this->mpMesh->GetFaces());
+  auto tResults = this->mpMesh->GetTreeHeader().TempGetTValues(offsetedRay);
+  //auto tResults = RayIntersectTriangle(offsetedRay, this->mpMesh->GetFaces());
   assert(tResults.empty() == false);
   std::sort(
     tResults.begin(), tResults.end(), 

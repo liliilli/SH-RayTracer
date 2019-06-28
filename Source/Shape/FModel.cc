@@ -87,7 +87,8 @@ std::optional<IHitable::TValueResults> FModel::GetRayIntersectedTValues(const DR
   IHitable::TValueResults results;
   for (const auto& smtMesh : this->mpMeshes)
   {
-    const auto optResult = smtMesh->GetRayIntersectedTValues(ray);
+    const auto optResult = smtMesh->GetRayIntserectedTValues2(ray);
+    //const auto optResult = smtMesh->GetRayIntersectedTValues(ray);
     if (optResult.has_value() == true)
     {
       results.insert(results.end(), (*optResult).begin(), (*optResult).end());
