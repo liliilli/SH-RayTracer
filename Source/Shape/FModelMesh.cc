@@ -205,7 +205,7 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntserectedTValues2(con
   const auto matWorldToLocal = this->mRotQuat.ToMatrix3().Transpose();
   const auto offsetedRay = DRay
   {
-    (matWorldToLocal * (ray.GetOrigin() - this->mOrigin)) * this->mScale,
+    (matWorldToLocal * (ray.GetOrigin() - this->mOrigin)) / this->mScale,
     matWorldToLocal * ray.GetDirection()
   };
 
@@ -219,7 +219,7 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntserectedTValues2(con
 
   IHitable::TValueResults results;
   results.reserve(tResults.size());
-  for (const auto& [t, _] : tResults) { results.emplace_back(t, EShapeType::ModelMesh, this); }
+  for (const auto& [t, _] : tResults) { results.emplace_back(t * this->mScale, EShapeType::ModelMesh, this); }
   return results;
 }
 
@@ -232,7 +232,7 @@ std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t) c
   const auto matWorldToLocal = matLocalToWorld.Transpose();
   const auto offsetedRay = DRay
   {
-    (matWorldToLocal * (ray.GetOrigin() - this->mOrigin)) * this->mScale,
+    (matWorldToLocal * (ray.GetOrigin() - this->mOrigin)) / this->mScale,
     matWorldToLocal * ray.GetDirection()
   };
 
@@ -251,13 +251,14 @@ std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t) c
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
   for (auto& [nT, nIds] : tResults)
   {
-    if (t != nT) { continue; }
+    if (t != nT * this->mScale) { continue; }
     // Get normal.
     const DVec3& n0 = normals[ indices[nIds[0]].mNormalIndex ];
     const DVec3& n1 = normals[ indices[nIds[1]].mNormalIndex ];
     const DVec3& n2 = normals[ indices[nIds[2]].mNormalIndex ];
 
-    const auto optResult = this->GetMaterial()->Scatter(nextRay, (n0 + n1 + n2) / 3);
+    const auto normal = matLocalToWorld * ((n0 + n1 + n2) / 3);
+    const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
     const auto& [refDir, attCol, isScattered] = *optResult;
 
     return PScatterResult{refDir, attCol, isScattered};
