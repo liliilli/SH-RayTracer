@@ -22,6 +22,7 @@
 #include <XCommon.hpp>
 #include <Resource/DModelIndex.hpp>
 #include <Resource/DModelFace.hpp>
+#include <KDTree/DTreeNode.hpp>
 
 namespace ray
 {
@@ -59,6 +60,13 @@ public:
   const std::vector<DModelIndex>& GetIndices() const noexcept;
   /// @brief Get face list of mesh.
   const std::vector<DModelFace>& GetFaces() const noexcept;
+  /// @brief Get KdTree Header node pointer.
+  const DTreeNode& GetTreeHeader() const noexcept;
+
+  /// @brief
+  void CreateFaces();
+  /// @brief 
+  void CreateKdTree();
 
 private:
   DMeshId         mId;
@@ -66,8 +74,9 @@ private:
   DModelBufferId  mModelBufferId;
 
   std::string mName;
-  std::vector<DModelIndex>  mIndices;
-  std::vector<DModelFace>   mFaces;
+  std::vector<DModelIndex>    mIndices;
+  std::vector<DModelFace>     mFaces;
+  std::unique_ptr<DTreeNode>  mLocalSpaceTree;
 };
 
 } /// ::ray namespace

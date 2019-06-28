@@ -186,6 +186,15 @@ std::optional<DModelId> MModel::AddModel(const DModelPrefab& prefab, const DMode
     }
   }
 
+  // Create KDTree and faces of meshes.
+  for (const auto& meshId : meshes)
+  {
+    auto* pMesh = EXPR_SGT(MModel).GetMesh(meshId);
+    assert(pMesh != nullptr);
+    pMesh->CreateFaces();
+    pMesh->CreateKdTree();
+  }
+
   // Create model instance into container, with every id list.
   DModelId mModelId;
   if (preparedId != nullptr)  { mModelId = *preparedId; }

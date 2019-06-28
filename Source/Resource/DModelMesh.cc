@@ -41,7 +41,10 @@ DModelMesh::DModelMesh(const PCtor& ctor)
     [[maybe_unused]] const auto flag = EXPR_SGT(MModel).HasModelBuffer(this->mModelBufferId);
     assert(flag == true);
   }
+}
 
+void DModelMesh::CreateFaces()
+{
   // Create Face and AABB.
   const auto* mpBuffer  = EXPR_SGT(MModel).GetModelBuffer(this->mModelBufferId);
   const auto& vertices  = mpBuffer->GetVertices();
@@ -55,7 +58,7 @@ DModelMesh::DModelMesh(const PCtor& ctor)
 
     DModelFace face;
     face.mVertex = {&vertices[i0.mVertexIndex], &vertices[i1.mVertexIndex], &vertices[i2.mVertexIndex]};
-    face.mNormal = {&normals[i0.mNormalIndex], &vertices[i1.mNormalIndex], &vertices[i2.mNormalIndex]};
+    face.mNormal = {&normals[i0.mNormalIndex], &normals[i1.mNormalIndex], &normals[i2.mNormalIndex]};
     face.mIndex  = {i, i+1, i+2};
 
     if (i0.mUv0Index != -1) { face.mUv0[0] = &uv0s[i0.mUv0Index]; }
@@ -67,6 +70,17 @@ DModelMesh::DModelMesh(const PCtor& ctor)
 
     this->mFaces.emplace_back(std::move(face));
   }
+}
+
+void DModelMesh::CreateKdTree()
+{
+  if (this->mLocalSpaceTree != nullptr) { this->mLocalSpaceTree = nullptr; }
+
+  std::vector<const DModelFace*> pFaces;
+  for (const auto& face : this->mFaces) { pFaces.emplace_back(&face); }
+
+  this->mLocalSpaceTree = std::make_unique<DTreeNode>();
+  this->mLocalSpaceTree->BuildTree(pFaces);
 }
 
 const DMeshId& DModelMesh::GetId() const noexcept
@@ -84,7 +98,7 @@ const DMatId& DModelMesh::GetDefaultMaterialId() const noexcept
   return this->mDefaultMatId;
 }
 
-const DModelBufferId & DModelMesh::GetModelBufferId() const noexcept
+const DModelBufferId& DModelMesh::GetModelBufferId() const noexcept
 {
   return this->mModelBufferId;
 }
@@ -107,6 +121,11 @@ const std::vector<DModelIndex>& DModelMesh::GetIndices() const noexcept
 const std::vector<DModelFace>& DModelMesh::GetFaces() const noexcept
 {
   return this->mFaces;
+}
+
+const DTreeNode& DModelMesh::GetTreeHeader() const noexcept
+{
+  return *this->mLocalSpaceTree;
 }
 
 } /// ::ray namespace

@@ -33,6 +33,8 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/Interface/IMaterial.cc"
     "${SOURCE_DIRECTORY}/Interface/IObject.cc"
 
+    "${SOURCE_DIRECTORY}/KDTree/DTreeNode.cc"
+
     "${SOURCE_DIRECTORY}/Manager/MScene.cc"
     "${SOURCE_DIRECTORY}/Manager/MMaterial.cc"
     "${SOURCE_DIRECTORY}/Manager/MModel.cc"
