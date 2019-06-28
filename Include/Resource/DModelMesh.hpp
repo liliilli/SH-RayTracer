@@ -21,6 +21,7 @@
 
 #include <XCommon.hpp>
 #include <Resource/DModelIndex.hpp>
+#include <Resource/DModelFace.hpp>
 
 namespace ray
 {
@@ -56,6 +57,8 @@ public:
   std::vector<DModelIndex>& GetIndices() noexcept;
   /// @brief Get index list of mesh.
   const std::vector<DModelIndex>& GetIndices() const noexcept;
+  /// @brief Get face list of mesh.
+  const std::vector<DModelFace>& GetFaces() const noexcept;
 
 private:
   DMeshId         mId;
@@ -63,7 +66,8 @@ private:
   DModelBufferId  mModelBufferId;
 
   std::string mName;
-  std::vector<DModelIndex> mIndices;
+  std::vector<DModelIndex>  mIndices;
+  std::vector<DModelFace>   mFaces;
 };
 
 } /// ::ray namespace

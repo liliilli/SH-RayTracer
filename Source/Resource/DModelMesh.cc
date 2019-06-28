@@ -41,6 +41,32 @@ DModelMesh::DModelMesh(const PCtor& ctor)
     [[maybe_unused]] const auto flag = EXPR_SGT(MModel).HasModelBuffer(this->mModelBufferId);
     assert(flag == true);
   }
+
+  // Create Face and AABB.
+  const auto* mpBuffer  = EXPR_SGT(MModel).GetModelBuffer(this->mModelBufferId);
+  const auto& vertices  = mpBuffer->GetVertices();
+  const auto& normals   = mpBuffer->GetNormals();
+  const auto& uv0s      = mpBuffer->GetUV0s();
+  for (TIndex i = 0, size = this->mIndices.size(); i < size; i += 3)
+  {
+    const auto& i0 = this->mIndices[i+0];
+    const auto& i1 = this->mIndices[i+1];
+    const auto& i2 = this->mIndices[i+2];
+
+    DModelFace face;
+    face.mVertex = {&vertices[i0.mVertexIndex], &vertices[i1.mVertexIndex], &vertices[i2.mVertexIndex]};
+    face.mNormal = {&normals[i0.mNormalIndex], &vertices[i1.mNormalIndex], &vertices[i2.mNormalIndex]};
+    face.mIndex  = {i, i+1, i+2};
+
+    if (i0.mUv0Index != -1) { face.mUv0[0] = &uv0s[i0.mUv0Index]; }
+    if (i1.mUv0Index != -1) { face.mUv0[1] = &uv0s[i1.mUv0Index]; }
+    if (i2.mUv0Index != -1) { face.mUv0[2] = &uv0s[i2.mUv0Index]; }
+    
+    const auto flag = face.CreateAABB();
+    assert(flag == true);
+
+    this->mFaces.emplace_back(std::move(face));
+  }
 }
 
 const DMeshId& DModelMesh::GetId() const noexcept
@@ -76,6 +102,11 @@ std::vector<DModelIndex>& DModelMesh::GetIndices() noexcept
 const std::vector<DModelIndex>& DModelMesh::GetIndices() const noexcept
 {
   return this->mIndices;
+}
+
+const std::vector<DModelFace>& DModelMesh::GetFaces() const noexcept
+{
+  return this->mFaces;
 }
 
 } /// ::ray namespace
