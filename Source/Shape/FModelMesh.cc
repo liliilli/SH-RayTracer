@@ -257,7 +257,8 @@ std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t) c
     const DVec3& n1 = normals[ indices[nIds[1]].mNormalIndex ];
     const DVec3& n2 = normals[ indices[nIds[2]].mNormalIndex ];
 
-    const auto optResult = this->GetMaterial()->Scatter(nextRay, (n0 + n1 + n2) / 3);
+    const auto normal = matLocalToWorld * ((n0 + n1 + n2) / 3);
+    const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
     const auto& [refDir, attCol, isScattered] = *optResult;
 
     return PScatterResult{refDir, attCol, isScattered};
