@@ -20,76 +20,6 @@
 namespace ray
 {
 
-#if 0
-template <> json::FExistanceList JsonCheckExistances<FModel::PCtor>(const nlohmann::json& json)
-{
-  using json::EExistance;
-  json::FExistanceList result(4, EExistance::NotExist);
-
-  if (json::HasJsonKey(json, "pos") == true) { result[0] = EExistance::Exist; }
-  if (json::HasJsonKey(json, "scale") == true) { result[1] = EExistance::Exist; }
-  if (json::HasJsonKey(json, "angle") == true) { result[2] = EExistance::Exist; }
-  if (json::HasJsonKey(json, "path") == true) { result[3] = EExistance::Exist; }
-
-  return result;
-}
-
-FModel::PCtor FModel::PCtor::Overwrite(const PCtor& pctor, const json::FExistanceList& list) const
-{
-  PCtor result = *this;
-  using json::EExistance;
-  
-  OverwriteWhenExist(list[0], result.mOrigin, pctor.mOrigin);
-  OverwriteWhenExist(list[1], result.mScale, pctor.mScale);
-  OverwriteWhenExist(list[2], result.mAngle, pctor.mAngle);
-  OverwriteWhenExist(list[3], result.mPath, pctor.mPath);
-
-  return result;  
-}
-
-void from_json(const nlohmann::json& json, FModel::PCtor& oCtor)
-{
-  if (json::HasJsonKey(json, "pos") == true) 
-  { oCtor.mOrigin = json::GetValueFrom<DVec3>(json, "pos"); }
-  if (json::HasJsonKey(json, "scale") == true) 
-  { oCtor.mScale = json::GetValueFrom<TReal>(json, "scale"); }
-  if (json::HasJsonKey(json, "angle") == true) 
-  { oCtor.mAngle = json::GetValueFrom<DVec3>(json, "angle"); }  
-  if (json::HasJsonKey(json, "path") == true) 
-  { oCtor.mPath = json::GetValueFrom<std::string>(json, "path"); }  
-}
-
-FModel::FModel(const PCtor& ctor, IMaterial* mat)
-  : IHitable{EShapeType::Model, mat},
-    mOrigin { ctor.mOrigin },
-    mScale { ctor.mScale },
-    mRotQuat { ctor.mAngle }
-{
-  if (ctor.mModelId.HasId() == false)
-  {
-    assert(ctor.mPath.empty() == false);
-    this->mResource = std::filesystem::path(ctor.mPath);
-  }
-  else
-  {
-    this->mResource = ctor.mModelId;
-    this->mIsPopulated = true;
-
-    const auto* pModel = EXPR_SGT(MModel).GetModel(ctor.mModelId);
-    for (const auto& meshId : pModel->GetMeshIds())
-    {
-      FModelMesh::PCtor meshCtor;
-      meshCtor.mOrigin  = this->mOrigin;
-      meshCtor.mScale   = this->mScale;
-      meshCtor.mAngle   = this->mRotQuat.ToDegrees();
-      meshCtor.mMeshId  = meshId;
-
-      mpMeshes.emplace_back(std::make_unique<FModelMesh>(meshCtor, this->GetMaterial()));
-    }
-  }
-}
-#endif
-
 FModel::FModel(const PModelCtor& ctor, IMaterial* mat)
   : IHitable{EShapeType::Model, mat},
     mOrigin { ctor.mOrigin },
@@ -173,51 +103,5 @@ std::optional<PScatterResult> FModel::TryScatter(const DRay&, TReal) const
   assert(false);
   return std::nullopt;
 }
-
-#if 0
-bool FModel::TryPopulateResource()
-{
-  if (this->IsResourcePopulated() == true) { return false; }
-
-  const auto optId = EXPR_SGT(MModel).AddModel(*this->TryGetResourcePath());
-  if (optId.has_value() == false)
-  {
-    return false;
-  }
-  this->mResource = *optId;
-  this->mIsPopulated = true;
-
-  const auto* pModel = EXPR_SGT(MModel).GetModel(*this->TryGetResourceId());
-  for (const auto& meshId : pModel->GetMeshIds())
-  {
-    FModelMesh::PCtor ctor;
-    ctor.mOrigin  = this->mOrigin;
-    ctor.mScale   = this->mScale;
-    ctor.mAngle   = this->mRotQuat.ToDegrees();
-    ctor.mMeshId  = meshId;
-
-    mpMeshes.emplace_back(std::make_unique<FModelMesh>(ctor, this->GetMaterial()));
-  }
-
-  return true;
-}
-
-bool FModel::IsResourcePopulated() const noexcept
-{
-  return this->mIsPopulated;
-}
-
-std::optional<std::filesystem::path> FModel::TryGetResourcePath() const noexcept
-{
-  if (this->IsResourcePopulated() == true) { return std::nullopt; }
-  return std::get<std::filesystem::path>(this->mResource);
-}
-
-std::optional<DModelId> FModel::TryGetResourceId() const noexcept
-{
-  if (this->IsResourcePopulated() == false) { return std::nullopt; }
-  return std::get<DModelId>(this->mResource);
-}
-#endif
 
 } /// ::ray namespace

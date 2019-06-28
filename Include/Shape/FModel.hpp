@@ -33,22 +33,6 @@ namespace ray
 class FModel final : public IHitable
 {
 public:
-#if 0
-  /// @brief Constructor type of FModel.
-  struct PCtor final
-  {
-    DVec3 mOrigin; 
-    TReal mScale; 
-    DVec3 mAngle; 
-    std::string mPath;
-    DModelId mModelId;
-
-    /// @brief Overwrite with given pctor instance and create new PCtor.
-    PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
-  };
-#endif
-
-  //FModel(const PCtor& ctor, IMaterial* mat);
   FModel(const PModelCtor& ctor, IMaterial* mat);
   virtual ~FModel() = default;
 
@@ -70,21 +54,6 @@ public:
   /// @brief Get PCtor instance from instance.
   /// @param type Type value.
   PModelCtor GetPCtor() const noexcept;
-
-#if 0
-  /// @brief Try populate resource when resource is not populated yet.
-  /// If populated, just return true.
-  bool TryPopulateResource();
-  /// @brief Check model resource is populated or not.
-  /// @return If resource is populated, just return true.
-  bool IsResourcePopulated() const noexcept;
-  /// @brief 
-  /// @return If `IsResourcePopulated()` returned value is false, path will be returned.
-  std::optional<std::filesystem::path> TryGetResourcePath() const noexcept;
-  /// @brief
-  /// @return If `IsResourcePopulated()` returned value is true, model id will be returned.
-  std::optional<DModelId> TryGetResourceId() const noexcept;
-#endif
 
 private:
   DVec3 mOrigin;
