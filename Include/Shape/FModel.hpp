@@ -64,13 +64,4 @@ private:
   std::vector<std::unique_ptr<FModelMesh>> mpMeshes;
 };
 
-#if 0
-/// @brief Template function for automatic parsing from json.
-/// This initialize FModel::PCtor instance, except some elements.
-void from_json(const nlohmann::json& json, FModel::PCtor& oCtor);
-
-/// @brief FModel specialized function.
-template <> json::FExistanceList JsonCheckExistances<FModel::PCtor>(const nlohmann::json& json);
-#endif
-
 } /// ::ray namespace
