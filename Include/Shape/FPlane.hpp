@@ -68,8 +68,13 @@ public:
   /// @param ray Ray of worls-space.
   /// @return When ray intersected to ray, returns TReal list.
   std::optional<TValueResults> GetRayIntersectedTValues(const DRay& ray) const override final;
-
-  std::optional<PScatterResult> TryScatter(const DRay& ray, TReal t) const override final;
+  
+  /// @brief Diffuse scattering function.
+  /// @param ray World space ray to intersect.
+  /// @param t Forwarding value t for moving ray origin into surface approximately.
+  /// @param normal Microfacet surface's given world-space normal vector.
+  /// @return If scattered, return scattered result of diffused reflection.
+  std::optional<PScatterResult> TryScatter(const DRay& ray, TReal t, const DVec3& normal) const override final;
 
   /// @brief Get PCtor instance from instance, with given type value.
   /// @param type Type value.

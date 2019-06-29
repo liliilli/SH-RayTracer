@@ -866,7 +866,7 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
   if (++cnt; cnt <= limit)
   {
     // Process culling to all objects with DAABB.
-    std::vector<std::pair<TReal, const ray::IHitable*>> tPairList; 
+    std::vector<IHitable::TValueResults::value_type> tList;
     // Get closest SDF value.
     for (auto& obj : this->mObjects)
     {
@@ -874,22 +874,22 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
       const auto tValues = obj->GetRayIntersectedTValues(ray);
       if (tValues.has_value() == false) { continue; } 
 
-      for (const auto& [t, type, pHitable] : *tValues)
+      for (const auto& tValue : *tValues)
       {
-        if (t > 0.0f) { tPairList.emplace_back(t, pHitable); }
+        if (tValue.mT > 0.0f) { tList.emplace_back(tValue); }
       }
     }
 
     // Sort and get only shortest T one.
     std::sort(
-      tPairList.begin(), tPairList.end(), 
-      [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+      EXPR_BIND_BEGIN_END(tList),
+      [](const auto& lhs, const auto& rhs) { return lhs.mT < rhs.mT; });
 
     // Render
-    if (tPairList.empty() == false)
+    if (tList.empty() == false)
     {
-      auto& [t, pObj] = tPairList.front();
-      auto optResult = pObj->TryScatter(ray, t);
+      auto& [t, type, pObj, normal] = tList.front();
+      auto optResult = pObj->TryScatter(ray, t, normal);
       const auto& [refDir, attCol, isScattered] = *optResult;
 
       if (isScattered == false) { return DVec3{0}; }

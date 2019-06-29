@@ -74,14 +74,14 @@ FSphere::PCtor FSphere::GetPCtor() const noexcept
   return result;
 }
 
-std::optional<PScatterResult> FSphere::TryScatter(const DRay& ray, TReal t) const
+std::optional<PScatterResult> FSphere::TryScatter(const DRay& ray, TReal t, const DVec3& normal) const
 {
   if (this->GetMaterial() == nullptr) { return std::nullopt; }
 
   // Get result
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
 
-  const auto optResult = this->GetMaterial()->Scatter(nextRay, *GetNormalOf(ray, *this));
+  const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
   const auto& [refDir, attCol, isScattered] = *optResult;
 
   return PScatterResult{refDir, attCol, isScattered};
@@ -97,7 +97,7 @@ std::optional<IHitable::TValueResults> FSphere::GetRayIntersectedTValues(const D
   IHitable::TValueResults results;
   for (const auto& t : tValues)
   {
-    results.emplace_back(t, this->GetType(), this);
+    results.emplace_back(t, this->GetType(), this, *GetNormalOf(ray, *this));
   }
   return results;
 }

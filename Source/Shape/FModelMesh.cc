@@ -173,35 +173,9 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntersectedTValues(cons
 {
   // Check AABB.
   if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
-
-  // Convert world-space ray into local space.
-  const auto matWorldToLocal = this->mRotQuat.ToMatrix3().Transpose();
-  const auto offsetedRay = DRay
-  {
-    (matWorldToLocal * (ray.GetOrigin() - this->mOrigin)) * this->mScale,
-    matWorldToLocal * ray.GetDirection()
-  };
-
-  // Use Möller–Trumbore intersection algorithm
-  // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-  const auto tResults = RayIntersectTriangle(offsetedRay, this->mpMesh->GetFaces());
-  if (tResults.empty() == true)
-  {
-    return std::nullopt;
-  }
-
-  IHitable::TValueResults results;
-  results.reserve(tResults.size());
-  for (const auto& [t, _] : tResults) { results.emplace_back(t, EShapeType::ModelMesh, this); }
-  return results;
-}
-
-std::optional<IHitable::TValueResults> FModelMesh::GetRayIntserectedTValues2(const DRay& ray)
-{
-  // Check AABB.
-  if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
   
    // Convert world-space ray into local space.
+  const auto matLocalToWorld = this->mRotQuat.ToMatrix3();
   const auto matWorldToLocal = this->mRotQuat.ToMatrix3().Transpose();
   const auto offsetedRay = DRay
   {
@@ -211,6 +185,9 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntserectedTValues2(con
 
   // Get T value (temporary) [#6? Need to be refactored more clean way.]
   const auto& header = this->mpMesh->GetTreeHeader();
+  const auto& indices   = this->mpMesh->GetIndices();
+  const auto& normals   = this->mpModelBuffer->GetNormals();
+
   const auto tResults = header.TempGetTValues(offsetedRay);
   if (tResults.empty() == true)
   {
@@ -219,11 +196,19 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntserectedTValues2(con
 
   IHitable::TValueResults results;
   results.reserve(tResults.size());
-  for (const auto& [t, _] : tResults) { results.emplace_back(t * this->mScale, EShapeType::ModelMesh, this); }
+  for (const auto& [t, nIds] : tResults) 
+  { 
+    // Get surface's normal vector in world-space.
+    const DVec3& n0 = normals[ indices[nIds[0]].mNormalIndex ];
+    const DVec3& n1 = normals[ indices[nIds[1]].mNormalIndex ];
+    const DVec3& n2 = normals[ indices[nIds[2]].mNormalIndex ];
+    const auto normal = matLocalToWorld * ((n0 + n1 + n2) / 3);
+    results.emplace_back(t * this->mScale, EShapeType::ModelMesh, this, normal); 
+  }
   return results;
 }
 
-std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t) const
+std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t, const DVec3& normal) const
 {
   if (this->GetMaterial() == nullptr) { return std::nullopt; }
 
@@ -236,35 +221,10 @@ std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t) c
     matWorldToLocal * ray.GetDirection()
   };
 
-  // Get result (bruteforce temporary)
-  const auto& indices   = this->mpMesh->GetIndices();
-  //const auto& vertices  = this->mpModelBuffer->GetVertices();
-  const auto& normals   = this->mpModelBuffer->GetNormals();
-
-  auto tResults = this->mpMesh->GetTreeHeader().TempGetTValues(offsetedRay);
-  //auto tResults = RayIntersectTriangle(offsetedRay, this->mpMesh->GetFaces());
-  assert(tResults.empty() == false);
-  std::sort(
-    tResults.begin(), tResults.end(), 
-    [](const TriangleResult& lhs, const TriangleResult& rhs) { return lhs.mT < rhs.mT; });
-
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
-  for (auto& [nT, nIds] : tResults)
-  {
-    if (t != nT * this->mScale) { continue; }
-    // Get normal.
-    const DVec3& n0 = normals[ indices[nIds[0]].mNormalIndex ];
-    const DVec3& n1 = normals[ indices[nIds[1]].mNormalIndex ];
-    const DVec3& n2 = normals[ indices[nIds[2]].mNormalIndex ];
-
-    const auto normal = matLocalToWorld * ((n0 + n1 + n2) / 3);
-    const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
-    const auto& [refDir, attCol, isScattered] = *optResult;
-
-    return PScatterResult{refDir, attCol, isScattered};
-  }
-
-  return std::nullopt;
+  const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
+  const auto& [refDir, attCol, isScattered] = *optResult;
+  return PScatterResult{refDir, attCol, isScattered};
 }
 
 } /// ::ray namespace

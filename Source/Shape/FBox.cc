@@ -239,19 +239,18 @@ std::optional<IHitable::TValueResults> FBox::GetRayIntersectedTValues(const DRay
   IHitable::TValueResults results;
   for (const auto& t : tValues)
   {
-    results.emplace_back(t, this->GetType(), this);
+    results.emplace_back(t, this->GetType(), this, *GetNormalOf(ray, *this, this->GetQuaternion()));
   }
   return results;
 }
 
-std::optional<PScatterResult> FBox::TryScatter(const DRay& ray, TReal t) const
+std::optional<PScatterResult> FBox::TryScatter(const DRay& ray, TReal t, const DVec3& normal) const
 {
   if (this->GetMaterial() == nullptr) { return std::nullopt; }
 
   // Get result
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
-
-  const auto optResult = this->GetMaterial()->Scatter(nextRay, *GetNormalOf(ray, *this, this->GetQuaternion()));
+  const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
   const auto& [refDir, attCol, isScattered] = *optResult;
 
   return PScatterResult{refDir, attCol, isScattered};

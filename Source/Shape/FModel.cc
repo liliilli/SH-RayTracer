@@ -87,8 +87,7 @@ std::optional<IHitable::TValueResults> FModel::GetRayIntersectedTValues(const DR
   IHitable::TValueResults results;
   for (const auto& smtMesh : this->mpMeshes)
   {
-    const auto optResult = smtMesh->GetRayIntserectedTValues2(ray);
-    //const auto optResult = smtMesh->GetRayIntersectedTValues(ray);
+    const auto optResult = smtMesh->GetRayIntersectedTValues(ray);
     if (optResult.has_value() == true)
     {
       results.insert(results.end(), (*optResult).begin(), (*optResult).end());
@@ -98,7 +97,7 @@ std::optional<IHitable::TValueResults> FModel::GetRayIntersectedTValues(const DR
   return results;
 }
 
-std::optional<PScatterResult> FModel::TryScatter(const DRay&, TReal) const
+std::optional<PScatterResult> FModel::TryScatter(const DRay&, TReal, const DVec3&) const
 {
   // This must not be called. Need to be refactored.
   assert(false);

@@ -148,6 +148,8 @@ std::vector<TriangleResult> DTreeNode::TempGetTValues(const DRay& localRay) cons
   }
 
   // If node is left, use moller algorithm to triangles.
+  // Use Möller–Trumbore intersection algorithm
+  // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
   std::vector<TriangleResult> tResult;
   for (const auto& pTriangle : this->mTriangles)
   {

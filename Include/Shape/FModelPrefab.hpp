@@ -52,7 +52,7 @@ public:
     return std::nullopt;
   };
 
-  std::optional<PScatterResult> TryScatter(const DRay&, TReal) const override final 
+  std::optional<PScatterResult> TryScatter(const DRay&, TReal, const DVec3&) const override final 
   {
     return std::nullopt;
   }
