@@ -58,16 +58,6 @@ const DModelPrefab* MModel::GetModelPrefab(const DModelId& id) const noexcept
   return &this->mModelPrefabs.find(id)->second;
 }
 
-std::optional<DModelId> MModel::AddModel(const std::filesystem::path& path)
-{
-  DModelPrefab prefab;
-  prefab.mModelPath     = path;
-  prefab.mScale         = 1;
-  prefab.mIsNormalized  = false;
-
-  return this->AddModel(prefab);
-}
-
 std::optional<DModelId> MModel::AddModel(const DModelPrefab& prefab, const DModelId* preparedId)
 {
     // Check file is not exist on given path.
@@ -97,22 +87,7 @@ std::optional<DModelId> MModel::AddModel(const DModelPrefab& prefab, const DMode
   std::string error;
   bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &error, path.string().c_str());
 
-  // Check prefab.mIsNormalized is checked.
-  if (prefab.mIsNormalized == true)
-  {
-    // If checked, normalize tinyobj::attrib_t::vertices with maximum value.
-    // Get maximum value. 
-    TReal maximum = ::dy::math::kMinValueOf<TReal>;
-    for (TIndex i = 0, size = attrib.vertices.size(); i < size; i += 3)
-    {
-      const auto length = DVec3{attrib.vertices[i], attrib.vertices[i+1], attrib.vertices[i+2]}.GetLength();
-      maximum = std::max(maximum, length);
-    }
-
-    // Apply it into list.
-    for (auto& value : attrib.vertices) { value /= maximum; }
-  }
-  else if (prefab.mScale != 1.0f)
+  if (prefab.mScale != 1.0f)
   {
     // If not checked, just scale tinyobj::attrib_t::vertices with prefab.mScale value that is not 1.0f.
     for (auto& value : attrib.vertices) { value *= prefab.mScale; }

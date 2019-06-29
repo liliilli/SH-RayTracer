@@ -55,8 +55,6 @@ public:
   /// @return The pointer of DModelPrefab when find, If not find just return nullptr.
   const DModelPrefab* GetModelPrefab(const DModelId& id) const noexcept;
 
-  /// @brief Create Model
-  std::optional<DModelId> AddModel(const std::filesystem::path& path);
   /// @brief Create Model with prefab (resource prefab) model.
   std::optional<DModelId> AddModel(const DModelPrefab& prefab, const DModelId* preparedId = nullptr);
 
