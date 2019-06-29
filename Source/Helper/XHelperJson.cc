@@ -12,12 +12,12 @@
 ///
 
 /// Header file
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 
 #include <iostream>
 #include <filesystem>
 #include <nlohmann/json.hpp>
-#include <XHelperIO.hpp>
+#include <Helper/XHelperIO.hpp>
 
 namespace ray::json
 {
