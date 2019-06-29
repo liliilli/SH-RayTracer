@@ -26,7 +26,6 @@ class DModelPrefab final
 public:
   std::filesystem::path mModelPath;
   TReal   mScale = 0;
-  bool    mIsNormalized = false;
 };
 
 /// @brief Template function for automatic parsing from json.

@@ -22,11 +22,9 @@ void from_json(const nlohmann::json& json, DModelPrefab& oCtor)
 {
   assert(json::HasJsonKey(json, "path") == true);
   assert(json::HasJsonKey(json, "scale") == true);
-  assert(json::HasJsonKey(json, "normalized") == true);
 
   oCtor.mModelPath    = json::GetValueFrom<std::string>(json, "path");
   oCtor.mScale        = json::GetValueFrom<TReal>(json, "scale");
-  oCtor.mIsNormalized = json::GetValueFrom<bool>(json, "normalized");
 }
 
 } /// ::ray namespace
