@@ -65,10 +65,12 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/Resource/DModelPrefab.cc"
     "${SOURCE_DIRECTORY}/Material/DMatMetaExternal.cc"
 
-    "${SOURCE_DIRECTORY}/FCamera.cc"
+    "${SOURCE_DIRECTORY}/Object/FCamera.cc"
+
     "${SOURCE_DIRECTORY}/FRenderWorker.cc"
     "${SOURCE_DIRECTORY}/XMain.cc"
     "${SOURCE_DIRECTORY}/XCommon.cc"
+
     "${SOURCE_DIRECTORY}/Helper/XHelperIO.cc"
     "${SOURCE_DIRECTORY}/Helper/XHelperJson.cc"
     "${SOURCE_DIRECTORY}/Helper/XTinyObj.cc"

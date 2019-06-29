@@ -21,7 +21,7 @@
 
 #include <XCommon.hpp>
 #include <Interface/IHitable.hpp>
-#include <FCamera.hpp>
+#include <Object/FCamera.hpp>
 #include <Interface/IObject.hpp>
 
 namespace ray

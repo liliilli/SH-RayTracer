@@ -13,12 +13,13 @@
 ///
 
 #include <vector>
-#include <FCamera.hpp>
 #include <XCommon.hpp>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
 
 namespace ray
 {
+
+class FCamera;
 
 /// @class FRenderWorker
 /// @brief Rendering worker. 

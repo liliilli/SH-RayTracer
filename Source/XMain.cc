@@ -26,7 +26,6 @@
 #include <Manager/MMaterial.hpp>
 #include <Manager/MModel.hpp>
 #include <XCommon.hpp>
-#include <FCamera.hpp>
 #include <FRenderWorker.hpp>
 
 int main(int argc, char* argv[])

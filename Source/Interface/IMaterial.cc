@@ -11,7 +11,7 @@
 /// SOFTWARE.
 ///
 
-#include <IMaterial.hpp>
+#include <Interface/IMaterial.hpp>
 
 namespace ray
 {

@@ -14,6 +14,7 @@
 #include <FRenderWorker.hpp>
 #include <Manager/MScene.hpp>
 #include <XCommon.hpp>
+#include <Object/FCamera.hpp>
 
 namespace ray
 {
