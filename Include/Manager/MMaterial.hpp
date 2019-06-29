@@ -21,7 +21,7 @@
 #include <nlohmann/json_fwd.hpp>
 #include <Expr/ISingleton.h>
 #include <Math/Type/Micellanous/DUuid.h>
-#include <IMaterial.hpp>
+#include <Interface/IMaterial.hpp>
 #include <Id/DMatId.hpp>
 #include <Material/DMatMetaExternal.hpp>
 

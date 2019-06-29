@@ -20,7 +20,7 @@
 #include <nlohmann/json_fwd.hpp>
 #include <Expr/ISingleton.h>
 #include <Math/Type/Micellanous/DUuid.h>
-#include <IMaterial.hpp>
+#include <Interface/IMaterial.hpp>
 #include <Id/DModelId.hpp>
 #include <Id/DModelBufferId.hpp>
 #include <Id/DMeshId.hpp>

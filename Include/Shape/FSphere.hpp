@@ -14,7 +14,7 @@
 
 #include <nlohmann/json_fwd.hpp>
 #include <Math/Type/Shape/DSphere.h>
-#include <IHitable.hpp>
+#include <Interface/IHitable.hpp>
 #include <XCommon.hpp>
 #include <Helper/XJsonCallback.hpp>
 #include <Helper/EJsonExistance.hpp>

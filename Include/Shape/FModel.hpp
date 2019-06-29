@@ -17,7 +17,7 @@
 
 #include <nlohmann/json_fwd.hpp>
 #include <Expr/XEnumConversion.h>
-#include <IHitable.hpp>
+#include <Interface/IHitable.hpp>
 #include <XCommon.hpp>
 #include <Helper/XJsonCallback.hpp>
 #include <Helper/EJsonExistance.hpp>

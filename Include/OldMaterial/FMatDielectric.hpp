@@ -15,7 +15,7 @@
 #include <nlohmann/json_fwd.hpp>
 #include <Math/Type/Micellanous/DClamp.h>
 
-#include <IMaterial.hpp>
+#include <Interface/IMaterial.hpp>
 #include <XCommon.hpp>
 
 namespace ray

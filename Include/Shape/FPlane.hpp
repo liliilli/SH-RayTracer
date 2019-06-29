@@ -15,7 +15,7 @@
 #include <variant>
 #include <nlohmann/json_fwd.hpp>
 #include <Math/Type/Shape/DPlane.h>
-#include <IHitable.hpp>
+#include <Interface/IHitable.hpp>
 #include <XCommon.hpp>
 #include <Helper/XJsonCallback.hpp>
 #include <Helper/EJsonExistance.hpp>

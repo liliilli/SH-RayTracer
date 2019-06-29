@@ -20,7 +20,7 @@
 #include <Expr/ISingleton.h>
 
 #include <XCommon.hpp>
-#include <IHitable.hpp>
+#include <Interface/IHitable.hpp>
 #include <FCamera.hpp>
 #include <Interface/IObject.hpp>
 

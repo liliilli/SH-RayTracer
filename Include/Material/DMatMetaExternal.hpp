@@ -16,7 +16,7 @@
 #include <tinyobj/tiny_obj_loader.h>
 #include <Math/Type/Micellanous/DUuid.h>
 
-#include <IMaterial.hpp>
+#include <Interface/IMaterial.hpp>
 #include <XCommon.hpp>
 #include <Id/DMatId.hpp>
 #include <Resource/DMaterialProperty.hpp>
