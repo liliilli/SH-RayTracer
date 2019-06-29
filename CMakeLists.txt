@@ -72,8 +72,6 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/Helper/XHelperIO.cc"
     "${SOURCE_DIRECTORY}/Helper/XHelperJson.cc"
     "${SOURCE_DIRECTORY}/Helper/XTinyObj.cc"
-
-    "${SOURCE_DIRECTORY}/XSamples.cc"
 )
 
 find_package(Threads REQUIRED)
