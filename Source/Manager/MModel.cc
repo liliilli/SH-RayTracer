@@ -18,7 +18,7 @@
 
 #include <Manager/MMaterial.hpp>
 #include <XCommon.hpp>
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 
 namespace ray
 {

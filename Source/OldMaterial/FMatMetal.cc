@@ -17,8 +17,7 @@
 #include <Math/Utility/XLinearMath.h>
 #include <Math/Utility/XGraphicsMath.h>
 #include <Math/Utility/XRandom.h>
-
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 
 namespace ray
 {

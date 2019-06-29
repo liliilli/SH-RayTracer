@@ -31,7 +31,7 @@
 #include <Shape/FCapsule.hpp>
 #include <Shape/FModel.hpp>
 #include <Shape/FModelPrefab.hpp>
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 
 #include <Manager/MMaterial.hpp>
 #include <Manager/MModel.hpp>

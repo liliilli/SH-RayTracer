@@ -13,7 +13,7 @@
 
 #include <Shape/PModelCtor.hpp>
 #include <nlohmann/json.hpp>
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 
 namespace ray
 {

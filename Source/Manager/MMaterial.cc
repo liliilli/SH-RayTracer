@@ -15,7 +15,7 @@
 #include <nlohmann/json.hpp>
 
 #include <XCommon.hpp>
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 #include <OldMaterial/FMatLambertian.hpp>
 #include <OldMaterial/FMatDielectric.hpp>
 #include <OldMaterial/FMatMetal.hpp>

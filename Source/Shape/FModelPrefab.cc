@@ -13,7 +13,7 @@
 
 #include <Shape/FModelPrefab.hpp>
 #include <nlohmann/json.hpp>
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 #include <Manager/MModel.hpp>
 
 namespace ray

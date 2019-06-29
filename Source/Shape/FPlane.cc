@@ -15,7 +15,7 @@
 
 #include <Math/Utility/XShapeMath.h>
 #include <nlohmann/json.hpp>
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 #include <Math/Utility/XRandom.h>
 
 namespace ray

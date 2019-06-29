@@ -14,7 +14,7 @@
 #include <Shape/FSphere.hpp>
 #include <nlohmann/json.hpp>
 #include <Math/Utility/XShapeMath.h>
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 
 namespace ray
 {

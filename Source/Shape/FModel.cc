@@ -13,7 +13,7 @@
 
 #include <Shape/FModel.hpp>
 #include <nlohmann/json.hpp>
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 #include <Manager/MModel.hpp>
 #include <Math/Utility/XShapeMath.h>
 

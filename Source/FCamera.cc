@@ -19,7 +19,7 @@
 #include <Math/Utility/XRandom.h>
 
 #include <XCommon.hpp>
-#include <XHelperJson.hpp>
+#include <Helper/XHelperJson.hpp>
 
 namespace ray
 {
