@@ -11,7 +11,7 @@
 /// SOFTWARE.
 ///
 
-#include <FCamera.hpp>
+#include <Object/FCamera.hpp>
 
 #include <iostream>
 #include <nlohmann/json.hpp>
