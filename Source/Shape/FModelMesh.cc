@@ -1,13 +1,27 @@
+///
+/// MIT License
+/// Copyright (c) 2018-2019 Jongmin Yun
+///
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+/// SOFTWARE.
+///
 
 #include <Shape/FModelMesh.hpp>
 #include <Manager/MModel.hpp>
 #include <Resource/DModelMesh.hpp>
 #include <Shape/FPlane.hpp>
 #include <Math/Utility/XShapeMath.h>
+#include <Object/XFunctionResults.hpp>
 
 namespace 
 {
 
+#if 0
 std::optional<std::pair<ray::TReal, const ray::DModelFace*>> RayIntersectTriangle(
   const ray::DRay& localRay,
   const ray::DModelFace& face) 
@@ -44,7 +58,7 @@ std::optional<std::pair<ray::TReal, const ray::DModelFace*>> RayIntersectTriangl
   return std::pair{t, &face};
 }
 
-std::vector<TriangleResult> RayIntersectTriangle(
+std::vector<PTriangleResult> RayIntersectTriangle(
   const ray::DRay& localRay,
   const std::vector<ray::DModelFace>& faces)
 {
@@ -55,7 +69,7 @@ std::vector<TriangleResult> RayIntersectTriangle(
   using ray::DVec3;
   constexpr ray::TReal e = ray::TReal(1e-5);
 
-  std::vector<TriangleResult> result;
+  std::vector<PTriangleResult> result;
   for (const auto& face : faces)
   {
     //if (::dy::math::IsRayIntersected(localRay, face.mTriangleAABB) == false) { continue; }
@@ -64,7 +78,7 @@ std::vector<TriangleResult> RayIntersectTriangle(
     if (optResult.has_value() == false) { continue; }
 
     const auto& [t, pFace] = *optResult;
-    TriangleResult item;
+    PTriangleResult item;
     item.mT = t;
     item.mIndex = {pFace->mIndex[0], pFace->mIndex[1], pFace->mIndex[2]};
     result.emplace_back(std::move(item));
@@ -73,7 +87,7 @@ std::vector<TriangleResult> RayIntersectTriangle(
   return result;
 }
 
-std::vector<TriangleResult> RayIntersectTriangle(
+std::vector<PTriangleResult> RayIntersectTriangle(
   const ray::DRay& localRay, 
   const std::vector<ray::DModelIndex>& indices,
   const ray::DModelBuffer::TPointVertices& vertices)
@@ -85,7 +99,7 @@ std::vector<TriangleResult> RayIntersectTriangle(
   using ray::DVec3;
   constexpr ray::TReal e = ray::TReal(1e-5);
 
-  std::vector<TriangleResult> result;
+  std::vector<PTriangleResult> result;
   for (ray::TIndex i = 0, size = indices.size(); i < size; i += 3)
   {
     const DVec3& p0 = vertices[ indices[i+0].mVertexIndex ];
@@ -114,7 +128,7 @@ std::vector<TriangleResult> RayIntersectTriangle(
     const TReal t = f * Dot(edge2, q);
     if (t < 0) { continue; }
 
-    TriangleResult item;
+    PTriangleResult item;
     item.mT = t;
     item.mIndex = {i, i+1, i+2};
     result.emplace_back(item);
@@ -122,13 +136,14 @@ std::vector<TriangleResult> RayIntersectTriangle(
 
   return result;
 }
+#endif
 
 } /// ::unnamed namespace
 
 namespace ray
 {
 
-ray::FModelMesh::FModelMesh(const PCtor& ctor, IMaterial* mat)
+ray::FModelMesh::FModelMesh(const PCtor& ctor, const IMaterial* mat)
   : IHitable { EShapeType::ModelMesh, mat },
     mOrigin { ctor.mOrigin },
     mScale { ctor.mScale },
@@ -188,7 +203,7 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntersectedTValues(cons
   const auto& indices   = this->mpMesh->GetIndices();
   const auto& normals   = this->mpModelBuffer->GetNormals();
 
-  const auto tResults = header.TempGetTValues(offsetedRay);
+  const auto tResults = header.GetIntersectedTriangleTValue(offsetedRay);
   if (tResults.empty() == true)
   {
     return std::nullopt;
@@ -223,8 +238,9 @@ std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t, c
 
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
   const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
-  const auto& [refDir, attCol, isScattered] = *optResult;
-  return PScatterResult{refDir, attCol, isScattered};
+  assert(optResult.has_value() == true);
+
+  return *optResult;
 }
 
 } /// ::ray namespace

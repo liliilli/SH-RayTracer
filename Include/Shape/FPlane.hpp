@@ -59,7 +59,7 @@ public:
   };
 
   /// @brief Construct FPlane with FPlane::PCtor.
-  FPlane(const FPlane::PCtor& arg, IMaterial* mat);
+  FPlane(const FPlane::PCtor& arg, const IMaterial* mat);
 
   virtual ~FPlane() = default;
 

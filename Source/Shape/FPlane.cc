@@ -142,7 +142,7 @@ void from_json(const nlohmann::json& json, FPlane::PCtor::PType2& oCtor)
   { oCtor.mPos3 = json::GetValueFrom<DVec3>(json, "pos3"); }
 }
 
-FPlane::FPlane(const FPlane::PCtor& arg, IMaterial* mat)
+FPlane::FPlane(const FPlane::PCtor& arg, const IMaterial* mat)
   : IHitable{EShapeType::Plane, mat},
     DPlane{}
 {
@@ -243,9 +243,9 @@ std::optional<PScatterResult> FPlane::TryScatter(const DRay& ray, TReal t, const
   // Get result
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
   const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
-  const auto& [refDir, attCol, isScattered] = *optResult;
+  assert(optResult.has_value() == true);
 
-  return PScatterResult{refDir, attCol, isScattered};
+  return *optResult;
 }
 
 std::optional<IHitable::TValueResults> FPlane::GetRayIntersectedTValues(const DRay& ray) const

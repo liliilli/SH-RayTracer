@@ -28,9 +28,9 @@
 namespace ray
 {
 
-class FMatLambertian;
-class FMatMetal;
-class FMatDielectric;
+class FMatLambertian; // Forward declaration
+class FMatMetal;      // Forward declaration
+class FMatDielectric; // Forward declaration
 
 /// @class MMaterial
 /// @brief Material management singleton type.
@@ -62,8 +62,8 @@ public:
   std::optional<DMatId> AddMaterial(const typename TType::PCtor& ctor);
 
   /// @brief Add external candidate material with outer library material information.
-  /// @param materialInfo
-  /// @return Material ID.
+  /// @param materialInfo Material information of `.obj` file.
+  /// @return If successful, return created material ID. 
   std::optional<DMatId> AddCandidateMaterial(const tinyobj::material_t& materialInfo);
 
   /// @brief Check container has material that named `id`.

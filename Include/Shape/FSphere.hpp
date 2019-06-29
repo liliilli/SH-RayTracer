@@ -37,7 +37,7 @@ public:
     PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
-  FSphere(const FSphere::PCtor& arg, IMaterial* mat);
+  FSphere(const FSphere::PCtor& arg, const IMaterial* mat);
   virtual ~FSphere() = default;
 
   /// @brief Try to getting ray intersected t value list.

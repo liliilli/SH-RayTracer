@@ -57,7 +57,7 @@ void from_json(const nlohmann::json& json, FTorus::PCtor& oCtor)
   { oCtor.mAngle = json::GetValueFrom<DVec3>(json, "angle"); }
 }
 
-FTorus::FTorus(const FTorus::PCtor& arg, IMaterial* mat)
+FTorus::FTorus(const FTorus::PCtor& arg, const IMaterial* mat)
   : IHitable{EShapeType::Torus, mat},
     ::dy::math::DTorus<TReal>{arg.mOrigin, arg.mDistance, arg.mRadius},
     mRotQuat{arg.mAngle}
@@ -88,11 +88,10 @@ std::optional<PScatterResult> FTorus::TryScatter(const DRay& ray, TReal t, const
 
   // Get result
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
-
   const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
-  const auto& [refDir, attCol, isScattered] = *optResult;
+  assert(optResult.has_value() == true);
 
-  return PScatterResult{refDir, attCol, isScattered};
+  return *optResult;
 }
 
 FTorus::PCtor FTorus::GetPCtor() const noexcept

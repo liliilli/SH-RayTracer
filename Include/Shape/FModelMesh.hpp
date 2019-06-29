@@ -44,7 +44,7 @@ public:
     PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
-  FModelMesh(const PCtor& ctor, IMaterial* mat);
+  FModelMesh(const PCtor& ctor, const IMaterial* mat);
   virtual ~FModelMesh() = default;
 
   const DQuat& GetQuaternion() const noexcept { return this->mRotQuat; }

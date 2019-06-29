@@ -56,8 +56,10 @@ public:
   const DModelPrefab* GetModelPrefab(const DModelId& id) const noexcept;
 
   /// @brief Create Model with prefab (resource prefab) model.
+  /// @param prefab The information of model not populated yet.
+  /// @param preparedId The pointer of prepared Model id. If exist, the function does not create new model id. 
+  /// @return If successful, return Model ID. If `preparedId` is exist, `preparedId` will be returned.
   std::optional<DModelId> AddModel(const DModelPrefab& prefab, const DModelId* preparedId = nullptr);
-
   /// @brief Check given id has valid, so DModel is exist in container.
   /// @param id Model id.
   /// @return If found, return true. Otherwise, return false.
@@ -71,7 +73,9 @@ public:
   /// @return The pointer of DModel when found, If not find just return nullptr.
   const DModel* GetModel(const DModelId& id) const noexcept;
 
-  /// @brief 
+  /// @brief Check given model buffer id has valid buffer in container.
+  /// @param id Model Buffer Id
+  /// @return If found, return true. Otherwise, return false.
   bool HasModelBuffer(const DModelBufferId& id) const noexcept;
   /// @brief Get pointer of model buffer that has given id.
   /// @param id Model Buffer Id.
@@ -82,7 +86,7 @@ public:
   /// @return The pointer of DModelBuffer when found, If not find just return nullptr.
   const DModelBuffer* GetModelBuffer(const DModelBufferId& id) const noexcept;
 
-  /// @brief Check given id has valid, so DModelMesh is in container.
+  /// @brief Check given id has valid model mesh.
   /// @param id Model Mesh Id.
   /// @return If found, return true. Otherwise, return false.
   bool HasMesh(const DMeshId& id) const noexcept;

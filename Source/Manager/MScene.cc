@@ -54,17 +54,17 @@ ESuccess MScene::pfRelease()
   return ESuccess::DY_SUCCESS;
 }
 
-void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
+void MScene::AddSampleObjects(const MScene::PSceneDefaults& defaults)
 {
   FCamera::PCtor descriptor = {};
   {
     descriptor.mAperture = 1.0f;
     descriptor.mFocusDistance = 1.0f;
     descriptor.mForwardTo = DVec3{0, 0, -1};
-    descriptor.mImgSize = imgSize;
+    descriptor.mImgSize = defaults.mImageSize;
     descriptor.mOrigin = DVec3{0, 0, 1};
-    descriptor.mSamples = numSamples;
-    descriptor.mScreenRatioXy = TReal(imgSize.X) / imgSize.Y;
+    descriptor.mSamples = defaults.mNumSamples;
+    descriptor.mScreenRatioXy = TReal(defaults.mImageSize.X) / defaults.mImageSize.Y;
     descriptor.mSensorSize = 1.0f;
   }
   this->mMainCamera = std::make_unique<FCamera>(descriptor);
@@ -157,7 +157,7 @@ void MScene::AddSampleObjects(const DUVec2& imgSize, TU32 numSamples)
   }
 }
 
-bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize, TU32 numSamples)
+bool MScene::LoadSceneFile(const std::string& pathString, const PSceneDefaults& defaults)
 {
   using ::dy::expr::string::Input;
   using ::dy::expr::string::Case;
@@ -177,7 +177,7 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
   if (jsonAtlas->is_array() == true)
   {
     // Load old `~v190710` version.
-    const auto flag = LoadOldSceneFile(*jsonAtlas, imgSize, numSamples);
+    const auto flag = LoadOldSceneFile(*jsonAtlas, defaults.mImageSize, defaults.mNumSamples);
     if (flag == false)
     {
       std::cerr << "Failed to load scene.\n";
@@ -204,9 +204,6 @@ bool MScene::LoadSceneFile(const std::string& pathString, const DUVec2& imgSize,
     case Case("190710"):
     {
       // Load `v190710` version.
-      MScene::PSceneDefaults defaults;
-      defaults.mImageSize = imgSize;
-      defaults.mNumSamples = numSamples;
       const auto flag = LoadSceneFile190710(*jsonAtlas, defaults);
       if (flag == false)
       {
@@ -903,6 +900,11 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
   // Background section.
   float skyT = 0.5f * (ray.GetDirection().Y + 1.0f); // [0, 1]
   return Lerp(DVec3{1.0f, 1.0f, 1.0f}, DVec3{0.2f, 0.5f, 1.0f}, skyT);
+}
+
+const FCamera* MScene::GetCamera() const noexcept 
+{ 
+  return this->mMainCamera.get(); 
 }
 
 } /// ::ray namespace

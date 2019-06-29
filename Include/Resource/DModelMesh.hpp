@@ -63,9 +63,10 @@ public:
   /// @brief Get KdTree Header node pointer.
   const DTreeNode& GetTreeHeader() const noexcept;
 
-  /// @brief
+  /// @brief Internal function. Create faces. This function must be called before `CreateKdTree()`.
   void CreateFaces();
-  /// @brief 
+  /// @brief Internal function. Create KDTree data structure for traversal optimization.
+  /// This function should be called after `CreateFaces()`.
   void CreateKdTree();
 
 private:

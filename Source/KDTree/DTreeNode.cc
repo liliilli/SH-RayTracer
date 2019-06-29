@@ -126,7 +126,7 @@ void DTreeNode::BuildTree(const std::vector<const DModelFace*>& pTriangles)
   }
 }
 
-std::vector<TriangleResult> DTreeNode::TempGetTValues(const DRay& localRay) const
+std::vector<PTriangleResult> DTreeNode::GetIntersectedTriangleTValue(const DRay& localRay) const
 {
   // Check AABB. If not passed, regard ray as not intersecting potential overall AABB region.
   using ::dy::math::IsRayIntersected;
@@ -138,10 +138,10 @@ std::vector<TriangleResult> DTreeNode::TempGetTValues(const DRay& localRay) cons
   {
     assert(this->mLeftNode != nullptr);
     assert(this->mRightNode != nullptr);
-    const auto leftTs   = this->mLeftNode->TempGetTValues(localRay);
-    const auto rightTs  = this->mRightNode->TempGetTValues(localRay);
+    const auto leftTs   = this->mLeftNode->GetIntersectedTriangleTValue(localRay);
+    const auto rightTs  = this->mRightNode->GetIntersectedTriangleTValue(localRay);
 
-    std::vector<TriangleResult> tResult;
+    std::vector<PTriangleResult> tResult;
     tResult.insert(tResult.end(), EXPR_BIND_BEGIN_END(leftTs));
     tResult.insert(tResult.end(), EXPR_BIND_BEGIN_END(rightTs));
     return tResult;
@@ -150,7 +150,7 @@ std::vector<TriangleResult> DTreeNode::TempGetTValues(const DRay& localRay) cons
   // If node is left, use moller algorithm to triangles.
   // Use Möller–Trumbore intersection algorithm
   // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-  std::vector<TriangleResult> tResult;
+  std::vector<PTriangleResult> tResult;
   for (const auto& pTriangle : this->mTriangles)
   {
     using dy::math::Cross;
@@ -182,7 +182,7 @@ std::vector<TriangleResult> DTreeNode::TempGetTValues(const DRay& localRay) cons
     const TReal t = f * Dot(edge2, q);
     if (t < 0) { continue; }
 
-    TriangleResult result;
+    PTriangleResult result;
     result.mT = t;
     result.mIndex = pTriangle->mIndex;
     tResult.emplace_back(std::move(result));

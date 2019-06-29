@@ -55,7 +55,7 @@ public:
   };
 
   /// @brief Construct DCapsule with FCapsule::PCtor.
-  FCapsule(const FCapsule::PCtor& arg, IMaterial* mat);
+  FCapsule(const FCapsule::PCtor& arg, const IMaterial* mat);
   virtual ~FCapsule() = default;
 
   const DQuat& GetQuaternion() const noexcept { return this->mRotQuat; }

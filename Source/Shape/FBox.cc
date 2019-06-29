@@ -194,7 +194,7 @@ void from_json(const nlohmann::json& json, FBox::PCtor::PType3& oCtor)
   { oCtor.mAngle = json::GetValueFrom<DVec3>(json, "angle"); }
 }
 
-FBox::FBox(const PCtor& arg, IMaterial* mat)
+FBox::FBox(const PCtor& arg, const IMaterial* mat)
   : IHitable{EShapeType::Box, mat},
     DBox{}
 {
@@ -251,9 +251,9 @@ std::optional<PScatterResult> FBox::TryScatter(const DRay& ray, TReal t, const D
   // Get result
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
   const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
-  const auto& [refDir, attCol, isScattered] = *optResult;
+  assert(optResult.has_value() == true);
 
-  return PScatterResult{refDir, attCol, isScattered};
+  return *optResult;
 }
 
 FBox::PCtor FBox::GetPCtor(FBox::PCtor::EType type) const noexcept

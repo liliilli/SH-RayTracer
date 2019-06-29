@@ -14,31 +14,26 @@
 
 #include <memory>
 #include <XCommon.hpp>
-
-struct TriangleResult 
-{
-  using TReal   = ray::TReal;
-  using TIndex  = ray::TIndex;
-  TReal mT;
-  std::array<TIndex, 3> mIndex;
-};
+#include <Object/XFunctionResults.hpp>
 
 namespace ray
 {
 
-class DModelFace;
+class DModelFace; // Forward declaration
 
 /// @class DTreeNode
-/// @brief Triangle KDTree node for optimization
+/// @brief Model Triangle KDTree node for optimization
 class DTreeNode final
 {
 public:
-  /// @brief 
-  /// @param
+  /// @brief Build KDTree with given pointer list of triangle from this node.
+  /// @param pTriangles All valid triangle pointer list.
   void BuildTree(const std::vector<const DModelFace*>& pTriangles);
 
-  /// @brief
-  std::vector<TriangleResult> TempGetTValues(const DRay& localRay) const;
+  /// @brief Get T with index if given ray that is in mesh's local space can be intersected arbitary triangle node.
+  /// @param localRay The ray in local mesh space.
+  /// @return If intersected, return T and three index of mesh.
+  std::vector<PTriangleResult> GetIntersectedTriangleTValue(const DRay& localRay) const;
 
 private:
   DAABB mOverallBoundingBox;

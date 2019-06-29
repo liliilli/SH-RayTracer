@@ -31,7 +31,7 @@ void from_json(const nlohmann::json& json, FMatMetal::PCtor& oCtor)
   oCtor.mRoughness = json::GetValueFrom<TReal>(json, "roughness");
 }
 
-std::optional<std::tuple<DVec3, DVec3, bool>> 
+std::optional<PScatterResult> 
 FMatMetal::Scatter(const DRay& intersectedRay, const DVec3& normal) const
 {
   using ::dy::math::Dot;
@@ -50,7 +50,7 @@ FMatMetal::Scatter(const DRay& intersectedRay, const DVec3& normal) const
   const auto albedo = this->mColor;
   const auto scattered = Dot(refDir, normal) > 0;
 
-  return std::tuple{refDir, albedo, scattered};
+  return PScatterResult{refDir, albedo, scattered};
 }
 
 } /// ::ray namespace

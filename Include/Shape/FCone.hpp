@@ -55,7 +55,7 @@ public:
   };
 
   /// @brief Construct DCone with FCone::PCtor.
-  FCone(const FCone::PCtor& arg, IMaterial* mat);
+  FCone(const FCone::PCtor& arg, const IMaterial* mat);
   virtual ~FCone() = default;
 
   const DQuat& GetQuaternion() const noexcept { return this->mRotQuat; }

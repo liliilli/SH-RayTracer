@@ -20,7 +20,7 @@
 namespace ray
 {
 
-FModel::FModel(const PModelCtor& ctor, IMaterial* mat)
+FModel::FModel(const PModelCtor& ctor, const IMaterial* mat)
   : IHitable{EShapeType::Model, mat},
     mOrigin { ctor.mOrigin },
     mScale { ctor.mScale },

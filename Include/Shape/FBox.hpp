@@ -61,7 +61,7 @@ public:
     PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
-  FBox(const PCtor& ctor, IMaterial* mat);
+  FBox(const PCtor& ctor, const IMaterial* mat);
   virtual ~FBox() = default;
 
   const DQuat& GetQuaternion() const noexcept { return this->mRotQuat; }

@@ -31,17 +31,17 @@ public:
     TReal mIor;
   };
 
-#if 0
-  FMatDielectric(TReal ior) : mIor { ior } { };
-#endif
   FMatDielectric(const PCtor& arg) 
     : IMaterial { arg.mId },
       mIor { arg.mIor } 
   { };
   virtual ~FMatDielectric() = default;
 
-  virtual std::optional<std::tuple<DVec3, DVec3, bool>> 
-  Scatter(const DRay& intersectedRay, const DVec3& normal) const override final;
+  /// @brief Diffuse scattering function.
+  /// @param intersectedRay The ray that can be on surface or intersected with surface directly.
+  /// @param normal The normal vector of surface.
+  /// @return If intersected and could get diffuse scattered reflection (with dialectric), return result.
+  std::optional<PScatterResult> Scatter(const DRay& intersectedRay, const DVec3& normal) const override final;
 
 private:
   ::dy::math::DClamp<TReal, 0, 100> mIor;

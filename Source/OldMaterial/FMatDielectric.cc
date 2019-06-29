@@ -30,7 +30,7 @@ void from_json(const nlohmann::json& json, FMatDielectric::PCtor& oCtor)
   oCtor.mIor = json::GetValueFrom<TReal>(json, "ior");
 }
 
-std::optional<std::tuple<DVec3, DVec3, bool>> 
+std::optional<PScatterResult> 
 FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal) const
 {
   using ::dy::math::GetClosestTValueOf;
@@ -67,18 +67,18 @@ FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal) const
   else
   {
     reflectProb = Schlick(incidentIor, refractIor, incidentNor, outNormal);
-    return std::tuple{*optRefract, DVec3{1}, true};
+    return PScatterResult {*optRefract, DVec3{1}, true};
   }
 
   if (::dy::math::RandomUniformReal(0.0f, 1.0f) < reflectProb)
   {
     const auto refDir = Reflect(incidentNor, normal);
-    return std::tuple{refDir, DVec3{1}, true};
+    return PScatterResult {refDir, DVec3{1}, true};
   }
   else
   {
     assert(Dot(incidentNor * -1.0f, *optRefract) >= 0);
-    return std::tuple{*optRefract, DVec3{1}, true};
+    return PScatterResult {*optRefract, DVec3{1}, true};
   }
 }
 

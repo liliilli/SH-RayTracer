@@ -148,7 +148,7 @@ void from_json(const nlohmann::json& json, FCone::PCtor::PType2& oCtor)
   { oCtor.mAngle = json::GetValueFrom<DVec3>(json, "angle"); }
 }
 
-FCone::FCone(const FCone::PCtor& arg, IMaterial* mat)
+FCone::FCone(const FCone::PCtor& arg, const IMaterial* mat)
   : IHitable{ EShapeType::Cone, mat },
     ::dy::math::DCone<TReal>{DVec3{}, 1}
 { 
@@ -209,11 +209,10 @@ std::optional<PScatterResult> FCone::TryScatter(const DRay& ray, TReal t, const 
 
   // Get result
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
-
   const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
-  const auto& [refDir, attCol, isScattered] = *optResult;
+  assert(optResult.has_value() == true);
 
-  return PScatterResult{refDir, attCol, isScattered};
+  return *optResult;
 }
 
 std::optional<IHitable::TValueResults> FCone::GetRayIntersectedTValues(const DRay& ray) const

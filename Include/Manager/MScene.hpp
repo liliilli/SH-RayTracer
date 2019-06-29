@@ -36,7 +36,9 @@ public:
   /// @brief Parameter type for handling values into functions.
   struct PSceneDefaults final
   {
+    /// @brief Image size to create.
     DUVec2  mImageSize;
+    /// @brief The count of samples per pixel.
     TU32    mNumSamples;
   };
 
@@ -47,45 +49,53 @@ public:
   /// @tparam TType TType that derives IHitable. 
   /// @tparam TArgs Constructor arguments of TType.
   template <typename TType, typename... TArgs>
-  void AddHitableObject(TArgs&&... args)
-  {
-    static_assert(
-      std::is_base_of_v<IHitable, TType> == true,
-      "TTYpe Must be Hitable object.");
-
-    std::unique_ptr<IHitable> obj = std::make_unique<TType>(std::forward<TArgs>(args)...);
-    this->mObjects.emplace_back(obj.release());
-  }
+  void AddHitableObject(TArgs&&... args);
 
 	/// @brief Add sample objects into scene.
-	void AddSampleObjects(const DUVec2& imgSize, TU32 numSamples);
+  /// @param defaults Default values.
+	void AddSampleObjects(const PSceneDefaults& defaults);
 
   /// @brief Load scene file.
   /// If succeeded, return true. Otherwise, return false.
-  bool LoadSceneFile(const std::string& pathString, const DUVec2& imgSize, TU32 numSamples);
+  /// @param defaults Default values.
+  /// @return If successful, return true.
+  bool LoadSceneFile(const std::string& pathString, const PSceneDefaults& defaults);
 
   /// @brief Proceed ray.
-  /// @brief RGB Color that has range of [0, 1].
-  DVec3 ProceedRay(const DRay& ray, TIndex t = 0, TIndex limit = 8);
+  /// @param ray The ray to be proceeded, in world-space.
+  /// @param cnt Depth count of function.
+  /// @param limit Depth count limit. If cnt hits limit, function will be suspended.
+  /// @return RGB Color that has range of [0, 1].
+  DVec3 ProceedRay(const DRay& ray, TIndex cnt = 0, TIndex limit = 8);
 
-  /// @brief Get pointer of camera.
-  FCamera* GetCamera() const noexcept { return this->mMainCamera.get(); }
+  /// @brief Get immutable pointer of camera.
+  const FCamera* GetCamera() const noexcept;
 
 private:
-  /// @brief
+  /// @brief Load scene with old-structure (~v190710)
+  /// @param json Json atlas.
+  /// @return Success flag when returned true.
   bool LoadOldSceneFile(const nlohmann::json& json, const DUVec2& imgSize, TU32 numSamples);
 
-  /// @brief
+  /// @brief Load scene with v190710 structure.
+  /// @param json Json atlas.
+  /// @return Success flag when returned true.
   bool LoadSceneFile190710(const nlohmann::json& json, const PSceneDefaults& defaults);
-  /// @brief
+  /// @brief Load model from v190710 scene structure.
+  /// @param json Json atlas of `models`.
+  /// @return Success flag when returned true.
   bool AddModelsFromJson190710(const nlohmann::json& json);
-  /// @brief
+  /// @brief Load materials from v190710 scene structure.
+  /// @param json Json atlas of `materials`.
+  /// @return Success flag when returned true.
   bool AddMaterialsFromJson190710(const nlohmann::json& json);
-  /// @brief Add prefabs into container automatically.
+  /// @brief Add prefabs into container automatically from v190710 scene structure.
   /// @param json Json atlas of `prefabs`.
   /// @return Success flag when returned true.
   bool AddPrefabsFromJson190710(const nlohmann::json& json, const PSceneDefaults& defaults);
-  /// @brief 
+  /// @brief Add prefabs into container automatically from v190710 scene structure.
+  /// @param json Json atlas of `objects`.
+  /// @return Success flag when returned true.
   bool AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDefaults& defaults);
 
   std::unordered_map<std::string, std::unique_ptr<IObject>> mPrefabs;
@@ -94,3 +104,4 @@ private:
 };
 
 } /// ::ray namespace
+#include <Inline/MScene.inl>

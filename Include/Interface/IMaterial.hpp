@@ -19,6 +19,7 @@
 
 #include <Id/DMatId.hpp>
 #include <XCommon.hpp>
+#include <Object/XFunctionResults.hpp>
 
 namespace ray
 {
@@ -32,8 +33,10 @@ public:
   virtual ~IMaterial() = 0;
 
   /// @brief Diffuse scattering function.
-  virtual std::optional<std::tuple<DVec3, DVec3, bool>> 
-  Scatter(const DRay& intersectedRay, const DVec3& normal) const = 0;
+  /// @param intersectedRay The ray that can be on surface or intersected with surface directly.
+  /// @param normal The normal vector of surface.
+  /// @return If intersected and could get diffuse scattered reflection (with dialectric), return result.
+  virtual std::optional<PScatterResult> Scatter(const DRay& intersectedRay, const DVec3& normal) const = 0;
 
   /// @brief Get ID instance.
   const DMatId& GetId() const noexcept;

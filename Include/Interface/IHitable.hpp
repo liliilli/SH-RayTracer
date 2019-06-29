@@ -16,68 +16,27 @@
 #include <Interface/IMaterial.hpp>
 #include <Interface/IObject.hpp>
 #include <Shape/EShapeType.hpp>
+#include <Object/XFunctionResults.hpp>
 
 namespace ray
 {
-
-class IHitable; // Forward declaration
-
-/// @class PTValueResult
-/// @brief GetRayIntersectedTValues returning type.
-class PTValueResult final
-{
-public:
-  TReal       mT;
-  EShapeType  mShapeType;
-  const IHitable* mpHitable;
-  DVec3       mSurfaceNormal;
-
-  PTValueResult(TReal t, EShapeType type, const IHitable* pHitable, const DVec3& normal)
-    : mT { t },
-      mShapeType { type },
-      mpHitable { pHitable },
-      mSurfaceNormal { normal }
-  { }
-};
-// Memory alignment optimization?
-static_assert(sizeof(PTValueResult) == 32);
-
-class PScatterResult final
-{
-public:
-  DVec3 mReflectionDir;
-  DVec3 mAttenuationCol;
-  alignas(8) bool mIsScattered;
-
-  PScatterResult(const DVec3& refDir, const DVec3& attCol, bool isScattered)
-    : mReflectionDir { refDir },
-      mAttenuationCol { attCol },
-      mIsScattered { isScattered }
-  { }
-};
-// Memory alignment optimization?
-static_assert(sizeof(PScatterResult) == 32);
 
 /// @class IHitable
 /// @brief Hitable object interface.
 class IHitable : public IObject
 {
 public:
-  IHitable(EShapeType type, IMaterial*& pMaterial)
-    : IObject { EObject::Hitable },
-      mMaterialType { type },
-      mpMaterial{ pMaterial }
-  { }
+  IHitable(EShapeType type, const IMaterial*& pMaterial);
   virtual ~IHitable() = 0;
 
   /// @brief Get type.
-  EShapeType GetType() const noexcept { return this->mMaterialType; }
+  EShapeType GetType() const noexcept;
   /// @brief Get pointer instance of material.
-  IMaterial* GetMaterial() const noexcept { return this->mpMaterial; }
+  const IMaterial* GetMaterial() const noexcept;
   /// @brief Check hitable object has 3D AABB.
-  bool HasAABB() const noexcept { return this->mAABB != nullptr; }
+  bool HasAABB() const noexcept;
   /// @brief Get AABB pointer of hitable object.
-  const DAABB* GetAABB() const noexcept { return this->mAABB.get(); }
+  const DAABB* GetAABB() const noexcept;
 
   /// @brief Try to getting ray intersected t value list.
   /// If this shape is not intersected with given ray, just return null value.
@@ -95,7 +54,7 @@ public:
 
 protected:
   EShapeType mMaterialType;
-  IMaterial* mpMaterial = nullptr;
+  const IMaterial* mpMaterial = nullptr;
 
   std::unique_ptr<DAABB> mAABB = nullptr;
 };

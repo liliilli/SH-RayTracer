@@ -12,19 +12,18 @@
 /// SOFTWARE.
 ///
 
-#include <XCommon.hpp>
-
 namespace ray
 {
 
-/// @class DModelIndex
-/// @brief Model-Mesh Index wrapping container type.
-class DModelIndex final
+template <typename TType, typename... TArgs>
+void MScene::AddHitableObject(TArgs&&... args)
 {
-public:
-  TI32 mVertexIndex;
-  TI32 mNormalIndex;
-  TI32 mUv0Index;
-};
+  static_assert(
+    std::is_base_of_v<IHitable, TType> == true,
+    "TTYpe Must be Hitable object.");
+
+  std::unique_ptr<IHitable> obj = std::make_unique<TType>(std::forward<TArgs>(args)...);
+  this->mObjects.emplace_back(obj.release());
+}
 
 } /// ::ray namespace

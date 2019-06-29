@@ -148,7 +148,7 @@ void from_json(const nlohmann::json& json, FCapsule::PCtor::PType2& oCtor)
   { oCtor.mAngle = json::GetValueFrom<DVec3>(json, "angle"); }
 }
 
-FCapsule::FCapsule(const FCapsule::PCtor& arg, IMaterial* mat)
+FCapsule::FCapsule(const FCapsule::PCtor& arg, const IMaterial* mat)
   : IHitable{ EShapeType::Capsule, mat },
     ::dy::math::DCapsule<TReal>{DVec3{}, 1}
 { 
@@ -210,9 +210,9 @@ std::optional<PScatterResult> FCapsule::TryScatter(const DRay& ray, TReal t, con
   // Get result
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
   const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
-  const auto& [refDir, attCol, isScattered] = *optResult;
+  assert(optResult.has_value() == true);
 
-  return PScatterResult{refDir, attCol, isScattered};
+  return *optResult;
 }
 
 std::optional<IHitable::TValueResults> FCapsule::GetRayIntersectedTValues(const DRay& ray) const

@@ -20,9 +20,13 @@ namespace ray
 {
  
 /// @brief Get buffer from file path.
+/// @param iFilePath File path
+/// @return If successful to read file from iFilePath, return buffer chunk.
 [[nodiscard]] std::optional<std::vector<char>> GetBufferFromFile(const std::string& iFilePath);
 
 /// @brief Get buffer from file path.
+/// @param iFilePath More safe file path
+/// @return If successful to read file from iFilePath, return buffer chunk.
 [[nodiscard]] std::optional<std::vector<char>> GetBufferFromFile(const std::filesystem::path& iFilePath);
 
 } /// ::ray namespace

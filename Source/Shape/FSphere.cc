@@ -49,7 +49,7 @@ void from_json(const nlohmann::json& json, FSphere::PCtor& oCtor)
   { oCtor.mRadius = json::GetValueFrom<TReal>(json, "radius"); }
 }
 
-FSphere::FSphere(const FSphere::PCtor& arg, IMaterial* mat)
+FSphere::FSphere(const FSphere::PCtor& arg, const IMaterial* mat)
   : IHitable{EShapeType::Sphere, mat},
     DSphere<TReal>{ arg.mOrigin, arg.mRadius }
 { 
@@ -72,11 +72,10 @@ std::optional<PScatterResult> FSphere::TryScatter(const DRay& ray, TReal t, cons
 
   // Get result
   const auto nextRay = DRay{ray.GetPointAtParam(t), ray.GetDirection()};
-
   const auto optResult = this->GetMaterial()->Scatter(nextRay, normal);
-  const auto& [refDir, attCol, isScattered] = *optResult;
+  assert(optResult.has_value() == true);
 
-  return PScatterResult{refDir, attCol, isScattered};
+  return *optResult;
 }
 
 std::optional<IHitable::TValueResults> FSphere::GetRayIntersectedTValues(const DRay& ray) const

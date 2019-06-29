@@ -33,7 +33,7 @@ namespace ray
 class FModel final : public IHitable
 {
 public:
-  FModel(const PModelCtor& ctor, IMaterial* mat);
+  FModel(const PModelCtor& ctor, const IMaterial* mat);
   virtual ~FModel() = default;
 
   /// @brief Get (x, y, z) position value.

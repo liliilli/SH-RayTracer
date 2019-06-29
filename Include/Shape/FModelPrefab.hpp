@@ -33,7 +33,7 @@ namespace ray
 class FModelPrefab final : public IHitable
 {
 public:
-  FModelPrefab(const PModelCtor& ctor, IMaterial* mat);
+  FModelPrefab(const PModelCtor& ctor, const IMaterial* mat);
   virtual ~FModelPrefab() = default;
 
   /// @brief Get (x, y, z) position value.

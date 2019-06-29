@@ -30,6 +30,7 @@ add_subdirectory(DyUtils)
 
 set(SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 set(SOURCE
+    "${SOURCE_DIRECTORY}/Interface/IHitable.cc"
     "${SOURCE_DIRECTORY}/Interface/IMaterial.cc"
     "${SOURCE_DIRECTORY}/Interface/IObject.cc"
 

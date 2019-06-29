@@ -39,7 +39,7 @@ public:
     PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
-  FTorus(const FTorus::PCtor& arg, IMaterial* mat);
+  FTorus(const FTorus::PCtor& arg, const IMaterial* mat);
   virtual ~FTorus() = default;
 
   const DQuat& GetQuaternion() const noexcept { return this->mRotQuat; }

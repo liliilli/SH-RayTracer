@@ -23,7 +23,7 @@ namespace ray
 {
 
 /// @class DModel
-/// @brief
+/// @brief Model resource type.
 class DModel final 
 {
 public:
@@ -35,13 +35,14 @@ public:
     std::vector<DMeshId>  mMeshIds;
     std::vector<DMatId>   mMaterialIds;
   };
-
   DModel(const PCtor& ctor); 
 
-  /// @brief
+  /// @brief Get mesh id list from this instance.
+  /// @return Valid Mesh Id list.
   const std::vector<DMeshId>& GetMeshIds() const noexcept;
 
-  /// @brief
+  /// @brief Get internal material's id list from this instance.
+  /// @return Valid material id list.
   const std::vector<DMatId>& GetInternalMaterials() const noexcept;
 
 private:

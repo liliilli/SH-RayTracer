@@ -66,13 +66,14 @@ int main(int argc, char* argv[])
   EXPR_SUCCESS_ASSERT(EXPR_SGT(MModel).Initialize());
 
 	// If input file name is empty (not specified), just add sample objects into manager.
+  const auto defaults = MScene::PSceneDefaults{imgSize, numSamples};
 	if (inputName.empty() == true)
 	{
-		EXPR_SGT(MScene).AddSampleObjects(imgSize, numSamples);
+    EXPR_SGT(MScene).AddSampleObjects(defaults);
 	}
 	else 
 	{
-    if (const auto flag = EXPR_SGT(MScene).LoadSceneFile(inputName, imgSize, numSamples); 
+    if (const auto flag = EXPR_SGT(MScene).LoadSceneFile(inputName, defaults); 
         flag == false)
     {
       std::cerr << "Failed to execute application.\n";

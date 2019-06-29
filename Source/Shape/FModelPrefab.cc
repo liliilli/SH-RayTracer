@@ -19,7 +19,7 @@
 namespace ray
 {
 
-FModelPrefab::FModelPrefab(const PModelCtor& ctor, IMaterial* mat)
+FModelPrefab::FModelPrefab(const PModelCtor& ctor, const IMaterial* mat)
   : IHitable{EShapeType::Model, mat},
     mOrigin { ctor.mOrigin },
     mScale { ctor.mScale },

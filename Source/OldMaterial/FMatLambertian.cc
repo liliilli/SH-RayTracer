@@ -29,7 +29,7 @@ void from_json(const nlohmann::json& json, FMatLambertian::PCtor& oCtor)
   oCtor.mColor = json::GetValueFrom<DVec3>(json, "color");
 }
 
-std::optional<std::tuple<DVec3, DVec3, bool>> 
+std::optional<PScatterResult> 
 FMatLambertian::Scatter([[maybe_unused]] const DRay& intersectedRay, const DVec3& normal) const 
 {
   using ::dy::math::GetClosestTValueOf;
@@ -42,7 +42,7 @@ FMatLambertian::Scatter([[maybe_unused]] const DRay& intersectedRay, const DVec3
     refDir = RandomVector3Length<TReal>(1.0f);
   }
 
-  return std::tuple{(normal + refDir).Normalize(), this->mColor * 0.9f, true};
+  return PScatterResult{(normal + refDir).Normalize(), this->mColor, true};
 }
 
 } /// ::ray namespace

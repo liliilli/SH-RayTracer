@@ -47,13 +47,12 @@ public:
   /// @brief Check buffer has uv.
   bool HasUv0s() const noexcept;
 
-  /// @brief 
+  /// @brief Get vertex list of model.
   const TPointVertices& GetVertices() const noexcept;
-  /// @brief
+  /// @brief Get normal vector list of model.
   const TNormals& GetNormals() const noexcept;
-  /// @brief
+  /// @brief Get UV0 list of model.
   const TUVs& GetUV0s() const noexcept;
-
   /// @brief Get model buffer id.
   DModelBufferId GetId() const noexcept;
 
