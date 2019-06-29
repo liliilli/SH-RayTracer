@@ -13,7 +13,7 @@
 ///
 
 #include <memory>
-#include <IMaterial.hpp>
+#include <Interface/IMaterial.hpp>
 #include <EShapeType.hpp>
 #include <Interface/IObject.hpp>
 
