@@ -22,9 +22,6 @@ namespace ray
 /// This template function that is not specialized must not be called,
 /// You have to implement fully specialized template function.
 template <typename TType>
-json::FExistanceList JsonCheckExistances(const nlohmann::json& json)
-{
-  static_assert(false, "Specialized function did not be defined.");
-}
+json::FExistanceList JsonCheckExistances(const nlohmann::json& json);
 
 } /// ::ray namespace

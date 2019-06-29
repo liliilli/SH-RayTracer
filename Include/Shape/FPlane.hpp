@@ -32,7 +32,6 @@ public:
   struct PCtor final
   {
     enum EType { _1, _2 };
-    EXPR_INIT_ENUMTOTYPE(Type, EType);
 
     /// @struct PType1
     /// @brief Construct FPlane with normalized vector and just d.
@@ -48,8 +47,6 @@ public:
       DVec3 mPos1, mPos2, mPos3; 
       PType2 Overwrite(const PType2& pctor, const json::FExistanceList& list) const;
     };
-    EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_1, PType1);
-    EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_2, PType2);
 
     EType mCtorType = EType::_1;
     std::variant<PType1, PType2> mCtor;

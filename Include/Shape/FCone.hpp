@@ -32,7 +32,6 @@ public:
   struct PCtor final
   {
     enum EType { _1, _2 };
-    EXPR_INIT_ENUMTOTYPE(Type, EType);
 
     struct PType1 final 
     { 
@@ -44,8 +43,6 @@ public:
       DVec3 mOrigin; TReal mLength; DVec3 mAngle; 
       PType2 Overwrite(const PType2& pctor, const json::FExistanceList& list) const;
     };
-    EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_1, PType1);
-    EXPR_SET_ENUMTOTYPE_CONVERSION(Type, EType::_2, PType2);
 
     EType mCtorType = EType::_1;
     std::variant<PType1, PType2> mCtor;
