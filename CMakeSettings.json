@@ -7,7 +7,7 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON  -DMATH_BUILD_WITH_EXPR=ON",
+      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_EXPR=ON -DBOOST_ROOT=\"c:/boost\"",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "variables": [
@@ -24,7 +24,7 @@
       "configurationType": "Debug",
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_EXPR=ON",
+      "cmakeCommandArgs": "-DMATH_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_EXPR=ON -DBOOST_ROOT=\"c:/boost\"",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "msvc_x64_x64" ],
