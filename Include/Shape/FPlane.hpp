@@ -34,11 +34,15 @@ public:
     enum EType { _1, _2 };
     EXPR_INIT_ENUMTOTYPE(Type, EType);
 
+    /// @struct PType1
+    /// @brief Construct FPlane with normalized vector and just d.
     struct PType1 final 
     { 
       DVec3 mNormal; TReal mD; 
       PType1 Overwrite(const PType1& pctor, const json::FExistanceList& list) const;
     };
+    /// @struct PType2
+    /// @brief Construct FPlane with (pos2 - pos1) and (pos3 - pos1) vector.
     struct PType2 final 
     { 
       DVec3 mPos1, mPos2, mPos3; 
@@ -54,11 +58,7 @@ public:
     PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
-  /// @brief Construct DPlane with normalized vector and just d.
-  FPlane(const DVec3& normal, TReal d, IMaterial* mat);
-  /// @brief Construct DPlane with (pos2 - pos1) and (pos3 - pos1) vector.
-  FPlane(const DVec3& pos1, const DVec3& pos2, const DVec3& pos3, IMaterial* mat);
-  /// @brief Construct DPlane with FPlane::PCtor.
+  /// @brief Construct FPlane with FPlane::PCtor.
   FPlane(const FPlane::PCtor& arg, IMaterial* mat);
 
   virtual ~FPlane() = default;

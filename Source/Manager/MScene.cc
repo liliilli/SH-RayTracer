@@ -22,7 +22,7 @@
 #include <Math/Utility/XShapeMath.h>
 #include <Math/Utility/XRandom.h>
 #include <Expr/XStringSwitch.h>
-#include <EShapeType.hpp>
+#include <Shape/EShapeType.hpp>
 #include <Shape/FSphere.hpp>
 #include <Shape/FPlane.hpp>
 #include <Shape/FBox.hpp>

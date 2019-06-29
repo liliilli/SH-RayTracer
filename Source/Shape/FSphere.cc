@@ -49,14 +49,6 @@ void from_json(const nlohmann::json& json, FSphere::PCtor& oCtor)
   { oCtor.mRadius = json::GetValueFrom<TReal>(json, "radius"); }
 }
 
-FSphere::FSphere(const DVec3& origin, TReal radius, IMaterial* mat)
-  : IHitable(EShapeType::Sphere, mat),
-    DSphere<TReal>(origin, radius)
-{ 
-  using ::dy::math::GetDBounds3DOf;
-  this->mAABB = std::make_unique<DAABB>(GetDBounds3DOf(*this));
-}
-
 FSphere::FSphere(const FSphere::PCtor& arg, IMaterial* mat)
   : IHitable{EShapeType::Sphere, mat},
     DSphere<TReal>{ arg.mOrigin, arg.mRadius }

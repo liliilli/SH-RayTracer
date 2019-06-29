@@ -14,8 +14,8 @@
 
 #include <memory>
 #include <Interface/IMaterial.hpp>
-#include <EShapeType.hpp>
 #include <Interface/IObject.hpp>
+#include <Shape/EShapeType.hpp>
 
 namespace ray
 {

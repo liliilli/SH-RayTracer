@@ -20,10 +20,6 @@
 namespace ray
 {
 
-DModelBuffer::DModelBuffer(const tinyobj::attrib_t& attrib)
-  : DModelBuffer { ::dy::math::DUuid{true}, attrib }
-{ }
-
 DModelBuffer::DModelBuffer(const DModelBufferId& id, const tinyobj::attrib_t& attrib)
   : mId { id },
     mVertices ( attrib.vertices.size() ),

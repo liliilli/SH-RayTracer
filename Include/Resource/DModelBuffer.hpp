@@ -31,7 +31,6 @@ public:
   using TNormals = std::vector<DVec3>;
   using TUVs = std::vector<DVec2>;
 
-  DModelBuffer(const tinyobj::attrib_t& attrib);
   DModelBuffer(const DModelBufferId& id, const tinyobj::attrib_t& attrib);
 
   /// @brief Get count of vertices.

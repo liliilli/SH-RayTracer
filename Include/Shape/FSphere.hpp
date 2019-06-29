@@ -37,7 +37,6 @@ public:
     PCtor Overwrite(const PCtor& pctor, const json::FExistanceList& list) const;
   };
 
-  FSphere(const DVec3& origin, TReal radius, IMaterial* mat);
   FSphere(const FSphere::PCtor& arg, IMaterial* mat);
   virtual ~FSphere() = default;
 
