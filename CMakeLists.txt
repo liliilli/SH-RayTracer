@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(ShRayTracer 
-	VERSION 2019.06.09
+	VERSION 2019.07.10
 	LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -9,14 +9,15 @@ set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_VERBOSE_MAKEFILE true)
 
 # If GNU or Clang, Add common/debug/release flags.
+MESSAGE(STATUS " - Build ${PROJECT_NAME} with ${CMAKE_CXX_COMPILER_ID}")
 if(GNU)
 	set(CMAKE_CXX_FLAGS_COMMON	"-Wall -Werror -pedantic")
 	set(CMAKE_CXX_FLAGS_DEBUG	"-g -O0 -pg")
 	set(CMKAE_CXX_FLAGS_RELEASE "-s -O2 -DNDEBUG -march=native")
 endif(GNU)
 if(Clang)
-	set(CMAKE_CXX_FLAGS_COMMON	"-Wall -Werror -pedantic")
-	set(CMAKE_CXX_FLAGS_DEBUG	"-g -O0 -pg")
+	set(CMAKE_CXX_FLAGS_COMMON "-Wall -Werror -Wno-ignored-qualifiers -pedantic -v")
+	set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -pg")
 	set(CMKAE_CXX_FLAGS_RELEASE "-s -O2 -DNDEBUG -march=native")
 endif(Clang)
 
@@ -94,9 +95,8 @@ PRIVATE
     ${CMAKE_SOURCE_DIR}/DyUtils/DyMath/Include
 )
 
-message(STATUS 
-	"Build ${PROJECT_NAME} with ${CMAKE_CXX_COMPILER_ID} as ${CMAKE_BUILD_TYPE} mode...")
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+message(STATUS "Build ${PROJECT_NAME} with ${CMAKE_CXX_COMPILER_ID} as ${CMAKE_BUILD_TYPE} mode...")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	target_compile_options(sse4_1 INTERFACE -msse4.1)
 	# add_library(DyMath INTERFACE IMPORTED)
 	link_directories("${CMAKE_SOURCE_DIR}/DyUtils/DyMath/lib/")
@@ -116,7 +116,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		message(FATAL_ERROR "CMAKE_BUILD_TYPE is not specified. Failed to build.")
 	endif()
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	
     target_compile_options(sse4_1 INTERFACE /arch:SSE4.1)
 	target_link_libraries(${CMAKE_PROJECT_NAME}
 		DyStringUtil
@@ -133,6 +132,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
 	endif()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX /MP /wd4127")
+else()
+    MESSAGE(FATAL_ERROR "Failed to link libraries. Compiler is not specified.")
 endif()
 
 # INSTALL SETTINGS
