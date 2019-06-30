@@ -62,30 +62,28 @@ std::optional<DModelId> MModel::AddModel(const DModelPrefab& prefab, const DMode
 {
     // Check file is not exist on given path.
   const auto& path = prefab.mModelPath;
-  if (std::filesystem::exists(prefab.mModelPath) == false)
+  if (auto* fp = std::fopen(path.c_str(), "r"); !fp)
   {
     std::cerr << "Failed to load model `" << path << "`. File is not exist on the path.\n";
     return std::nullopt;
   }
+  else { std::fclose(fp); }
 
   // Check file is not started with `.obj`.
-  if (path.has_extension() == false)
-  {
-    std::cerr << "Failed to load model `" << path << "`. File extension is not specified.\n";
-    return std::nullopt;
-  }
-  if (path.extension().string() != ".obj")
+#if 0
+  if (path.string() != ".obj")
   {
     std::cerr << "Failed to load model `" << path << "`. File extension is not `.obj`.\n";
     return std::nullopt;
   }
+#endif
 
   // Load Obj file.
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;
   std::string error;
-  bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &error, path.string().c_str());
+  bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &error, path.c_str());
 
   if (prefab.mScale != 1.0f)
   {

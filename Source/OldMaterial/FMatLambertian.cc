@@ -42,7 +42,7 @@ FMatLambertian::Scatter([[maybe_unused]] const DRay& intersectedRay, const DVec3
     refDir = RandomVector3Length<TReal>(1.0f);
   }
 
-  return PScatterResult{(normal + refDir).Normalize(), this->mColor, true};
+  return PScatterResult{(normal + refDir).Normalize(), this->mColor * 0.9f, true};
 }
 
 } /// ::ray namespace

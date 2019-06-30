@@ -12,7 +12,6 @@
 /// SOFTWARE.
 ///
 
-#include <filesystem>
 #include <nlohmann/json_fwd.hpp>
 #include <XCommon.hpp>
 
@@ -24,8 +23,8 @@ namespace ray
 class DModelPrefab final
 {
 public:
-  std::filesystem::path mModelPath;
-  TReal   mScale = 0;
+  std::string mModelPath;
+  TReal       mScale = 0;
 };
 
 /// @brief Template function for automatic parsing from json.

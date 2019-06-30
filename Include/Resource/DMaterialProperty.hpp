@@ -24,7 +24,7 @@ namespace ray
 class DMaterialProperty final
 {
 public:
-  using TPath = std::filesystem::path;
+  using TPath = std::string;
 
   DVec3 mAmbientColor;
   DVec3 mDiffuseColor;

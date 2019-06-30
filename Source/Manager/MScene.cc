@@ -163,15 +163,14 @@ bool MScene::LoadSceneFile(const std::string& pathString, const PSceneDefaults& 
   using ::dy::expr::string::Case;
 
   // Check
-  const std::filesystem::path path = pathString;
-  if (std::filesystem::exists(path) == false) 
+  if (auto* fp = std::fopen(pathString.c_str(), "r"); fp == nullptr)
   { 
-    std::cerr << "Failed to read file, " << path << ". File is not exist on path.\n";
+    std::cerr << "Failed to read file, " << pathString << ". File is not exist on path.\n";
     return false; 
-  }
+  } else { std::fclose(fp); }
 
   // Load sequence.
-  const auto jsonAtlas = json::GetAtlasFromFile(path);
+  const auto jsonAtlas = json::GetAtlasFromFile(pathString);
   if (jsonAtlas.has_value() == false) { return false; }
 
   if (jsonAtlas->is_array() == true)
@@ -374,11 +373,12 @@ bool MScene::AddModelsFromJson190710(const nlohmann::json& json)
     // Get model information.
     const auto modelName = json::GetValueFrom<std::string>(item, "name");
     const auto modelInfo = json::GetValueFrom<DModelPrefab>(item, "detail");
-    if (std::filesystem::exists(modelInfo.mModelPath) == false)
+    if (auto* fp = std::fopen(modelInfo.mModelPath.c_str(), "r"); fp == nullptr)
     {
       std::cerr << "Failed to load model prefab. Model path is not valid. `" << modelInfo.mModelPath << "`\n"; 
       return false;
     }
+    else { std::fclose(fp); }
     if (EXPR_SGT(MModel).HasModelPrefab(modelName) == true)
     {
       std::cerr << "Failed to load model prefab. Model prefab name is duplicated.\n";
@@ -596,6 +596,7 @@ bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDe
       const auto& [prefabName, prefabObject] = *itPrefab;
       switch (prefabObject->GetObjectType())
       {
+      default: break;
       case EObject::Camera:
       {
         const auto& camera = static_cast<FCamera&>(*prefabObject);

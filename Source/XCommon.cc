@@ -194,9 +194,9 @@ bool CreateImagePpm(const char* const path, DDynamicGrid2D<DIVec3>& container)
   // Header 
   std::fprintf(fd, "P3\n%u %u\n255\n", (TU32)container.GetColumnSize(), (TU32)container.GetRowSize());
   // Data
-  for (auto& row : container)
+  for (const auto& row : container)
   {
-    for (auto& col : row)
+    for (const auto& col : row)
     {
       std::fprintf(fd, "%d %d %d\n", col[0], col[1], col[2]);
     }
