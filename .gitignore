@@ -423,3 +423,7 @@ bin
 !Docs/Image0.png
 !Docs/Image1.png
 !Docs/Image2.png
+
+.idea
+cmake-build-debug
+cmake-build-release
