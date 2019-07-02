@@ -1,10 +1,12 @@
 ## SH-RayTracer
 
-![image0](Docs/Image0.png)
-
 ![image1](Docs/Image1.jpg)
 
-`SH-RayTracer` is open sourced CPU ray-tracing application, coded based on C++17. 
+![image4](Docs/Image4.png)
+
+![image2](Docs/Image3.jpg)
+
+`SH-RayTracer` is open sourced CPU ray-tracing application, and coded based on C++17. 
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/1a829c0522af4af8b9e9bc5bc38f1ca6)](https://app.codacy.com/app/liliilli/SH-RayTracer?utm_source=github.com&utm_medium=referral&utm_content=liliilli/SH-RayTracer&utm_campaign=Badge_Grade_Dashboard)
 [![Build status](https://ci.appveyor.com/api/projects/status/8efrab1n7d63jq6q/branch/master?svg=true)](https://ci.appveyor.com/project/liliilli/sh-raytracer/branch/master)
@@ -30,7 +32,7 @@
   * DyExpression
 * stb
 * nlohmann
-* (optional) boost 1.70.0
+* any boost version that implements UUID library. (`boost::uuid`)
 
 To build `SH-RayTracer`, `DyUtils` library uses submodule so need to write below command codes prior to use CMake commands.
 
@@ -38,12 +40,7 @@ To build `SH-RayTracer`, `DyUtils` library uses submodule so need to write below
 > git submodule update --init --recursive
 ```
 
-If you want to use application with more informatively, install `boost 1.70.0` library (header files) into below path following platform.
-
-| Platform          | Path         |
-| ----------------- | ------------ |
-| Windows           | C:\boost     |
-| Linux (not apple) | /usr/include |
+If you want to build application to output more information, install `boost 1.70.0` library. Application uses `boost::expected`.
 
 ### Windows
 
@@ -53,24 +50,29 @@ Recommend to use CMake GUI version or first make `./build` directory and cmake (
 
 ``` bash
 > mkdir build && cd build
-> cmake .. -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON
-> or, cmake .. -DEXPR_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON
+> cmake .. -DMATH_BUILD_WITH_EXPR=ON -DMATH_BUILD_LIB=ON \
+-DMATH_BUILD_WITH_BOOST=ON -DBOOST_ROOT="The path of boost library"
+> or, cmake .. -DEXPR_BUILD_WITH_BOOST=ON -DMATH_BUILD_WITH_EXPR=ON \
+-DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON -DBOOST_ROOT="The path of boost library"
 ```
 
 Afterward, open `ShRayTracer.sln` in `./build` directory and build `ALL_BUILD`.
 
-### Linux with gcc (g++)
+### Linux with gcc (g++) or clang
 
-To build `SH-RayTracer` with g++ on `-inx`, C++17 Supported version is required. You must add `DEBUG` or `RELEASE` mode to compile it as debug (not optimized version) or release (fully-optimized version) version like a below.
+To build `SH-RayTracer` with g++ or clang on `-inx`, C++17 Supported version compiler is required. You must add `Debug` or `Release` mode to compile it as debug (not optimized version) or release (fully-optimized version) version like a below.
 
 ``` bash
 > mkdir build && cd build
 > cmake .. \
--DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON \
--DCMAKE_BUILD_TYPE=DEBUG or RELEASE
+-DMATH_BUILD_WITH_EXPR=ON -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON \
+-DBOOST_ROOT="The path of boost library" \
+-DCMAKE_BUILD_TYPE=Debug or Release
 > or, cmake .. \
--DEXPR_BUILD_WITH_BOOST=ON -DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON \
--DCMAKE_BUILD_TYPE=DEBUG or RELEASE
+-DMATH_BUILD_WITH_EXPR=ON -DEXPR_BUILD_WITH_BOOST=ON \
+-DMATH_BUILD_LIB=ON -DMATH_BUILD_WITH_BOOST=ON \
+-DBOOST_ROOT="The path of boost library" \
+-DCMAKE_BUILD_TYPE=Debug or Release
 ```
 
 and
@@ -79,10 +81,22 @@ and
 > make
 ```
 
+## Release Note
+
+### `v190710` : v1.1.0 version
+
+* Extended supported anti-aliasing sampling count to 64.
+* Implement Bounding box, Reduced rendering time by 1/14 times (maximum case)
+* Implement Fundamental SDF Shapes (Sphere, Box, Plane, Capsule, Cone and Torus) Torus will not be rendered on some points, but I should fix it up as soon as possible.
+* Renew Json Scene Structure as `v190710` version on `meta` header.
+* Add Plane OBJ (using internal material is not supported yet) loading and rendering feature.
+* Automatic normal creation feature (not interpolated normal yet) on OBJ file when normal information is not found.
+* Done optimization and Improved stability.
+
 ## Log
 
 2019-06-04 : Create Document<br>
-2019-06-05 : Add DEBUG & RELEASE building mode for Linux (GCC)
+2019-06-05 : Add DEBUG & RELEASE building mode for Linux (GCC)<br>2019-07-10 : Update README to v190710.
 
 ## Copyright
 
