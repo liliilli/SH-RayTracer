@@ -71,7 +71,7 @@ void AddDefaultCommandArguments(::dy::expr::FCmdArguments& manager)
 
   const PCmdArgument sampler = PCmdArgument{
     's', "sample", (TU32)1, 
-    "Anti-aliase (Sample) each pixels. supported value is 1, 2, 4, 8. (example : -s 1, -s 4)"};
+    "Anti-aliase (Sample) each pixels. supported value is 1, 2, 4, 8, 16, 32 and 64. (example : -s 1, -s 4)"};
   const PCmdArgument verbose = PCmdArgument{'v', "verbose", false, "Log process verbosely. (-v, --verbose)"};
   const PCmdArgument exportPng = PCmdArgument{'p', "png", false, "Export result as .png. (-p, --png)"};
   const PCmdArgument imageWidth = PCmdArgument{
