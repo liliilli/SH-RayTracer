@@ -37,19 +37,22 @@ void from_json(const nlohmann::json& item, FCamera::PCtor& oCtor)
   { oCtor.mOrigin = json::GetValueFrom<DVec3>(item, "pos"); }
   if (json::HasJsonKey(item, "sensor_size") == true) 
   { oCtor.mSensorSize = json::GetValueFrom<TReal>(item, "sensor_size"); }
+  if (json::HasJsonKey(item, "depth_of_field") == true)
+  { json::GetValueFromTo(item, "depth_of_field", oCtor.mDepthOfField); }
 }
 
 template <>
 json::FExistanceList JsonCheckExistances<FCamera::PCtor>(const nlohmann::json& json)
 {
   using json::EExistance;
-  json::FExistanceList result(8, EExistance::NotExist);
+  json::FExistanceList result(9, EExistance::NotExist);
 
   if (json::HasJsonKey(json, "aperture") == true) { result[0] = EExistance::Exist; }
   if (json::HasJsonKey(json, "focus_dist") == true) { result[1] = EExistance::Exist; }
   if (json::HasJsonKey(json, "eye") == true) { result[2] = EExistance::Exist; }
   if (json::HasJsonKey(json, "pos") == true) { result[4] = EExistance::Exist; }
   if (json::HasJsonKey(json, "sensor_size") == true) { result[7] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "depth_of_field") == true) { result[8] = EExistance::Exist; }
 
   return result;
 }
@@ -67,6 +70,7 @@ FCamera::PCtor FCamera::PCtor::Overwrite(const PCtor& pctor, const json::FExista
   OverwriteWhenExist(list[5], result.mSamples, pctor.mSamples);
   OverwriteWhenExist(list[6], result.mScreenRatioXy, pctor.mScreenRatioXy);
   OverwriteWhenExist(list[7], result.mSensorSize, pctor.mSensorSize);
+  OverwriteWhenExist(list[8], result.mDepthOfField, pctor.mDepthOfField);
 
   return result;
 } 
@@ -82,6 +86,7 @@ FCamera::PCtor FCamera::GetPCtor() const noexcept
   result.mSamples = this->mSamples;
   result.mScreenRatioXy = TReal(result.mImgSize.X) / result.mImgSize.Y;
   result.mSensorSize = this->mSensorSize;
+  result.mDepthOfField = this->mIsUsingDepthOfField;
 
   return result;
 }
@@ -96,7 +101,8 @@ FCamera::FCamera(const FCamera::PCtor& arg)
     mSamples{ arg.mSamples },
     mAperture{ arg.mAperture },
     mDistance{ arg.mFocusDistance },
-    mSensorSize{ arg.mSensorSize }
+    mSensorSize{ arg.mSensorSize },
+    mIsUsingDepthOfField{ arg.mDepthOfField }
 {
   using ::dy::math::kToRadian;
   constexpr TReal defScrHeight = TReal(2.0);
@@ -113,7 +119,7 @@ FCamera::FCamera(const FCamera::PCtor& arg)
   this->mCellRight  = mSide * (scaledHeight * arg.mScreenRatioXy / TReal(this->mScreenSize.X) );
   this->mCellUp     = mUp * (scaledHeight / TReal(this->mScreenSize.Y) );
 
-  RAY_IF_VERBOSE_MODE()
+  RAY_IF_VERBOSE_MODE() // #21 Implement ToString() method.
   {
     std::cout << "* Camera Information\n";
     std::cout << "  Origin : " << this->mOrigin << '\n';
@@ -129,6 +135,7 @@ FCamera::FCamera(const FCamera::PCtor& arg)
     std::cout << "  Aperture : " << this->mAperture << '\n';
     std::cout << "  Distance : " << this->mDistance << '\n';
     std::cout << "  Sensor size : " << this->mSensorSize << '\n';
+    std::cout << "  Using Depth Of Field : " << (this->mIsUsingDepthOfField ? "true" : "false") << '\n';
   }
 }
 
@@ -145,7 +152,7 @@ std::vector<DRay> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
   const std::vector<DVec3> offsets = GetSampleOffsetsOf(this->mCellRight, this->mCellUp, this->mSamples);
 
   std::vector<DRay> rayList;
-  if (EXPR_SGT(MScene).IsUsingDepthOfField() == false)
+  if (this->IsUsingDepthOfField() == false)
   {
     // If camera is not using depth of field, just model perfect pin-hole camera.
     for (const auto& offset : offsets)
@@ -292,6 +299,11 @@ void FCamera::SetSamples(TU32 sample)
 TU32 FCamera::GetSamples() const noexcept
 {
   return this->mSamples;
+}
+
+bool FCamera::IsUsingDepthOfField() const noexcept
+{
+  return this->mIsUsingDepthOfField;
 }
 
 } /// ::ray namespace 

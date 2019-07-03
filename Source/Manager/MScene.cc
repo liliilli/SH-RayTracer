@@ -226,14 +226,7 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
   // Check there is additional features are exist in `meta` header. (v190810)
   if (json::HasJsonKey(json, "meta") == true)
   {
-    const auto& meta = json["meta"];
-    // Check depth of field feature.
-    if (json::HasJsonKey(meta, "depth_of_field") == false) { this->mIsUsingDepthOfField = false; }
-    else
-    {
-      this->mIsUsingDepthOfField = json::GetValueFrom<bool>(meta, "depth_of_field");
-    }
-
+    [[maybe_unused]] const auto& meta = json["meta"];
     // and etc...
   }
 
@@ -846,11 +839,6 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
 const FCamera* MScene::GetCamera() const noexcept 
 { 
   return this->mMainCamera.get(); 
-}
-
-bool MScene::IsUsingDepthOfField() const noexcept
-{
-  return this->mIsUsingDepthOfField;
 }
 
 } /// ::ray namespace

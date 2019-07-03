@@ -38,9 +38,10 @@ public:
     DUVec2  mImgSize;
     TReal   mScreenRatioXy;
     TU32    mSamples;
-    DClamp<0, 100> mAperture;
-    DClamp<0, 100> mFocusDistance;
-    DClamp<0, 100> mSensorSize;
+    DClamp<0, 1000> mAperture;
+    DClamp<0, 1000> mFocusDistance;
+    DClamp<0, 1000> mSensorSize;
+    bool mDepthOfField = false;
 
     /// @brief Overwrite with given pctor instance and crate new PCtor.
     /// member variable matching order must be same to `JsonCheckExistances` function matching order.
@@ -61,6 +62,9 @@ public:
   TU32 GetSamples() const noexcept;
   /// @brief Get PCtor instance from instance.
   FCamera::PCtor GetPCtor() const noexcept;
+
+  /// @brief Check camera instance is using depth of field feature.
+  bool IsUsingDepthOfField() const noexcept;
 
 private:
   /// @brief Get sample offset list of given anti-aliasing sample count.
@@ -84,6 +88,8 @@ private:
   TReal mAperture = 1.0f;
   TReal mDistance = 1.0f;
   TReal mSensorSize = 1.0f;
+
+  bool mIsUsingDepthOfField = false;
 };
 
 /// @brief Template function for automatic parsing from json.

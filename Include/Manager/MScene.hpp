@@ -72,9 +72,6 @@ public:
   /// @brief Get immutable pointer of camera.
   const FCamera* GetCamera() const noexcept;
 
-  /// @brief Check loaded scene is using depth of field.
-  bool IsUsingDepthOfField() const noexcept;
-
 private:
   /// @brief Load scene with v190710 structure.
   /// @param json Json atlas.
@@ -101,8 +98,6 @@ private:
   std::vector<std::unique_ptr<IHitable>> mObjects;
   std::unique_ptr<FCamera>      mMainCamera;
   std::unique_ptr<DObjectNode>  mObjectTree;
-
-  bool mIsUsingDepthOfField = false;
 };
 
 } /// ::ray namespace
