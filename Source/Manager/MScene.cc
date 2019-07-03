@@ -224,7 +224,7 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
   using ::dy::expr::string::Case;
 
   // Check there is additional features are exist in `meta` header. (v190810)
-  if (json::HasJsonKey(json, "meta") == false)
+  if (json::HasJsonKey(json, "meta") == true)
   {
     const auto& meta = json["meta"];
     // Check depth of field feature.

@@ -20,6 +20,7 @@
 
 #include <XCommon.hpp>
 #include <Helper/XHelperJson.hpp>
+#include <Manager/MScene.hpp>
 
 namespace ray
 {
@@ -144,14 +145,41 @@ std::vector<DRay> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
   const std::vector<DVec3> offsets = GetSampleOffsetsOf(this->mCellRight, this->mCellUp, this->mSamples);
 
   std::vector<DRay> rayList;
-  for (const auto& offset : offsets)
+  if (EXPR_SGT(MScene).IsUsingDepthOfField() == false)
   {
-    //DVec3 rd = this->mAperture / 2.0f * ::dy::math::RandomVector3Length<TReal>(1.0f);
-    //const auto lensOffset = this->mSide * rd.X + this->mUp * rd.Y;
+    // If camera is not using depth of field, just model perfect pin-hole camera.
+    for (const auto& offset : offsets)
+    {
+      const auto orig = screenPos + offset;
+      const auto dir = this->mOrigin - orig;
+      rayList.emplace_back(this->mOrigin, dir);
+    }
+  }
+  else
+  {
+    using ::dy::math::RandomVector2Range;
+    using ::dy::math::ERandomPolicy;
+    using ::dy::math::Dot;
 
-    const auto orig = screenPos + offset;// + lensOffset;
-    const auto dir = this->mOrigin - orig;
-    rayList.emplace_back(this->mOrigin, dir);
+    // If camera is using depth of field, model convex (positive) thin-lens camera.
+    // f-number = this->mSensorSize (diameter) / this->mDistance;
+    // We need to get positive focal plane's focal point.
+    for (const auto& offset : offsets)
+    {
+      const auto origDir    = (this->mOrigin - (screenPos + offset)).Normalize();
+      const auto rayFocalCos= Dot(origDir, this->mForward);
+      const auto focalPoint = this->mOrigin + (origDir * (this->mDistance / rayFocalCos));
+      
+      // And get uniform random arbitary point of lens with this->mCellRight and this->mCellUp.
+      const auto xyPoint = RandomVector2Range<TReal>(ERandomPolicy::Uniform, 0, this->mSensorSize * 0.0625f);
+      const auto aperturePoint = 
+          this->mOrigin
+        + this->mSide * xyPoint[0]
+        + this->mUp * xyPoint[1];
+      // Finally get actual direction and insert it as a ray.
+      const auto dir = (focalPoint - aperturePoint).Normalize();
+      rayList.emplace_back(aperturePoint, dir);
+    }
   }
 
   return rayList;
