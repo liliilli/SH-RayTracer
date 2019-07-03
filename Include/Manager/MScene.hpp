@@ -72,12 +72,10 @@ public:
   /// @brief Get immutable pointer of camera.
   const FCamera* GetCamera() const noexcept;
 
-private:
-  /// @brief Load scene with old-structure (~v190710)
-  /// @param json Json atlas.
-  /// @return Success flag when returned true.
-  bool LoadOldSceneFile(const nlohmann::json& json, const DUVec2& imgSize, TU32 numSamples);
+  /// @brief Check loaded scene is using depth of field.
+  bool IsUsingDepthOfField() const noexcept;
 
+private:
   /// @brief Load scene with v190710 structure.
   /// @param json Json atlas.
   /// @return Success flag when returned true.
@@ -104,6 +102,7 @@ private:
   std::unique_ptr<FCamera>      mMainCamera;
   std::unique_ptr<DObjectNode>  mObjectTree;
 
+  bool mIsUsingDepthOfField = false;
 };
 
 } /// ::ray namespace

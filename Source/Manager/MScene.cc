@@ -172,51 +172,43 @@ bool MScene::LoadSceneFile(const std::string& pathString, const PSceneDefaults& 
   // Load sequence.
   const auto jsonAtlas = json::GetAtlasFromFile(pathString);
   if (jsonAtlas.has_value() == false) { return false; }
-
   if (jsonAtlas->is_array() == true)
   {
-    // Load old `~v190710` version.
-    const auto flag = LoadOldSceneFile(*jsonAtlas, defaults.mImageSize, defaults.mNumSamples);
+    std::cerr << "Failed to load scene file, " << pathString << ". File structure is not valid.\n";
+    return false;
+  }
+
+  // Checks `meta::version` is exist.
+  if (json::HasJsonKey(*jsonAtlas, "meta") == false)
+  {
+    std::cerr << "Failed to load scene. `meta` header is not found.\n";
+    return false;
+  }
+  if (json::HasJsonKey((*jsonAtlas)["meta"], "version") == false)
+  {
+    std::cerr << "Failed to load scene. `meta::version` header is not found.\n";
+    return false;
+  }
+  
+  // Check version.
+  switch (Input(json::GetValueFrom<std::string>((*jsonAtlas)["meta"], "version")))
+  {
+  case Case("190710"):
+  {
+    // Load `v190710` version.
+    const auto flag = LoadSceneFile190710(*jsonAtlas, defaults);
     if (flag == false)
     {
       std::cerr << "Failed to load scene.\n";
       return false;
-    }
-  }
-  else
+    } 
+  } break;
+  default:
   {
-    // Checks `meta::version` is `"190710"`.
-    if (json::HasJsonKey(*jsonAtlas, "meta") == false)
-    {
-      std::cerr << "Failed to load scene. `meta` header is not found.\n";
-      return false;
-    }
-    if (json::HasJsonKey((*jsonAtlas)["meta"], "version") == false)
-    {
-      std::cerr << "Failed to load scene. `meta::version` header is not found.\n";
-      return false;
-    }
-    
-    // Check version.
-    switch (Input(json::GetValueFrom<std::string>((*jsonAtlas)["meta"], "version")))
-    {
-    case Case("190710"):
-    {
-      // Load `v190710` version.
-      const auto flag = LoadSceneFile190710(*jsonAtlas, defaults);
-      if (flag == false)
-      {
-        std::cerr << "Failed to load scene.\n";
-        return false;
-      } 
-    } break;
-    default:
-    {
-      std::cerr << "Failed to load scene. `meta::version` value does not match any values.\n";
-      return false;
-    }
-    }
+    std::cerr << "Failed to load scene. `meta::version` value does not match any values.\n";
+    return false;
   }
+}
 
   if (this->mMainCamera == nullptr) 
   { 
@@ -226,79 +218,24 @@ bool MScene::LoadSceneFile(const std::string& pathString, const PSceneDefaults& 
   return true;
 }
 
-bool MScene::LoadOldSceneFile(const nlohmann::json& json, const DUVec2& imgSize, TU32 numSamples)
-{
-  using ::dy::expr::string::Input;
-  using ::dy::expr::string::Case;
-
-  for (const auto& item : json)
-  {
-    if (json::HasJsonKey(item, "type") == false) { return false; }
-    if (json::HasJsonKey(item, "detail") == false) { return false; }
-
-    if (const auto type = json::GetValueFrom<std::string>(item, "type"); type == "camera")
-    {
-      // Create camera
-      auto ctor = json::GetValueFrom<FCamera::PCtor>(item, "detail");
-      ctor.mImgSize = imgSize;
-      ctor.mSamples = numSamples;
-      ctor.mScreenRatioXy = TReal(imgSize.X) / imgSize.Y;
-      this->mMainCamera = std::make_unique<FCamera>(ctor);
-    }
-    else
-    {
-      // Create objects
-      if (json::HasJsonKey(item, "material") == false) { return false; }
-      if (json::HasJsonKey(item, "mat_detail") == false) { return false; }
-
-      DMatId matId;
-      switch (Input(json::GetValueFrom<std::string>(item, "material")))
-      {
-      case Case("lambertian"):
-      {
-        const auto optId = EXPR_SGT(MMaterial).AddOldMaterial<FMatLambertian>(item);
-        assert(optId.has_value() == true);
-        matId = *optId;
-      } break;
-      case Case("metal"):
-      {
-        const auto optId = EXPR_SGT(MMaterial).AddOldMaterial<FMatMetal>(item);
-        assert(optId.has_value() == true);
-        matId = *optId;
-      } break;
-      case Case("dielectric"):
-      {
-        const auto optId = EXPR_SGT(MMaterial).AddOldMaterial<FMatDielectric>(item);
-        assert(optId.has_value() == true);
-        matId = *optId;
-      } break;
-      default: break;
-      }
-
-      switch (Input(type))
-      {
-        case Case("sphere"):
-        {
-          const auto ctor = json::GetValueFrom<FSphere::PCtor>(item, "detail");
-          this->AddHitableObject<FSphere>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
-        } break;
-        case Case("plane"):
-        {
-          const auto ctor = json::GetValueFrom<FPlane::PCtor>(item, "detail");
-          this->AddHitableObject<FPlane>(ctor, EXPR_SGT(MMaterial).GetMaterial(matId));
-        } break;
-        default: break;
-      }
-    }
-  }
-
-  return true;
-}
-
 bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PSceneDefaults& defaults)
 {
   using ::dy::expr::string::Input;
   using ::dy::expr::string::Case;
+
+  // Check there is additional features are exist in `meta` header. (v190810)
+  if (json::HasJsonKey(json, "meta") == false)
+  {
+    const auto& meta = json["meta"];
+    // Check depth of field feature.
+    if (json::HasJsonKey(meta, "depth_of_field") == false) { this->mIsUsingDepthOfField = false; }
+    else
+    {
+      this->mIsUsingDepthOfField = json::GetValueFrom<bool>(meta, "depth_of_field");
+    }
+
+    // and etc...
+  }
 
   // Check there is `models` header key.
   if (json::HasJsonKey(json, "models") == false)
@@ -880,12 +817,6 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
     tValues.erase(std::remove_if(
       EXPR_BIND_BEGIN_END(tValues), 
       [](const PTValueResult& item) { return item.mT <= 0.0f; }), tValues.end());
-#if 0
-    for (const auto& tValue : tValues)
-    {
-      if (tValue.mT > 0.0f) { tList.emplace_back(tValue); }
-    }
-#endif
 
     // Sort and get only shortest T one.
     std::sort(
@@ -915,6 +846,11 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
 const FCamera* MScene::GetCamera() const noexcept 
 { 
   return this->mMainCamera.get(); 
+}
+
+bool MScene::IsUsingDepthOfField() const noexcept
+{
+  return this->mIsUsingDepthOfField;
 }
 
 } /// ::ray namespace
