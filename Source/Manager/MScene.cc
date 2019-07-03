@@ -347,6 +347,15 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
     std::cerr << "Failed to create scene objects list. Unexpected error occurred inside.\n";
     return false;
   }
+
+  // Make KDTree for objects (optimization).
+  std::vector<const IHitable*> mpObjects;
+  for (const auto& smtObject : this->mObjects)
+  {
+    mpObjects.emplace_back(smtObject.get());
+  }
+  this->mObjectTree = std::make_unique<DObjectNode>();
+  this->mObjectTree->BuildTree(mpObjects);
   
   return true;
 }
@@ -864,29 +873,29 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
   if (++cnt; cnt <= limit)
   {
     // Process culling to all objects with DAABB.
-    std::vector<IHitable::TValueResults::value_type> tList;
-    // Get closest SDF value.
-    for (auto& obj : this->mObjects)
-    {
-      assert(obj != nullptr);
-      const auto tValues = obj->GetRayIntersectedTValues(ray);
-      if (tValues.has_value() == false) { continue; } 
+    //IHitable::TValueResults tList;
 
-      for (const auto& tValue : *tValues)
-      {
-        if (tValue.mT > 0.0f) { tList.emplace_back(tValue); }
-      }
+    // Get closest SDF value.
+    auto tValues = this->mObjectTree->GetIntersectedTriangleTValue(ray);
+    tValues.erase(std::remove_if(
+      EXPR_BIND_BEGIN_END(tValues), 
+      [](const PTValueResult& item) { return item.mT <= 0.0f; }), tValues.end());
+#if 0
+    for (const auto& tValue : tValues)
+    {
+      if (tValue.mT > 0.0f) { tList.emplace_back(tValue); }
     }
+#endif
 
     // Sort and get only shortest T one.
     std::sort(
-      EXPR_BIND_BEGIN_END(tList),
+      EXPR_BIND_BEGIN_END(tValues),
       [](const auto& lhs, const auto& rhs) { return lhs.mT < rhs.mT; });
 
     // Render
-    if (tList.empty() == false)
+    if (tValues.empty() == false)
     {
-      auto& [t, type, pObj, normal] = tList.front();
+      auto& [t, type, pObj, normal] = tValues.front();
       auto optResult = pObj->TryScatter(ray, t, normal);
       const auto& [refDir, attCol, isScattered] = *optResult;
 

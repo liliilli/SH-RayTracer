@@ -29,12 +29,10 @@ public:
   /// @param pObjects All valid hitable object pointer list.
   void BuildTree(const std::vector<const IHitable*>& pObjects);
 
-#if 0
-  /// @brief Get T with index if given ray that is in mesh's local space can be intersected arbitary triangle node.
-  /// @param localRay The ray in local mesh space.
-  /// @return If intersected, return T and three index of mesh.
-  std::vector<PTriangleResult> GetIntersectedTriangleTValue(const DRay& localRay) const;
-#endif
+  /// @brief Get T and normal if given ray that is in world-space can be intersected arbitary objects.
+  /// @param ray The ray in world space.
+  /// @return If intersected, return T, normal and object pointer.
+  IHitable::TValueResults GetIntersectedTriangleTValue(const DRay& ray) const;
 
 private:
   DAABB mOverallBoundingBox;

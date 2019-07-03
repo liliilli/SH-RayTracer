@@ -22,6 +22,7 @@
 #include <XCommon.hpp>
 #include <Interface/IHitable.hpp>
 #include <Object/FCamera.hpp>
+#include <KDTree/DObjectNode.hpp>
 #include <Interface/IObject.hpp>
 
 namespace ray
@@ -100,7 +101,9 @@ private:
 
   std::unordered_map<std::string, std::unique_ptr<IObject>> mPrefabs;
   std::vector<std::unique_ptr<IHitable>> mObjects;
-  std::unique_ptr<FCamera> mMainCamera;
+  std::unique_ptr<FCamera>      mMainCamera;
+  std::unique_ptr<DObjectNode>  mObjectTree;
+
 };
 
 } /// ::ray namespace

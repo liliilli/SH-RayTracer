@@ -104,23 +104,22 @@ void DObjectNode::BuildTree(const std::vector<const IHitable*>& pObjects)
   }
 }
 
-#if 0
-std::vector<PTriangleResult> DObjectNode::GetIntersectedTriangleTValue(const DRay& localRay) const
+IHitable::TValueResults DObjectNode::GetIntersectedTriangleTValue(const DRay& ray) const
 {
-  // Check AABB. If not passed, regard ray as not intersecting potential overall AABB region.
   using ::dy::math::IsRayIntersected;
-  if (IsRayIntersected(localRay, this->mOverallBoundingBox) == false) { return {}; }
-
   // Check It is leaf node or not. If leaf node, we can use moller algorithm to find T.
   // If not, we just forward `localRay` into children.
   if (this->mLeftNode != nullptr || this->mRightNode != nullptr)
   {
+    // Check AABB optionally. If not passed, regard ray as not intersecting potential overall AABB region.
+    if (IsRayIntersected(ray, this->mOverallBoundingBox) == false) { return {}; }
+
     assert(this->mLeftNode != nullptr);
     assert(this->mRightNode != nullptr);
-    const auto leftTs   = this->mLeftNode->GetIntersectedTriangleTValue(localRay);
-    const auto rightTs  = this->mRightNode->GetIntersectedTriangleTValue(localRay);
+    const auto leftTs   = this->mLeftNode->GetIntersectedTriangleTValue(ray);
+    const auto rightTs  = this->mRightNode->GetIntersectedTriangleTValue(ray);
 
-    std::vector<PTriangleResult> tResult;
+    IHitable::TValueResults tResult;
     tResult.insert(tResult.end(), EXPR_BIND_BEGIN_END(leftTs));
     tResult.insert(tResult.end(), EXPR_BIND_BEGIN_END(rightTs));
     return tResult;
@@ -129,46 +128,16 @@ std::vector<PTriangleResult> DObjectNode::GetIntersectedTriangleTValue(const DRa
   // If node is left, use moller algorithm to triangles.
   // Use Möller–Trumbore intersection algorithm
   // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-  std::vector<PTriangleResult> tResult;
-  for (const auto& pTriangle : this->mTriangles)
+  IHitable::TValueResults tResult;
+  for (const auto& pObject : this->mpObjects)
   {
-    using dy::math::Cross;
-    using dy::math::Dot;
-    using dy::math::IsNearlyZero;
-    using ray::TReal;
-    using ray::DVec3;
-    constexpr ray::TReal e = ray::TReal(1e-5);
+    const auto optTValues = pObject->GetRayIntersectedTValues(ray);
 
-    const DVec3 edge1 = *pTriangle->mVertex[1] - *pTriangle->mVertex[0];
-    const DVec3 edge2 = *pTriangle->mVertex[2] - *pTriangle->mVertex[0];
-
-    const DVec3 h = Cross(localRay.GetDirection(), edge2);
-    const auto a = Dot(edge1, h);
-
-    // If ray is parallel, just do next triangle.
-    if (IsNearlyZero(a) == true) { continue; }
-
-    const TReal f = 1 / a;
-    const DVec3 s = localRay.GetOrigin() - *pTriangle->mVertex[0];
-    const TReal u = f * Dot(s, h);
-    if (u < 0 || u > 1) { continue; }
-
-    const DVec3 q = Cross(s, edge1);
-    const TReal v = f * Dot(localRay.GetDirection(), q);
-    if (v < 0 || u + v > 1) { continue; }
-
-    // We can find `t` to find out where the intersection point is on the line.
-    const TReal t = f * Dot(edge2, q);
-    if (t < 0) { continue; }
-
-    PTriangleResult result;
-    result.mT = t;
-    result.mIndex = pTriangle->mIndex;
-    tResult.emplace_back(std::move(result));
+    if (optTValues.has_value() == false) { continue; }
+    tResult.insert(tResult.end(), EXPR_BIND_BEGIN_END((*optTValues)));
   }
-  
+ 
   return tResult;
 }
-#endif
 
 } /// ::ray namespace
