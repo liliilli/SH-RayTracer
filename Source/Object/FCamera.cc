@@ -102,9 +102,8 @@ FCamera::FCamera(const FCamera::PCtor& arg)
   
   // I moved origin to backward instead of moving lens position (screen) to forward,
   // to avoid the intersection between screen and objects.
-  this->mOrigin -= this->mForward * (mDistance - 1.0f);
   this->mLowLeftCorner = 
-      this->mOrigin + this->mForward * (mDistance)
+      this->mOrigin - this->mForward * (mDistance)
     + this->mSide * -arg.mScreenRatioXy * this->mSensorSize
     + this->mUp * -1.0f * this->mSensorSize;
 
@@ -151,8 +150,8 @@ std::vector<DRay> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
     //const auto lensOffset = this->mSide * rd.X + this->mUp * rd.Y;
 
     const auto orig = screenPos + offset;// + lensOffset;
-    const auto dir = orig - this->mOrigin;
-    rayList.emplace_back(orig, dir);
+    const auto dir = this->mOrigin - orig;
+    rayList.emplace_back(this->mOrigin, dir);
   }
 
   return rayList;

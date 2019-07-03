@@ -194,13 +194,16 @@ bool CreateImagePpm(const char* const path, DDynamicGrid2D<DIVec3>& container)
   // Header 
   std::fprintf(fd, "P3\n%u %u\n255\n", (TU32)container.GetColumnSize(), (TU32)container.GetRowSize());
   // Data
-  for (const auto& row : container)
-  {
-    for (const auto& col : row)
-    {
+	const auto w = container.GetColumnSize();
+	const auto h = container.GetRowSize();
+	for (auto y = 0u; y < h; ++y)
+	{
+		for (auto x = 0u; x < w; ++x)
+		{
+      const auto& col = container.Get(w - x - 1, h - y - 1);
       std::fprintf(fd, "%d %d %d\n", col[0], col[1], col[2]);
-    }
-  }
+		}
+	}
 
   std::fclose(fd);
   return true;
@@ -218,7 +221,7 @@ bool CreateImagePng(const char* const path, const DDynamicGrid2D<DIVec3>& contai
 	{
 		for (auto x = 0u; x < w; ++x)
 		{
-			charContainer.Set(x, y, static_cast<DU8Vec3>(container.Get(x, y)));
+			charContainer.Set(w - x - 1, h - y - 1, static_cast<DU8Vec3>(container.Get(x, y)));
 		}
 	}
 
