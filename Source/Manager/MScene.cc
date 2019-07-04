@@ -67,7 +67,7 @@ void MScene::AddSampleObjects(const MScene::PSceneDefaults& defaults)
     descriptor.mScreenRatioXy = TReal(defaults.mImageSize.X) / defaults.mImageSize.Y;
     descriptor.mSensorSize = 1.0f;
   }
-  this->mMainCamera = std::make_unique<FCamera>(descriptor);
+  this->msmtCameras.emplace_back(std::make_unique<FCamera>(descriptor));
 
   // Object
   FMatLambertian::PCtor lambCtor;
@@ -204,15 +204,13 @@ bool MScene::LoadSceneFile(const std::string& pathString, const PSceneDefaults& 
     } 
   } break;
   default:
-  {
     std::cerr << "Failed to load scene. `meta::version` value does not match any values.\n";
     return false;
   }
-}
 
-  if (this->mMainCamera == nullptr) 
+  if (this->msmtCameras.empty() == true)
   { 
-    std::cerr << "Failed to load scene. Main camera must be exist on scene file.\n";
+    std::cerr << "Failed to load scene. At least one camera must be exist on scene file.\n";
     return false; 
   }
   return true;
@@ -540,7 +538,9 @@ bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDe
       {
         const auto& camera = static_cast<FCamera&>(*prefabObject);
         const auto [ctor, list] = json::GetValueFromOptionally<FCamera::PCtor>(item, "detail");
-        this->mMainCamera = std::make_unique<FCamera>(camera.GetPCtor().Overwrite(ctor, list));
+        this->msmtCameras.emplace_back(
+          std::make_unique<FCamera>(camera.GetPCtor().Overwrite(ctor, list))
+        );
       } break;
       case EObject::Hitable:
       {
@@ -639,7 +639,7 @@ bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDe
         ctor.mImgSize = defaults.mImageSize;
         ctor.mSamples = defaults.mNumSamples;
         ctor.mScreenRatioXy = TReal(defaults.mImageSize.X) / defaults.mImageSize.Y;
-        this->mMainCamera = std::make_unique<FCamera>(ctor);
+        this->msmtCameras.emplace_back(std::make_unique<FCamera>(ctor));
       } break;
       case Case("sphere"): // Create SDF Sphere
       {
@@ -836,9 +836,17 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
   return Lerp(DVec3{1.0f, 1.0f, 1.0f}, DVec3{0.2f, 0.5f, 1.0f}, skyT);
 }
 
-const FCamera* MScene::GetCamera() const noexcept 
+std::vector<const FCamera*> MScene::GetCameras() const noexcept
 { 
-  return this->mMainCamera.get(); 
+  std::vector<const FCamera*> pCameras;
+  pCameras.reserve(this->msmtCameras.size());
+
+  for (const auto& smtCamera : this->msmtCameras)
+  {
+    pCameras.emplace_back(smtCamera.get());
+  }
+
+  return pCameras;
 }
 
 } /// ::ray namespace

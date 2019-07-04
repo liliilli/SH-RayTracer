@@ -51,7 +51,17 @@ int main(int argc, char* argv[])
   const auto workCount  = indexCount / numThreads;
   
 	const auto inputName  = *sArguments->GetValueFrom<std::string>("file");
-  const auto outputName	= *sArguments->GetValueFrom<std::string>("output");
+  auto outputName	= *sArguments->GetValueFrom<std::string>("output");
+#if 0
+  if (const std::string regexPattern = R"regex(^(.*)\.png$)regex";
+      regex::IsMatched(outputName, regexPattern) == true)
+  {
+    const auto optMatchedWords = regex::GetMatches(outputName, regexPattern);
+    assert(optMatchedWords.has_value() == true);
+
+    outputName = ptMatchedWords[1];
+  }
+#endif
 	const auto isPng      = *sArguments->GetValueFrom<bool>("png"); 
 
   // Print Overall Information when -v mode.
@@ -109,53 +119,72 @@ int main(int argc, char* argv[])
   }
 
   // Render
-  DDynamicGrid2D<DIVec3> container = {imgSize.X, imgSize.Y};
-  std::vector<std::pair<FRenderWorker, std::thread>> threads(numThreads);
-	{
-		EXPR_TIMER_CHECK_CPU("RenderTime");
+  const auto& pCameras = EXPR_SGT(MScene).GetCameras();
+  for (TIndex i = 0, size = pCameras.size(); i < size; ++i)
+  {
+    const auto& pCamera = pCameras[i];
+    DDynamicGrid2D<DIVec3> container = {imgSize.X, imgSize.Y};
+    std::vector<std::pair<FRenderWorker, std::thread>> threads(numThreads);
 
-		for (TIndex i = 0; i < numThreads; ++i)
-		{
-			auto& [instance, thread] = threads[i];
-			thread = std::thread{
-				&FRenderWorker::Execute, &instance,
-				std::cref(*EXPR_SGT(MScene).GetCamera()),
-				std::cref(indexes[i]), imgSize, std::ref(container)};
-		}
+    {
+      EXPR_TIMER_CHECK_CPU("RenderTime");
 
-		for (auto& [instance, thread] : threads) 
-		{ 
-			assert(thread.joinable() == true);
-			thread.join(); 
-		}
-	}
+      for (TIndex tId = 0; tId < numThreads; ++tId)
+      {
+        auto& [instance, thread] = threads[tId];
+        thread = std::thread{
+          &FRenderWorker::Execute, &instance,
+          std::cref(*pCamera),
+          std::cref(indexes[tId]), imgSize, std::ref(container)};
+      }
 
-  // Release time...
+      for (auto& [instance, thread] : threads) 
+      { 
+        assert(thread.joinable() == true);
+        thread.join(); 
+      }
+    } // Release time...
+
+    // After process...
+    // If --png (-p) is enabled, export result as `.png`, not `.ppm`.
+    if (isPng == true)
+    {
+      std::string modifiedName = outputName;
+      if (pCameras.size() > 1)
+      {
+        modifiedName = outputName + "_camera" + std::to_string(i + 1);
+      }
+      modifiedName += ".png";
+
+      if (const auto flag = ray::CreateImagePng(modifiedName.c_str(), container); flag == false) 
+      { 
+        std::printf("Failed to execute program.\n"); 
+        return 1;
+      }
+    }
+    else
+    {
+      std::string modifiedName = outputName;
+      if (pCameras.size() > 1)
+      {
+        modifiedName = outputName + "_camera" + std::to_string(i + 1);
+      }
+      modifiedName += ".ppm";
+
+      if (const auto flag = ray::CreateImagePpm(modifiedName.c_str(), container); flag == false) 
+      { 
+        std::printf("Failed to execute program.\n"); 
+        return 1;
+      }
+    }
+
+    using ::dy::expr::MTimeChecker;
+    const auto timestamp = EXPR_SGT(MTimeChecker).Get("RenderTime").GetRecent();
+    std::cout << "* Elapsed Time : " << timestamp.count() << "s\n";
+  }
+
   EXPR_SUCCESS_ASSERT(EXPR_SGT(MModel).Release());
   EXPR_SUCCESS_ASSERT(EXPR_SGT(MMaterial).Release());
   EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Release());
-
-  // After process...
-	// If --png (-p) is enabled, export result as `.png`, not `.ppm`.
-	if (isPng == true)
-	{
-		if (const auto flag = ray::CreateImagePng(outputName.c_str(), container); flag == false) 
-		{ 
-			std::printf("Failed to execute program.\n"); 
-			return 1;
-		}
-	}
-	else
-	{
-		if (const auto flag = ray::CreateImagePpm(outputName.c_str(), container); flag == false) 
-		{ 
-			std::printf("Failed to execute program.\n"); 
-			return 1;
-		}
-	}
-
-	using ::dy::expr::MTimeChecker;
-	const auto timestamp = EXPR_SGT(MTimeChecker).Get("RenderTime").GetRecent();
-	std::cout << "* Elapsed Time : " << timestamp.count() << "s\n";
   return 0;
 }

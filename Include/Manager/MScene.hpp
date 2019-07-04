@@ -70,7 +70,7 @@ public:
   DVec3 ProceedRay(const DRay& ray, TIndex cnt = 0, TIndex limit = 8);
 
   /// @brief Get immutable pointer of camera.
-  const FCamera* GetCamera() const noexcept;
+  std::vector<const FCamera*> GetCameras() const noexcept;
 
 private:
   /// @brief Load scene with v190710 structure.
@@ -95,8 +95,8 @@ private:
   bool AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDefaults& defaults);
 
   std::unordered_map<std::string, std::unique_ptr<IObject>> mPrefabs;
-  std::vector<std::unique_ptr<IHitable>> mObjects;
-  std::unique_ptr<FCamera>      mMainCamera;
+  std::vector<std::unique_ptr<IHitable>>  mObjects;
+  std::vector<std::unique_ptr<FCamera>>   msmtCameras;
   std::unique_ptr<DObjectNode>  mObjectTree;
 };
 
