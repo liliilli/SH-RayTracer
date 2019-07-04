@@ -132,6 +132,7 @@ int main(int argc, char* argv[])
 
     DDynamicGrid2D<DIVec3> container = {imageSize.X, imageSize.Y};
     std::vector<std::pair<FRenderWorker, std::thread>> threads(numThreads);
+    std::cout << "* Start Rendering of [" << i + 1 << "/" << size << "] Camera." << "\n";
 
     { // Check time...
       EXPR_TIMER_CHECK_CPU("RenderTime");
@@ -187,7 +188,7 @@ int main(int argc, char* argv[])
 
     using ::dy::expr::MTimeChecker;
     const auto timestamp = EXPR_SGT(MTimeChecker).Get("RenderTime").GetRecent();
-    std::cout << "* Elapsed Time : " << timestamp.count() << "s\n";
+    std::cout << "  Elapsed Time : " << timestamp.count() << "s\n";
   }
 
   EXPR_SUCCESS_ASSERT(EXPR_SGT(MModel).Release());
