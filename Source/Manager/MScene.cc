@@ -66,6 +66,8 @@ void MScene::AddSampleObjects(const MScene::PSceneDefaults& defaults)
     descriptor.mSamples = defaults.mNumSamples;
     descriptor.mScreenRatioXy = TReal(defaults.mImageSize.X) / defaults.mImageSize.Y;
     descriptor.mSensorSize = 1.0f;
+    descriptor.mGamma = defaults.mGamma;
+    descriptor.mRepeat = defaults.mRepeat;
   }
   this->msmtCameras.emplace_back(std::make_unique<FCamera>(descriptor));
 
@@ -410,8 +412,10 @@ bool MScene::AddPrefabsFromJson190710(const nlohmann::json& json, const PSceneDe
     if (typeHashValue == Case("camera")) // Create camera prefab
     {
       auto [ctor, list] = json::GetValueFromOptionally<FCamera::PCtor>(item, "detail");
-      if (list[3] == json::EExistance::NotExist) { ctor.mImgSize = defaults.mImageSize; }
-      if (list[5] == json::EExistance::NotExist) { ctor.mSamples = defaults.mNumSamples; }
+      if (list[3] == json::EExistance::NotExist)  { ctor.mImgSize = defaults.mImageSize; }
+      if (list[5] == json::EExistance::NotExist)  { ctor.mSamples = defaults.mNumSamples; }
+      if (list[9] == json::EExistance::NotExist)  { ctor.mGamma   = defaults.mGamma; }
+      if (list[10] == json::EExistance::NotExist) { ctor.mRepeat  = defaults.mRepeat; }
       ctor.mScreenRatioXy = TReal(ctor.mImgSize.X) / ctor.mImgSize.Y;
       
       const auto [_, isSuccessful] = this->mPrefabs.try_emplace(name, std::make_unique<FCamera>(ctor));
@@ -636,8 +640,10 @@ bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDe
       case Case("camera"): // Create camera
       {
         auto [ctor, list] = json::GetValueFromOptionally<FCamera::PCtor>(item, "detail");
-        if (list[3] == json::EExistance::NotExist) { ctor.mImgSize = defaults.mImageSize; }
-        if (list[5] == json::EExistance::NotExist) { ctor.mSamples = defaults.mNumSamples; }
+        if (list[3] == json::EExistance::NotExist)  { ctor.mImgSize = defaults.mImageSize; }
+        if (list[5] == json::EExistance::NotExist)  { ctor.mSamples = defaults.mNumSamples; }
+        if (list[9] == json::EExistance::NotExist)  { ctor.mGamma   = defaults.mGamma; }
+        if (list[10] == json::EExistance::NotExist) { ctor.mRepeat  = defaults.mRepeat; }
         ctor.mScreenRatioXy = TReal(ctor.mImgSize.X) / ctor.mImgSize.Y;
 
         this->msmtCameras.emplace_back(std::make_unique<FCamera>(ctor));

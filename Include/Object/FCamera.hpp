@@ -37,7 +37,9 @@ public:
     DVec3   mForwardTo;
     DUVec2  mImgSize;
     TReal   mScreenRatioXy;
+    TReal   mGamma;
     TU32    mSamples;
+    TU32    mRepeat;
     DClamp<0, 1000> mAperture;
     DClamp<0, 1000> mFocusDistance;
     DClamp<0, 1000> mSensorSize;
@@ -60,6 +62,11 @@ public:
   void SetSamples(TU32 sample);
   /// @brief Get rendering samples of each pixel.
   TU32 GetSamples() const noexcept;
+  /// @brief
+  TReal GetGamma() const noexcept; 
+  /// @brief
+  TU32 GetRepeat() const noexcept;
+
   /// @brief Get PCtor instance from instance.
   FCamera::PCtor GetPCtor() const noexcept;
 
@@ -87,10 +94,12 @@ private:
   DVec3 mCellRight, mCellUp;
   DUVec2 mScreenSize;
 
-  TU32 mSamples = 4;
+  TU32  mSamples = 4;
+  TU32  mRepeat = 1;
   TReal mAperture = 1.0f;
   TReal mDistance = 1.0f;
   TReal mSensorSize = 1.0f;
+  TReal mGamma = 2.2f;
 
   bool mIsUsingDepthOfField = false;
 };

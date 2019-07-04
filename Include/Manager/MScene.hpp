@@ -37,10 +37,10 @@ public:
   /// @brief Parameter type for handling values into functions.
   struct PSceneDefaults final
   {
-    /// @brief Image size to create.
-    DUVec2  mImageSize;
-    /// @brief The count of samples per pixel.
-    TU32    mNumSamples;
+    DUVec2  mImageSize;   /// @brief Image size to create.
+    TU32    mNumSamples;  /// @brief The count of samples per pixel.
+    TU32    mRepeat;      /// @brief The repeat
+    TReal   mGamma;       /// @brief The gamma.
   };
 
   EXPR_SINGLETON_DERIVED(MScene);

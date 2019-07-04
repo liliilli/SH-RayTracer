@@ -44,13 +44,17 @@ void from_json(const nlohmann::json& item, FCamera::PCtor& oCtor)
   { oCtor.mSensorSize = json::GetValueFrom<TReal>(item, "sensor_size"); }
   if (json::HasJsonKey(item, "depth_of_field") == true)
   { json::GetValueFromTo(item, "depth_of_field", oCtor.mDepthOfField); }
+  if (json::HasJsonKey(item, "gamma") == true)
+  { json::GetValueFromTo(item, "gamma", oCtor.mGamma); }
+  if (json::HasJsonKey(item, "repeat") == true)
+  { json::GetValueFromTo(item, "repeat", oCtor.mRepeat); }
 }
 
 template <>
 json::FExistanceList JsonCheckExistances<FCamera::PCtor>(const nlohmann::json& json)
 {
   using json::EExistance;
-  json::FExistanceList result(9, EExistance::NotExist);
+  json::FExistanceList result(11, EExistance::NotExist);
 
   if (json::HasJsonKey(json, "aperture") == true)       { result[0] = EExistance::Exist; }
   if (json::HasJsonKey(json, "focus_dist") == true)     { result[1] = EExistance::Exist; }
@@ -60,6 +64,8 @@ json::FExistanceList JsonCheckExistances<FCamera::PCtor>(const nlohmann::json& j
   if (json::HasJsonKey(json, "sample_count") == true)   { result[5] = EExistance::Exist; }
   if (json::HasJsonKey(json, "sensor_size") == true)    { result[7] = EExistance::Exist; }
   if (json::HasJsonKey(json, "depth_of_field") == true) { result[8] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "gamma") == true)          { result[9] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "repeat") == true)         { result[10] = EExistance::Exist; }
 
   return result;
 }
@@ -78,6 +84,8 @@ FCamera::PCtor FCamera::PCtor::Overwrite(const PCtor& pctor, const json::FExista
   OverwriteWhenExist(list[6], result.mScreenRatioXy, pctor.mScreenRatioXy);
   OverwriteWhenExist(list[7], result.mSensorSize, pctor.mSensorSize);
   OverwriteWhenExist(list[8], result.mDepthOfField, pctor.mDepthOfField);
+  OverwriteWhenExist(list[9], result.mGamma, pctor.mGamma);
+  OverwriteWhenExist(list[10], result.mRepeat, pctor.mRepeat);
 
   return result;
 } 
@@ -106,9 +114,11 @@ FCamera::FCamera(const FCamera::PCtor& arg)
     mUp{ Cross(this->mSide, this->mForward) },
     mScreenSize{ arg.mImgSize },
     mSamples{ arg.mSamples },
+    mRepeat{ arg.mRepeat },
     mAperture{ arg.mAperture },
     mDistance{ arg.mFocusDistance },
     mSensorSize{ arg.mSensorSize },
+    mGamma{ arg.mGamma },
     mIsUsingDepthOfField{ arg.mDepthOfField }
 {
   using ::dy::math::kToRadian;
@@ -287,6 +297,16 @@ void FCamera::SetSamples(TU32 sample)
 TU32 FCamera::GetSamples() const noexcept
 {
   return this->mSamples;
+}
+
+TReal FCamera::GetGamma() const noexcept
+{
+  return this->mGamma;
+}
+
+TU32 FCamera::GetRepeat() const noexcept
+{
+  return this->mRepeat;
 }
 
 bool FCamera::IsUsingDepthOfField() const noexcept

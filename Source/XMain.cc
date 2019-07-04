@@ -74,9 +74,12 @@ int main(int argc, char* argv[])
 
 	// If input file name is empty (not specified), just add sample objects into manager.
   {
-    const DUVec2 sampleImageSize  = { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
-    const auto sampleSampling     = *sArguments->GetValueFrom<TU32>('s'); 
-    const auto defaults           = MScene::PSceneDefaults{ sampleImageSize, sampleSampling };
+    MScene::PSceneDefaults defaults;
+    defaults.mImageSize   = DUVec2{ *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
+    defaults.mNumSamples  = *sArguments->GetValueFrom<TU32>('s'); 
+    defaults.mGamma       = *sArguments->GetValueFrom<float>("gamma");
+    defaults.mRepeat      = *sArguments->GetValueFrom<TU32>("repeat");
+
     if (inputName.empty() == true)
     {
       EXPR_SGT(MScene).AddSampleObjects(defaults);
