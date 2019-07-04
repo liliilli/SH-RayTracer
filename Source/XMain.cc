@@ -44,12 +44,7 @@ int main(int argc, char* argv[])
     return 0;
   }
 
-  const auto imgSize    = DUVec2 { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
-  const auto numSamples = *sArguments->GetValueFrom<TU32>('s');
   const auto numThreads = *sArguments->GetValueFrom<TU32>('t');
-  const auto indexCount = imgSize.X * imgSize.Y;
-  const auto workCount  = indexCount / numThreads;
-  
 	const auto inputName  = *sArguments->GetValueFrom<std::string>("file");
   auto outputName	= *sArguments->GetValueFrom<std::string>("output");
 #if 0
@@ -65,10 +60,12 @@ int main(int argc, char* argv[])
 	const auto isPng      = *sArguments->GetValueFrom<bool>("png"); 
 
   // Print Overall Information when -v mode.
+#if 0
   RAY_IF_VERBOSE_MODE() 
   {
     PrintOverallInformation(*sArguments);
   }
+#endif
 
   // Initialization time...
   EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Initialize());
@@ -76,57 +73,64 @@ int main(int argc, char* argv[])
   EXPR_SUCCESS_ASSERT(EXPR_SGT(MModel).Initialize());
 
 	// If input file name is empty (not specified), just add sample objects into manager.
-  const auto defaults = MScene::PSceneDefaults{imgSize, numSamples};
-	if (inputName.empty() == true)
-	{
-    EXPR_SGT(MScene).AddSampleObjects(defaults);
-	}
-	else 
-	{
-    if (const auto flag = EXPR_SGT(MScene).LoadSceneFile(inputName, defaults); 
-        flag == false)
-    {
-      std::cerr << "Failed to execute application.\n";
-      EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Release());
-
-      return 1;
-    }
-	}
-
-  // Separate work list to each thread. (potential)
-  std::vector<std::vector<DUVec2>> indexes(numThreads);
-  for (auto y = imgSize.Y, t = 0u, c = 0u; y > 0; --y)
   {
-    for (auto x = 0u; x < imgSize.X; ++x)
+    const DUVec2 sampleImageSize  = { *sArguments->GetValueFrom<TU32>('w'), *sArguments->GetValueFrom<TU32>('h') };
+    const auto sampleSampling     = *sArguments->GetValueFrom<TU32>('s'); 
+    const auto defaults           = MScene::PSceneDefaults{ sampleImageSize, sampleSampling };
+    if (inputName.empty() == true)
     {
-      indexes[t].emplace_back(x, y);     
-      // Next thread index list.
-      if (++c; c >= workCount && t + 1 < numThreads) { ++t; c = 0; }
+      EXPR_SGT(MScene).AddSampleObjects(defaults);
+    }
+    else
+    {
+      if (const auto flag = EXPR_SGT(MScene).LoadSceneFile(inputName, defaults); flag == false)
+      {
+        std::cerr << "Failed to execute application.\n";
+        EXPR_SUCCESS_ASSERT(EXPR_SGT(MScene).Release());
+        return 1;
+      }
     }
   }
 
-  // Print Thread Work list -v mode.
-  RAY_IF_VERBOSE_MODE() 
-  {
-    std::cout << "* Thread Work List\n";
-    for (TIndex i = 0; i < numThreads; ++i)
-    {
-      std::cout 
-        << "  Thread [" << i << "] : " 
-          << "Count : " << indexes[i].size() << ' '
-          << indexes[i].front() << " ~ " << indexes[i].back() << '\n';
-    }
-  }
-
-  // Render
+  // Render each camera...
   const auto& pCameras = EXPR_SGT(MScene).GetCameras();
   for (TIndex i = 0, size = pCameras.size(); i < size; ++i)
   {
-    const auto& pCamera = pCameras[i];
-    DDynamicGrid2D<DIVec3> container = {imgSize.X, imgSize.Y};
+    const auto& pCamera   = pCameras[i];
+    const auto imageSize  = pCamera->GetImageSize();
+
+    // Separate work list to each thread. (potential)
+    std::vector<std::vector<DUVec2>> indexes(numThreads);
+    const auto indexCount = imageSize.X * imageSize.Y;
+    const auto workCount  = indexCount / numThreads;
+    for (auto y = imageSize.Y, t = 0u, c = 0u; y > 0; --y)
+    {
+      for (auto x = 0u; x < imageSize.X; ++x)
+      {
+        indexes[t].emplace_back(x, y);     
+        // Next thread index list.
+        if (++c; c >= workCount && t + 1 < numThreads) { ++t; c = 0; }
+      }
+    }
+
+    // Print Thread Work list -v mode.
+    RAY_IF_VERBOSE_MODE() 
+    {
+      std::cout << pCamera->ToString();
+      std::cout << "* Thread Work List\n";
+      for (TIndex tId = 0; tId < numThreads; ++tId)
+      {
+        std::cout 
+          << "  Thread [" << i << "] : " 
+            << "Count : " << indexes[tId].size() << ' '
+            << indexes[tId].front() << " ~ " << indexes[tId].back() << '\n';
+      }
+    }
+
+    DDynamicGrid2D<DIVec3> container = {imageSize.X, imageSize.Y};
     std::vector<std::pair<FRenderWorker, std::thread>> threads(numThreads);
 
-    {
+    { // Check time...
       EXPR_TIMER_CHECK_CPU("RenderTime");
 
       for (TIndex tId = 0; tId < numThreads; ++tId)
@@ -135,7 +139,7 @@ int main(int argc, char* argv[])
         thread = std::thread{
           &FRenderWorker::Execute, &instance,
           std::cref(*pCamera),
-          std::cref(indexes[tId]), imgSize, std::ref(container)};
+          std::cref(indexes[tId]), imageSize, std::ref(container)};
       }
 
       for (auto& [instance, thread] : threads) 

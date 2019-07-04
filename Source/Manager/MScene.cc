@@ -409,10 +409,10 @@ bool MScene::AddPrefabsFromJson190710(const nlohmann::json& json, const PSceneDe
     const auto typeHashValue = Input(type); // Create hash value from `type` std::string.
     if (typeHashValue == Case("camera")) // Create camera prefab
     {
-      auto ctor = json::GetValueFrom<FCamera::PCtor>(item, "detail");
-      ctor.mImgSize = defaults.mImageSize;
-      ctor.mSamples = defaults.mNumSamples;
-      ctor.mScreenRatioXy = TReal(defaults.mImageSize.X) / defaults.mImageSize.Y;
+      auto [ctor, list] = json::GetValueFromOptionally<FCamera::PCtor>(item, "detail");
+      if (list[3] == json::EExistance::NotExist) { ctor.mImgSize = defaults.mImageSize; }
+      if (list[5] == json::EExistance::NotExist) { ctor.mSamples = defaults.mNumSamples; }
+      ctor.mScreenRatioXy = TReal(ctor.mImgSize.X) / ctor.mImgSize.Y;
       
       const auto [_, isSuccessful] = this->mPrefabs.try_emplace(name, std::make_unique<FCamera>(ctor));
       if (isSuccessful == false)
@@ -635,10 +635,11 @@ bool MScene::AddObjectsFromJson190710(const nlohmann::json& json, const PSceneDe
       {
       case Case("camera"): // Create camera
       {
-        auto ctor = json::GetValueFrom<FCamera::PCtor>(item, "detail");
-        ctor.mImgSize = defaults.mImageSize;
-        ctor.mSamples = defaults.mNumSamples;
-        ctor.mScreenRatioXy = TReal(defaults.mImageSize.X) / defaults.mImageSize.Y;
+        auto [ctor, list] = json::GetValueFromOptionally<FCamera::PCtor>(item, "detail");
+        if (list[3] == json::EExistance::NotExist) { ctor.mImgSize = defaults.mImageSize; }
+        if (list[5] == json::EExistance::NotExist) { ctor.mSamples = defaults.mNumSamples; }
+        ctor.mScreenRatioXy = TReal(ctor.mImgSize.X) / ctor.mImgSize.Y;
+
         this->msmtCameras.emplace_back(std::make_unique<FCamera>(ctor));
       } break;
       case Case("sphere"): // Create SDF Sphere
