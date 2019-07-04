@@ -102,6 +102,8 @@ FCamera::PCtor FCamera::GetPCtor() const noexcept
   result.mScreenRatioXy = TReal(result.mImgSize.X) / result.mImgSize.Y;
   result.mSensorSize = this->mSensorSize;
   result.mDepthOfField = this->mIsUsingDepthOfField;
+  result.mGamma = this->mGamma;
+  result.mRepeat = this->mRepeat;
 
   return result;
 }
@@ -332,6 +334,8 @@ std::string FCamera::ToString() const noexcept
   buffer << "  Aperture : " << this->mAperture << '\n';
   buffer << "  Distance : " << this->mDistance << '\n';
   buffer << "  Sensor size : " << this->mSensorSize << '\n';
+  buffer << "  Gamma : " << this->mGamma << '\n';
+  buffer << "  Repeat : " << this->mRepeat << '\n';
   buffer << "  Using Depth Of Field : " << (this->mIsUsingDepthOfField ? "true" : "false") << '\n';
 
   return buffer.str();

@@ -27,8 +27,8 @@ void FRenderWorker::Execute(
 {
   for (const auto& index : list)
   {
-    const auto rayList = cam.CreateRay(index.X, index.Y - 1);
-    const auto repeat = *sArguments->GetValueFrom<TU32>("repeat");
+    const auto rayList  = cam.CreateRay(index.X, index.Y - 1);
+    const auto repeat   = cam.GetRepeat();
 
     DVec3 colorSum = {0};
     for (TU32 r = 0; r < repeat; ++r)
@@ -41,7 +41,7 @@ void FRenderWorker::Execute(
     colorSum /= (TReal(rayList.size()) * repeat);
 
     // Encoding
-    auto encode = 1.0f / *sArguments->GetValueFrom<float>("gamma");
+    auto encode = 1.0f / cam.GetGamma();
     for (int i = 0; i < 3; ++i) { colorSum[i] = std::pow(colorSum[i], encode); }
 
     // Clamping 
