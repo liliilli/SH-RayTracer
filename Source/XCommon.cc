@@ -248,4 +248,19 @@ void from_json(const nlohmann::json& j, ray::DVec3& p)
   }
 }
 
+void to_json(nlohmann::json& j, const ray::DUVec2& p)
+{
+  j = std::vector<ray::DUVec2::TValueType>{p[0], p[1]};
+}
+
+void from_json(const nlohmann::json& j, ray::DUVec2& p)
+{
+  using TValue = ray::DUVec2::TValueType;
+  for (int i = 0; i < 2; ++i)
+  {
+    p[i] = j[i].get<TValue>();
+  }
+}
+
+
 }

@@ -88,4 +88,7 @@ namespace dy::math
 void to_json(nlohmann::json& j, const ray::DVec3& p);
 void from_json(const nlohmann::json& j, ray::DVec3& p);
 
+void to_json(nlohmann::json& j, const ray::DUVec2& p);
+void from_json(const nlohmann::json& j, ray::DUVec2& p);
+
 } /// ::dy::math namespace
