@@ -14,6 +14,7 @@
 #include <Object/FCamera.hpp>
 
 #include <iostream>
+#include <sstream>
 #include <nlohmann/json.hpp>
 #include <Math/Utility/XLinearMath.h>
 #include <Math/Utility/XRandom.h>
@@ -33,8 +34,12 @@ void from_json(const nlohmann::json& item, FCamera::PCtor& oCtor)
   { oCtor.mFocusDistance = json::GetValueFrom<TReal>(item, "focus_dist"); }
   if (json::HasJsonKey(item, "eye") == true) 
   { oCtor.mForwardTo = json::GetValueFrom<DVec3>(item, "eye"); }
+  if (json::HasJsonKey(item, "image_size") == true)
+  { oCtor.mImgSize = json::GetValueFrom<DUVec2>(item, "image_size"); }
   if (json::HasJsonKey(item, "pos") == true) 
   { oCtor.mOrigin = json::GetValueFrom<DVec3>(item, "pos"); }
+  if (json::HasJsonKey(item, "sample_count") == true)
+  { oCtor.mSamples = json::GetValueFrom<TU32>(item, "sample_count"); }
   if (json::HasJsonKey(item, "sensor_size") == true) 
   { oCtor.mSensorSize = json::GetValueFrom<TReal>(item, "sensor_size"); }
   if (json::HasJsonKey(item, "depth_of_field") == true)
@@ -47,11 +52,13 @@ json::FExistanceList JsonCheckExistances<FCamera::PCtor>(const nlohmann::json& j
   using json::EExistance;
   json::FExistanceList result(9, EExistance::NotExist);
 
-  if (json::HasJsonKey(json, "aperture") == true) { result[0] = EExistance::Exist; }
-  if (json::HasJsonKey(json, "focus_dist") == true) { result[1] = EExistance::Exist; }
-  if (json::HasJsonKey(json, "eye") == true) { result[2] = EExistance::Exist; }
-  if (json::HasJsonKey(json, "pos") == true) { result[4] = EExistance::Exist; }
-  if (json::HasJsonKey(json, "sensor_size") == true) { result[7] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "aperture") == true)       { result[0] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "focus_dist") == true)     { result[1] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "eye") == true)            { result[2] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "image_size") == true)     { result[3] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "pos") == true)            { result[4] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "sample_count") == true)   { result[5] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "sensor_size") == true)    { result[7] = EExistance::Exist; }
   if (json::HasJsonKey(json, "depth_of_field") == true) { result[8] = EExistance::Exist; }
 
   return result;
@@ -118,25 +125,6 @@ FCamera::FCamera(const FCamera::PCtor& arg)
   const auto scaledHeight = defScrHeight * this->mSensorSize;
   this->mCellRight  = mSide * (scaledHeight * arg.mScreenRatioXy / TReal(this->mScreenSize.X) );
   this->mCellUp     = mUp * (scaledHeight / TReal(this->mScreenSize.Y) );
-
-  RAY_IF_VERBOSE_MODE() // #21 Implement ToString() method.
-  {
-    std::cout << "* Camera Information\n";
-    std::cout << "  Origin : " << this->mOrigin << '\n';
-    std::cout << "  Forward : " << this->mForward << '\n';
-    std::cout << "  Side : " << this->mSide << '\n';
-    std::cout << "  Up : " << this->mUp << '\n';
-
-    std::cout << "  LowLeftCorner : " << this->mLowLeftCorner << '\n';
-    std::cout << "  CellRight : " << this->mCellRight << '\n';
-    std::cout << "  CellUp : " << this->mCellUp << '\n';
-
-    std::cout << "  ScreenSize : " << this->mScreenSize << '\n';
-    std::cout << "  Aperture : " << this->mAperture << '\n';
-    std::cout << "  Distance : " << this->mDistance << '\n';
-    std::cout << "  Sensor size : " << this->mSensorSize << '\n';
-    std::cout << "  Using Depth Of Field : " << (this->mIsUsingDepthOfField ? "true" : "false") << '\n';
-  }
 }
 
 const DUVec2& FCamera::GetImageSize() const noexcept
@@ -304,6 +292,29 @@ TU32 FCamera::GetSamples() const noexcept
 bool FCamera::IsUsingDepthOfField() const noexcept
 {
   return this->mIsUsingDepthOfField;
+}
+
+std::string FCamera::ToString() const noexcept
+{
+  std::stringstream buffer;
+
+  buffer << "* Camera Information\n";
+  buffer << "  Origin : " << this->mOrigin << '\n';
+  buffer << "  Forward : " << this->mForward << '\n';
+  buffer << "  Side : " << this->mSide << '\n';
+  buffer << "  Up : " << this->mUp << '\n';
+
+  buffer << "  LowLeftCorner : " << this->mLowLeftCorner << '\n';
+  buffer << "  CellRight : " << this->mCellRight << '\n';
+  buffer << "  CellUp : " << this->mCellUp << '\n';
+
+  buffer << "  ScreenSize : " << this->mScreenSize << '\n';
+  buffer << "  Aperture : " << this->mAperture << '\n';
+  buffer << "  Distance : " << this->mDistance << '\n';
+  buffer << "  Sensor size : " << this->mSensorSize << '\n';
+  buffer << "  Using Depth Of Field : " << (this->mIsUsingDepthOfField ? "true" : "false") << '\n';
+
+  return buffer.str();
 }
 
 } /// ::ray namespace 

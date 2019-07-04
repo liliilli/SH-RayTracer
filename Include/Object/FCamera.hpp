@@ -66,6 +66,9 @@ public:
   /// @brief Check camera instance is using depth of field feature.
   bool IsUsingDepthOfField() const noexcept;
 
+  /// @brief Output information string of camera.
+  std::string ToString() const noexcept;
+
 private:
   /// @brief Get sample offset list of given anti-aliasing sample count.
   /// If `samples` value exceeds 8, offset list of sample 8 will be returned.
