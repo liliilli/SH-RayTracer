@@ -76,6 +76,7 @@ set(SOURCE
 
     "${SOURCE_DIRECTORY}/Helper/XHelperIO.cc"
     "${SOURCE_DIRECTORY}/Helper/XHelperJson.cc"
+    "${SOURCE_DIRECTORY}/Helper/XHelperRegex.cc"
     "${SOURCE_DIRECTORY}/Helper/XTinyObj.cc"
 )
 
