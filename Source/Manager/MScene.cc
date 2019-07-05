@@ -157,6 +157,15 @@ void MScene::AddSampleObjects(const MScene::PSceneDefaults& defaults)
     ctor.mCtor = ptor;
     this->AddHitableObject<FCone>(ctor, EXPR_SGT(MMaterial).GetMaterial(metal2Id));
   }
+
+  // Make KDTree for objects (optimization).
+  std::vector<const IHitable*> mpObjects;
+  for (const auto& smtObject : this->mObjects)
+  {
+    mpObjects.emplace_back(smtObject.get());
+  }
+  this->mObjectTree = std::make_unique<DObjectNode>();
+  this->mObjectTree->BuildTree(mpObjects);
 }
 
 bool MScene::LoadSceneFile(const std::string& pathString, const PSceneDefaults& defaults)
