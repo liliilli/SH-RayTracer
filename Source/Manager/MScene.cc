@@ -235,8 +235,15 @@ bool MScene::LoadSceneFile190710(const nlohmann::json& json, const MScene::PScen
   // Check there is additional features are exist in `meta` header. (v190810)
   if (json::HasJsonKey(json, "meta") == true)
   {
-    [[maybe_unused]] const auto& meta = json["meta"];
-    // and etc...
+    const auto& meta = json["meta"];
+
+    // Get IOR (Overall Scene IOR)
+    if (json::HasJsonKey(meta, "ior") == false)
+    {
+      std::cerr << "Failed to get IOR (Index of Refrection) of scene.\n";
+      return false;
+    }
+    else { json::GetValueFromTo(meta, "ior", this->mSceneIor); }
   }
 
   // Check there is `models` header key.
@@ -863,6 +870,11 @@ std::vector<const FCamera*> MScene::GetCameras() const noexcept
   }
 
   return pCameras;
+}
+
+TReal MScene::GetSceneIOR() const noexcept
+{
+  return this->mSceneIor;
 }
 
 } /// ::ray namespace

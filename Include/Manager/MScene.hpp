@@ -72,6 +72,9 @@ public:
   /// @brief Get immutable pointer of camera.
   std::vector<const FCamera*> GetCameras() const noexcept;
 
+  /// @brief Get Overall Scene IOR (Index of Refraction).
+  TReal GetSceneIOR() const noexcept;
+
 private:
   /// @brief Load scene with v190710 structure.
   /// @param json Json atlas.
@@ -98,6 +101,9 @@ private:
   std::vector<std::unique_ptr<IHitable>>  mObjects;
   std::vector<std::unique_ptr<FCamera>>   msmtCameras;
   std::unique_ptr<DObjectNode>  mObjectTree;
+
+  /// @brief Overall scene ior (index of refraction).
+  TReal mSceneIor;
 };
 
 } /// ::ray namespace
