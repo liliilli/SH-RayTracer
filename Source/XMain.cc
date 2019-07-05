@@ -27,6 +27,7 @@
 #include <Manager/MModel.hpp>
 #include <XCommon.hpp>
 #include <FRenderWorker.hpp>
+#include <Helper/XHelperRegex.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -46,18 +47,33 @@ int main(int argc, char* argv[])
 
   const auto numThreads = *sArguments->GetValueFrom<TU32>('t');
 	const auto inputName  = *sArguments->GetValueFrom<std::string>("file");
+	const auto isPng      = *sArguments->GetValueFrom<bool>("png"); 
+
   auto outputName	= *sArguments->GetValueFrom<std::string>("output");
-#if 0
-  if (const std::string regexPattern = R"regex(^(.*)\.png$)regex";
-      regex::IsMatched(outputName, regexPattern) == true)
+  std::string extension = "";
+  if (const std::string regexPattern = R"regex((.+)\.(.+)$)regex";
+      ray::regex::IsMatched(outputName, regexPattern) == true)
   {
     const auto optMatchedWords = regex::GetMatches(outputName, regexPattern);
     assert(optMatchedWords.has_value() == true);
 
-    outputName = ptMatchedWords[1];
+    outputName = (*optMatchedWords)[0];
+    extension = (*optMatchedWords)[1];
+
+    // Check extension is neither `.ppm` nor `.png`.
+    if (extension.empty() == false 
+    &&  extension != "ppm" && extension != "png")
+    {
+      std::cerr 
+        << "Could not start application. Specified output name's extension is not supported yet. `" 
+        << outputName << "." << extension << "`\n";
+      return 1;
+    }
   }
-#endif
-	const auto isPng      = *sArguments->GetValueFrom<bool>("png"); 
+  else
+  {
+    if (isPng == true) { extension = "png"; } else { extension = "ppm"; }
+  }
 
   // Print Overall Information when -v mode.
 #if 0
@@ -154,32 +170,26 @@ int main(int argc, char* argv[])
     } // Release time...
 
     // After process...
-    // If --png (-p) is enabled, export result as `.png`, not `.ppm`.
-    if (isPng == true)
+    // Make full output name using variables.
+    std::string fullOutputName = outputName;
+    if (pCameras.size() > 1)
     {
-      std::string modifiedName = outputName;
-      if (pCameras.size() > 1)
-      {
-        modifiedName = outputName + "_camera" + std::to_string(i + 1);
-      }
-      modifiedName += ".png";
+      fullOutputName = outputName + "_camera" + std::to_string(i + 1);
+    }
+    fullOutputName += "." + extension;
 
-      if (const auto flag = ray::CreateImagePng(modifiedName.c_str(), container); flag == false) 
+    // If --png (-p) is enabled, export result as `.png`, not `.ppm`.
+    if (extension == "png")
+    {
+      if (const auto flag = ray::CreateImagePng(fullOutputName.c_str(), container); flag == false) 
       { 
         std::printf("Failed to execute program.\n"); 
         return 1;
       }
     }
-    else
+    else if (extension == "ppm")
     {
-      std::string modifiedName = outputName;
-      if (pCameras.size() > 1)
-      {
-        modifiedName = outputName + "_camera" + std::to_string(i + 1);
-      }
-      modifiedName += ".ppm";
-
-      if (const auto flag = ray::CreateImagePpm(modifiedName.c_str(), container); flag == false) 
+      if (const auto flag = ray::CreateImagePpm(fullOutputName.c_str(), container); flag == false) 
       { 
         std::printf("Failed to execute program.\n"); 
         return 1;
