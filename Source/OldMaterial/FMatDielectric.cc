@@ -19,6 +19,7 @@
 #include <Math/Utility/XShapeMath.h>
 #include <Math/Utility/XRandom.h>
 #include <Helper/XHelperJson.hpp>
+#include <Manager/MScene.hpp>
 
 namespace ray
 {
@@ -40,6 +41,43 @@ FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal) const
   using ::dy::math::Reflect;
   using ::dy::math::Schlick;
 
+  // Compare IOR with scene.
+  const auto incidentNormal = intersectedRay.GetDirection() * -1.0f;
+  const auto cosTheta1  = Dot(incidentNormal, normal);
+  const auto sceneIor   = EXPR_SGT(MScene).GetSceneIOR();
+
+  if (cosTheta1 > 0)
+  {
+    // If from outside to inside of object, IOR factor is inside/outside.
+    const auto optRefractDir = Refract(sceneIor, this->mIor(), incidentNormal, normal);
+    if (optRefractDir.has_value() == false)
+    {
+      const auto reflectDir = Reflect(incidentNormal, normal);
+      return PScatterResult{reflectDir, DVec3{1}, true};
+    }
+    else
+    {
+      assert(Dot(*optRefractDir, normal * -1.0f) >= 0);
+      return PScatterResult{*optRefractDir, DVec3{1, 1, 1}, true};
+    }
+  }
+  else
+  {
+    // If from inside to outside of object, IOR factor is inside/outside.
+    const auto optRefractDir = Refract(this->mIor(), sceneIor, incidentNormal, normal * -1.0f);
+    if (optRefractDir.has_value() == false)
+    {
+      const auto reflectDir = Reflect(incidentNormal, normal * -1.0f);
+      return PScatterResult{reflectDir, DVec3{1}, true};
+    }
+    else
+    {
+      assert(Dot(*optRefractDir, normal) >= 0);
+      return PScatterResult{*optRefractDir, DVec3{1}, true};
+    }
+  }
+
+#if 0
   auto incidentIor  = TReal();
   auto refractIor   = TReal();
   const auto incidentNor = intersectedRay.GetDirection() * -1.0f;
@@ -80,6 +118,7 @@ FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal) const
     assert(Dot(incidentNor * -1.0f, *optRefract) >= 0);
     return PScatterResult {*optRefract, DVec3{1}, true};
   }
+#endif
 }
 
 } /// ::ray namespace
