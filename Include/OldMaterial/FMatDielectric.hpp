@@ -29,11 +29,13 @@ public:
   {
     DMatId mId;
     TReal mIor;
+    DVec3 mColor;
   };
 
   FMatDielectric(const PCtor& arg) 
     : IMaterial { arg.mId },
-      mIor { arg.mIor } 
+      mIor { arg.mIor },
+      mColor { arg.mColor }
   { };
   virtual ~FMatDielectric() = default;
 
@@ -45,6 +47,7 @@ public:
 
 private:
   ::dy::math::DClamp<TReal, 0, 100> mIor;
+  DVec3 mColor;
 };
 
 /// @brief Template function for automatic parsing from json.

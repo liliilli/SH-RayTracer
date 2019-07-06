@@ -27,8 +27,10 @@ namespace ray
 void from_json(const nlohmann::json& json, FMatDielectric::PCtor& oCtor)
 {
   assert(json::HasJsonKey(json, "ior") == true);
+  assert(json::HasJsonKey(json, "color") == true);
 
   oCtor.mIor = json::GetValueFrom<TReal>(json, "ior");
+  oCtor.mColor = json::GetValueFrom<DVec3>(json, "color");
 }
 
 std::optional<PScatterResult> 
@@ -62,12 +64,12 @@ FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal) const
       if (RandomUniformReal(0.f, 1.f) < presnelFactor)
       {
         const auto reflectDir = Reflect(incidentNormal, normal);
-        return PScatterResult{reflectDir, DVec3{1}, true};
+        return PScatterResult{reflectDir, this->mColor, true};
       }
       else
       {
         assert(Dot(*optRefractDir, normal * -1.0f) >= 0);
-        return PScatterResult{*optRefractDir, DVec3{1, 1, 1}, true};
+        return PScatterResult{*optRefractDir, this->mColor, true};
       }
     }
   }
@@ -86,12 +88,12 @@ FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal) const
       if (RandomUniformReal(0.f, 1.f) < presnelFactor)
       {
         const auto reflectDir = Reflect(incidentNormal, normal * -1.0f);
-        return PScatterResult{reflectDir, DVec3{1}, true};
+        return PScatterResult{reflectDir, this->mColor, true};
       }
       else
       {
         assert(Dot(*optRefractDir, normal) >= 0);
-        return PScatterResult{*optRefractDir, DVec3{1}, true};
+        return PScatterResult{*optRefractDir, this->mColor, true};
       }
     }
   }
