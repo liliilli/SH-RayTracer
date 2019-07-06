@@ -36,6 +36,7 @@ FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal) const
 {
   using ::dy::math::GetClosestTValueOf;
   using ::dy::math::RandomVector3Length;
+  using ::dy::math::RandomUniformReal;
   using ::dy::math::Dot;
   using ::dy::math::Refract;
   using ::dy::math::Reflect;
@@ -57,8 +58,17 @@ FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal) const
     }
     else
     {
-      assert(Dot(*optRefractDir, normal * -1.0f) >= 0);
-      return PScatterResult{*optRefractDir, DVec3{1, 1, 1}, true};
+      const auto presnelFactor = Schlick(sceneIor, this->mIor(), incidentNormal, normal);
+      if (RandomUniformReal(0.f, 1.f) < presnelFactor)
+      {
+        const auto reflectDir = Reflect(incidentNormal, normal);
+        return PScatterResult{reflectDir, DVec3{1}, true};
+      }
+      else
+      {
+        assert(Dot(*optRefractDir, normal * -1.0f) >= 0);
+        return PScatterResult{*optRefractDir, DVec3{1, 1, 1}, true};
+      }
     }
   }
   else
@@ -72,8 +82,17 @@ FMatDielectric::Scatter(const DRay& intersectedRay, const DVec3& normal) const
     }
     else
     {
-      assert(Dot(*optRefractDir, normal) >= 0);
-      return PScatterResult{*optRefractDir, DVec3{1}, true};
+      const auto presnelFactor = Schlick(this->mIor(), sceneIor, incidentNormal, normal);
+      if (RandomUniformReal(0.f, 1.f) < presnelFactor)
+      {
+        const auto reflectDir = Reflect(incidentNormal, normal * -1.0f);
+        return PScatterResult{reflectDir, DVec3{1}, true};
+      }
+      else
+      {
+        assert(Dot(*optRefractDir, normal) >= 0);
+        return PScatterResult{*optRefractDir, DVec3{1}, true};
+      }
     }
   }
 
