@@ -23,7 +23,7 @@ void FRenderWorker::Execute(
   const FCamera& cam,
   const std::vector<DUVec2>& list, 
   const DUVec2 imgSize, 
-  DDynamicGrid2D<DIVec3>& container)
+  DDynamicGrid2D<DVec3>& container)
 {
   for (const auto& index : list)
   {
@@ -39,18 +39,20 @@ void FRenderWorker::Execute(
       }
     }
     colorSum /= (TReal(rayList.size()) * repeat);
+    container.Set(index.X, imgSize.Y - index.Y, colorSum);
+  }
 
-    // Encoding
-    auto encode = 1.0f / cam.GetGamma();
-    for (int i = 0; i < 3; ++i) { colorSum[i] = std::pow(colorSum[i], encode); }
-
-    // Clamping 
-    for (int i = 0; i < 3; ++i) { colorSum[i] = std::clamp(colorSum[i], TReal(0), TReal(1)); }
-
-    int ir = int(255.99f * colorSum[0]);
-    int ig = int(255.99f * colorSum[1]);
-    int ib = int(255.99f * colorSum[2]);
-    container.Set(index.X, imgSize.Y - index.Y, {ir, ig, ib});
+  // If there is -nan, change value into 0. (I suggest this is a bug.)
+  for (TIndex y = 0, ySize = imgSize.Y; y < ySize; ++y)
+  {
+    for (TIndex x = 0, xSize = imgSize.X; x < xSize; ++x)
+    {
+      auto& color = container.Get(x, y);
+      for (TIndex i = 0; i < 3; ++i)
+      {
+        if (std::isnan(color[i]) == true) { color[i] = 0; }
+      }
+    }
   }
 }
 

@@ -113,9 +113,9 @@ int main(int argc, char* argv[])
 
   // Render each camera...
   const auto& pCameras = EXPR_SGT(MScene).GetCameras();
-  for (TIndex i = 0, size = pCameras.size(); i < size; ++i)
+  for (TIndex cameraId = 0, size = pCameras.size(); cameraId < size; ++cameraId)
   {
-    const auto& pCamera   = pCameras[i];
+    const auto& pCamera   = pCameras[cameraId];
     const auto imageSize  = pCamera->GetImageSize();
 
     // Separate work list to each thread. (potential)
@@ -140,26 +140,27 @@ int main(int argc, char* argv[])
       for (TIndex tId = 0; tId < numThreads; ++tId)
       {
         std::cout 
-          << "  Thread [" << i << "] : " 
+          << "  Thread [" << cameraId << "] : " 
             << "Count : " << indexes[tId].size() << ' '
             << indexes[tId].front() << " ~ " << indexes[tId].back() << '\n';
       }
     }
-
-    DDynamicGrid2D<DIVec3> container = {imageSize.X, imageSize.Y};
+    
+    DDynamicGrid2D<DVec3> colorContainer = {imageSize.X, imageSize.Y};
     std::vector<std::pair<FRenderWorker, std::thread>> threads(numThreads);
-    std::cout << "* Start Rendering of [" << i + 1 << "/" << size << "] Camera." << "\n";
+    std::cout << "* Start Rendering of [" << cameraId + 1 << "/" << size << "] Camera." << "\n";
 
     { // Check time...
       EXPR_TIMER_CHECK_CPU("RenderTime");
 
       for (TIndex tId = 0; tId < numThreads; ++tId)
       {
+        // Returned colorContainer values are on linear color space.
         auto& [instance, thread] = threads[tId];
         thread = std::thread{
           &FRenderWorker::Execute, &instance,
           std::cref(*pCamera),
-          std::cref(indexes[tId]), imageSize, std::ref(container)};
+          std::cref(indexes[tId]), imageSize, std::ref(colorContainer)};
       }
 
       for (auto& [instance, thread] : threads) 
@@ -174,9 +175,57 @@ int main(int argc, char* argv[])
     std::string fullOutputName = outputName;
     if (pCameras.size() > 1)
     {
-      fullOutputName = outputName + "_camera" + std::to_string(i + 1);
+      fullOutputName = outputName + "_camera" + std::to_string(cameraId + 1);
     }
     fullOutputName += "." + extension;
+
+    // Check this camera is using HDR or not.
+    if (pCamera->IsUsingHDR() == true)
+    {
+      ToneHdr(colorContainer, pCamera->GetMiddleGray());
+    }
+    else
+    {
+      // If not, just clamp out of bound values [0, 1].
+      for (TIndex y = 0; y < imageSize.Y; ++y)
+      {
+        for (TIndex x = 0; x < imageSize.X; ++x)
+        {
+          auto& color = colorContainer.Get(x, y);
+          color[0] = std::clamp(color[0], 0.f, 1.f);
+          color[1] = std::clamp(color[1], 0.f, 1.f);
+          color[2] = std::clamp(color[2], 0.f, 1.f);
+        }
+      }
+    }
+
+    // Encode with gamma.
+    auto encodeGamma = 1.0f / pCamera->GetGamma();
+    for (TIndex y = 0; y < imageSize.Y; ++y)
+    {
+      for (TIndex x = 0; x < imageSize.X; ++x)
+      {
+        auto& colorSum = colorContainer.Get(x, y);
+        for (TIndex cid = 0; cid < 3; ++cid) 
+        { 
+          colorSum[cid] = std::pow(colorSum[cid], encodeGamma); 
+        }
+      }
+    }
+
+    // Convert into 8-bit RGB container. There is no need to invert colors vertically.
+    DDynamicGrid2D<DIVec3> container = {imageSize.X, imageSize.Y};
+    for (TIndex y = 0; y < imageSize.Y; ++y)
+    {
+      for (TIndex x = 0; x < imageSize.X; ++x)
+      {
+        auto& color = colorContainer.Get(x, y);
+        int ir = int(255.99f * color[0]);
+        int ig = int(255.99f * color[1]);
+        int ib = int(255.99f * color[2]);
+        container.Set(x, y, {ir, ig, ib});
+      }
+    }
 
     // If --png (-p) is enabled, export result as `.png`, not `.ppm`.
     if (extension == "png")

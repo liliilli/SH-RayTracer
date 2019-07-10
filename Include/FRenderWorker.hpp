@@ -32,7 +32,7 @@ public:
     const FCamera& cam,
     const std::vector<DUVec2>& list, 
     const DUVec2 imgSize, 
-    DDynamicGrid2D<DIVec3>& container);
+    DDynamicGrid2D<DVec3>& container);
 };
 
 } /// ::ray namespace
