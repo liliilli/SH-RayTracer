@@ -212,8 +212,8 @@ FBox::FBox(const PCtor& arg, const IMaterial* mat)
     const auto ctor = std::get<FBox::PCtor::PType2>(arg.mCtor);
     this->mOrigin   = ctor.mOrigin;
     this->mLength   = {
-      ctor.mLength[0], ctor.mLength[1], ctor.mLength[2], 
-      ctor.mLength[3], ctor.mLength[4], ctor.mLength[5]};
+      ctor.mLength[0], ctor.mLength[0], ctor.mLength[1], 
+      ctor.mLength[1], ctor.mLength[2], ctor.mLength[2]};
     this->mRotQuat  = DQuat{ctor.mAngle};
   } break;
   case FBox::PCtor::_3:
