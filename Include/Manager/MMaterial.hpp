@@ -31,6 +31,7 @@ namespace ray
 class FMatLambertian; // Forward declaration
 class FMatMetal;      // Forward declaration
 class FMatDielectric; // Forward declaration
+class FMatLight;      // Forward declaration
 
 /// @class MMaterial
 /// @brief Material management singleton type.
@@ -89,6 +90,7 @@ private:
   std::optional<DMatId> AddMaterial_FMatLambertian(const nlohmann::json& json, const std::string& id);
   std::optional<DMatId> AddMaterial_FMatMetal(const nlohmann::json& json, const std::string& id);
   std::optional<DMatId> AddMaterial_FMatDielectric(const nlohmann::json& json, const std::string& id);
+  std::optional<DMatId> AddMaterial_FMatLight(const nlohmann::json& json, const std::string& id);
 
   using TKey = DMatId; 
   using TValue = std::unique_ptr<IMaterial>;

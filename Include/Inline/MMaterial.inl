@@ -59,6 +59,10 @@ std::optional<DMatId> MMaterial::AddMaterial(const nlohmann::json& json, const s
   {
     return this->AddMaterial_FMatDielectric(json, name);
   }
+  else if constexpr (std::is_same_v<TType, FMatLight> == true)
+  {
+    return this->AddMaterial_FMatLight(json, name);
+  }
   else
   {
     return std::nullopt;

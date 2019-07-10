@@ -35,6 +35,7 @@
 
 #include <Manager/MMaterial.hpp>
 #include <Manager/MModel.hpp>
+#include <Material/FMatLight.hpp>
 #include <OldMaterial/FMatLambertian.hpp>
 #include <OldMaterial/FMatMetal.hpp>
 #include <OldMaterial/FMatDielectric.hpp>
@@ -381,6 +382,7 @@ bool MScene::AddMaterialsFromJson190710(const nlohmann::json& json)
     case Case("lambertian"):  { EXPR_SGT(MMaterial).AddMaterial<FMatLambertian>(item, name); } break;
     case Case("metal"):       { EXPR_SGT(MMaterial).AddMaterial<FMatMetal>(item, name); } break;
     case Case("dielectric"):  { EXPR_SGT(MMaterial).AddMaterial<FMatDielectric>(item, name); } break;
+    case Case("light"):       { EXPR_SGT(MMaterial).AddMaterial<FMatLight>(item, name); } break;
     default: 
     {
       std::cerr << "Failed to create material. Unexpected material type name is specified.\n";

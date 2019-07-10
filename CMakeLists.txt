@@ -42,6 +42,7 @@ set(SOURCE
     "${SOURCE_DIRECTORY}/Manager/MMaterial.cc"
     "${SOURCE_DIRECTORY}/Manager/MModel.cc"
 
+    "${SOURCE_DIRECTORY}/Material/FMatLight.cc"
     "${SOURCE_DIRECTORY}/OldMaterial/FMatLambertian.cc"
     "${SOURCE_DIRECTORY}/OldMaterial/FMatDielectric.cc"
     "${SOURCE_DIRECTORY}/OldMaterial/FMatMetal.cc"

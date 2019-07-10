@@ -19,6 +19,7 @@
 #include <OldMaterial/FMatLambertian.hpp>
 #include <OldMaterial/FMatDielectric.hpp>
 #include <OldMaterial/FMatMetal.hpp>
+#include <Material/FMatLight.hpp>
 
 namespace ray
 {
@@ -65,33 +66,6 @@ IMaterial* MMaterial::GetMaterial(const DMatId& id)
   return it->second.get();
 }
 
-std::optional<DMatId> MMaterial::AddOldMaterial_FMatLambertian(const nlohmann::json& json)
-{
-  auto ctor = json::GetValueFrom<FMatLambertian::PCtor>(json, "mat_detail");
-  ctor.mId = ::dy::math::DUuid{true};
-
-  this->mContainer.try_emplace(ctor.mId, std::make_unique<FMatLambertian>(ctor));
-  return ctor.mId;
-}
-
-std::optional<DMatId> MMaterial::AddOldMaterial_FMatMetal(const nlohmann::json& json)
-{
-  auto ctor = json::GetValueFrom<FMatMetal::PCtor>(json, "mat_detail");
-  ctor.mId = ::dy::math::DUuid{true};
-
-  this->mContainer.try_emplace(ctor.mId, std::make_unique<FMatMetal>(ctor));
-  return ctor.mId;
-}
-
-std::optional<DMatId> MMaterial::AddOldMaterial_FMatDielectric(const nlohmann::json& json)
-{
-  auto ctor = json::GetValueFrom<FMatDielectric::PCtor>(json, "mat_detail");
-  ctor.mId = ::dy::math::DUuid{true};
-
-  this->mContainer.try_emplace(ctor.mId, std::make_unique<FMatDielectric>(ctor));
-  return ctor.mId;
-}
-
 std::optional<DMatId> MMaterial::AddMaterial_FMatLambertian(const nlohmann::json& json, const std::string& id)
 {
   auto ctor = json::GetValueFrom<FMatLambertian::PCtor>(json, "detail");
@@ -116,6 +90,15 @@ std::optional<DMatId> MMaterial::AddMaterial_FMatDielectric(const nlohmann::json
   ctor.mId = id;
 
   this->mContainer.try_emplace(ctor.mId, std::make_unique<FMatDielectric>(ctor));
+  return ctor.mId;
+}
+
+std::optional<DMatId> MMaterial::AddMaterial_FMatLight(const nlohmann::json& json, const std::string& id)
+{
+  auto ctor = json::GetValueFrom<FMatLight::PCtor>(json, "detail");
+  ctor.mId = id;
+
+  this->mContainer.try_emplace(ctor.mId, std::make_unique<FMatLight>(ctor));
   return ctor.mId;
 }
 
