@@ -848,7 +848,8 @@ DVec3 MScene::ProceedRay(const DRay& ray, TIndex cnt, TIndex limit)
       auto optResult = pObj->TryScatter(ray, t, normal);
       const auto& [refDir, attCol, isScattered] = *optResult;
 
-      if (isScattered == false) { return DVec3{0}; }
+      // If collided with light, return with value.
+      if (isScattered == false) { return attCol; }
 
       // Resursion...
       const auto nextPos = ray.GetPointAtParam(t);

@@ -33,7 +33,7 @@ void from_json(const nlohmann::json& json, FMatLight::PCtor& oCtor)
 
 std::optional<PScatterResult> FMatLight::Scatter(const DRay&, const DVec3&) const 
 {
-  return PScatterResult{DVec3{0}, this->mColor, false};
+  return PScatterResult{DVec3{0}, this->mColor * this->mIntensity, false};
 }
 
 } /// ::ray namespace
