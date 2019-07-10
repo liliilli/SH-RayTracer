@@ -72,6 +72,11 @@ void PrintHelp(const ::dy::expr::FCmdArguments& manager);
 /// @param manager Command Argument Manager Reference.
 void PrintOverallInformation(const ::dy::expr::FCmdArguments& manager);
 
+/// @brief Proceed HDR (tone-mapping) into DVector3<TReal> color container.
+/// @param ioContainer Color (TReal) container.
+/// @param middleGray middle gray value.
+void ToneHdr(DDynamicGrid2D<DVec3>& ioContainer, TReal middleGray);
+
 /// @brief Create image ppm with grid2d container.
 /// @return If successful, return true. Otherwise, return false.
 bool CreateImagePpm(const char* const path, DDynamicGrid2D<DIVec3>& container);

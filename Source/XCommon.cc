@@ -22,6 +22,8 @@
 #include <thread>
 #include <sstream>
 
+#include <Math/Utility/XLinearMath.h>
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #if defined(_MSVC_LANG)
 	#define STBIW_WINDOWS_UTF8
@@ -178,6 +180,58 @@ void PrintOverallInformation(const ::dy::expr::FCmdArguments& manager)
   std::cout << "  Repeat : " << *sArguments->GetValueFrom<TU32>("repeat") << '\n';
   std::cout << "  Gamma : " << *sArguments->GetValueFrom<float>("gamma") << '\n';
   std::cout << "  Work Count For Each Thread : " << workCount << '\n'; 
+}
+
+void ToneHdr(DDynamicGrid2D<DVec3>& ioContainer, TReal middleGray)
+{
+  // Calculate log_e-scale luminance of image.
+  std::vector<TReal> luminances;
+  const DVec3 grayVector  = DVec3{0.2126f, 0.7152f, 0.0722f};
+  constexpr TReal delta   = 1e-5f;
+
+  for (TIndex y = 0, ySize = ioContainer.GetRowSize(); y < ySize; ++y)
+  {
+    for (TIndex x = 0, xSize = ioContainer.GetColumnSize(); x < xSize; ++x)
+    {
+      auto& color = ioContainer.Get(x, y);
+      if (::dy::math::IsNearlyZero(color.GetLength()) == true) { continue; }
+
+      const TReal gray = ::dy::math::Dot(color, grayVector);
+      luminances.emplace_back(std::log(gray + delta));
+    }
+  }
+#ifndef NDEBUG
+  for (const auto& value : luminances)
+  {
+    assert(std::isnan(value) == false);
+    assert(std::isinf(value) == false);
+  }
+#endif
+
+  // Get average luminance of image from `luminanceContainer` with `middleGray`.
+  TReal logEScaleAverageLuminance = 0.0f;
+  for (const auto& luminance : luminances)
+  {
+    logEScaleAverageLuminance += luminance;
+    assert(std::isnan(logEScaleAverageLuminance) == false);
+    assert(std::isinf(logEScaleAverageLuminance) == false);
+  }
+  //logEScaleAverageLuminance /= TReal(luminanceContainer.GetRowSize() * luminanceContainer.GetColumnSize());
+  logEScaleAverageLuminance /= TReal(luminances.size());
+
+  const TReal eScaleLuminance = std::exp(logEScaleAverageLuminance);
+  const TReal averageLuminance = middleGray / (eScaleLuminance - delta);
+
+  // Do Tone mapping to `ioContainer`.
+  for (TIndex y = 0, ySize = ioContainer.GetRowSize(); y < ySize; ++y)
+  {
+    for (TIndex x = 0, xSize = ioContainer.GetColumnSize(); x < xSize; ++x)
+    {
+      auto& color = ioContainer.Get(x, y);
+      color *= averageLuminance;
+      for (TIndex i = 0; i < 3; ++i) { color[i] = color[i] / (color[i] + 1); }
+    }
+  }
 }
 
 bool CreateImagePpm(const char* const path, DDynamicGrid2D<DIVec3>& container)
