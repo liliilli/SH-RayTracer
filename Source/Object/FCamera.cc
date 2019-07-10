@@ -48,13 +48,17 @@ void from_json(const nlohmann::json& item, FCamera::PCtor& oCtor)
   { json::GetValueFromTo(item, "gamma", oCtor.mGamma); }
   if (json::HasJsonKey(item, "repeat") == true)
   { json::GetValueFromTo(item, "repeat", oCtor.mRepeat); }
+  if (json::HasJsonKey(item, "hdr") == true)
+  { json::GetValueFromTo(item, "hdr", oCtor.mHdr); }
+  if (json::HasJsonKey(item, "hdr_middle_gray") == true)
+  { oCtor.mMiddleGray = json::GetValueFrom<TReal>(item, "hdr_middle_gray"); }
 }
 
 template <>
 json::FExistanceList JsonCheckExistances<FCamera::PCtor>(const nlohmann::json& json)
 {
   using json::EExistance;
-  json::FExistanceList result(11, EExistance::NotExist);
+  json::FExistanceList result(13, EExistance::NotExist);
 
   if (json::HasJsonKey(json, "aperture") == true)       { result[0] = EExistance::Exist; }
   if (json::HasJsonKey(json, "focus_dist") == true)     { result[1] = EExistance::Exist; }
@@ -66,6 +70,8 @@ json::FExistanceList JsonCheckExistances<FCamera::PCtor>(const nlohmann::json& j
   if (json::HasJsonKey(json, "depth_of_field") == true) { result[8] = EExistance::Exist; }
   if (json::HasJsonKey(json, "gamma") == true)          { result[9] = EExistance::Exist; }
   if (json::HasJsonKey(json, "repeat") == true)         { result[10] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "hdr") == true)            { result[11] = EExistance::Exist; }
+  if (json::HasJsonKey(json, "hdr_middle_gray") == true){ result[12] = EExistance::Exist; }
 
   return result;
 }
@@ -86,6 +92,8 @@ FCamera::PCtor FCamera::PCtor::Overwrite(const PCtor& pctor, const json::FExista
   OverwriteWhenExist(list[8], result.mDepthOfField, pctor.mDepthOfField);
   OverwriteWhenExist(list[9], result.mGamma, pctor.mGamma);
   OverwriteWhenExist(list[10], result.mRepeat, pctor.mRepeat);
+  OverwriteWhenExist(list[11], result.mHdr, pctor.mHdr);
+  OverwriteWhenExist(list[12], result.mMiddleGray, pctor.mMiddleGray);
 
   return result;
 } 
@@ -101,9 +109,12 @@ FCamera::PCtor FCamera::GetPCtor() const noexcept
   result.mSamples = this->mSamples;
   result.mScreenRatioXy = TReal(result.mImgSize.X) / result.mImgSize.Y;
   result.mSensorSize = this->mSensorSize;
-  result.mDepthOfField = this->mIsUsingDepthOfField;
   result.mGamma = this->mGamma;
   result.mRepeat = this->mRepeat;
+
+  result.mDepthOfField = this->mIsUsingDepthOfField;
+  result.mHdr = this->mIsUsingHdr;
+  result.mMiddleGray = this->mHdrMiddleGray;
 
   return result;
 }
@@ -121,7 +132,9 @@ FCamera::FCamera(const FCamera::PCtor& arg)
     mDistance{ arg.mFocusDistance },
     mSensorSize{ arg.mSensorSize },
     mGamma{ arg.mGamma },
-    mIsUsingDepthOfField{ arg.mDepthOfField }
+    mIsUsingDepthOfField{ arg.mDepthOfField },
+    mIsUsingHdr{ arg.mHdr },
+    mHdrMiddleGray{ arg.mMiddleGray }
 {
   using ::dy::math::kToRadian;
   constexpr TReal defScrHeight = TReal(2.0);
@@ -316,6 +329,16 @@ bool FCamera::IsUsingDepthOfField() const noexcept
   return this->mIsUsingDepthOfField;
 }
 
+bool FCamera::IsUsingHDR() const noexcept
+{
+  return this->mIsUsingHdr;
+}
+
+TReal FCamera::GetMiddleGray() const noexcept
+{
+  return this->mHdrMiddleGray;
+}
+
 std::string FCamera::ToString() const noexcept
 {
   std::stringstream buffer;
@@ -336,7 +359,10 @@ std::string FCamera::ToString() const noexcept
   buffer << "  Sensor size : " << this->mSensorSize << '\n';
   buffer << "  Gamma : " << this->mGamma << '\n';
   buffer << "  Repeat : " << this->mRepeat << '\n';
+  buffer << "  Middle Gray Value (When HDR is enabled) : " << this->mHdrMiddleGray << '\n';
   buffer << "  Using Depth Of Field : " << (this->mIsUsingDepthOfField ? "true" : "false") << '\n';
+  buffer << "  Using HDR (tone-mapping) : " << (this->mIsUsingHdr ? "true" : "false") << '\n';
+  buffer << '\n';
 
   return buffer.str();
 }

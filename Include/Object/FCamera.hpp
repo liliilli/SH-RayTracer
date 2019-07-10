@@ -44,6 +44,8 @@ public:
     DClamp<0, 1000> mFocusDistance;
     DClamp<0, 1000> mSensorSize;
     bool mDepthOfField = false;
+    bool mHdr = false;
+    DClamp<0, 1> mMiddleGray = 0.5f;
 
     /// @brief Overwrite with given pctor instance and crate new PCtor.
     /// member variable matching order must be same to `JsonCheckExistances` function matching order.
@@ -72,6 +74,10 @@ public:
 
   /// @brief Check camera instance is using depth of field feature.
   bool IsUsingDepthOfField() const noexcept;
+  /// @brief Check camera instance is using hdr feature.
+  bool IsUsingHDR() const noexcept;
+  /// @brief Get middle gray value.
+  TReal GetMiddleGray() const noexcept;
 
   /// @brief Output information string of camera.
   std::string ToString() const noexcept;
@@ -102,6 +108,8 @@ private:
   TReal mGamma = 2.2f;
 
   bool mIsUsingDepthOfField = false;
+  bool mIsUsingHdr = false;
+  TReal mHdrMiddleGray = 0;
 };
 
 /// @brief Template function for automatic parsing from json.
