@@ -137,19 +137,19 @@ FCamera::FCamera(const FCamera::PCtor& arg)
     mHdrMiddleGray{ arg.mMiddleGray }
 {
   using ::dy::math::kToRadian;
-  constexpr TReal defScrHeight = TReal(2.0);
+  constexpr TReal defScrHeight = TReal(1.0);
+  const auto scaledHeight = defScrHeight * this->mSensorSize;
   
   // I moved origin to backward instead of moving lens position (screen) to forward,
   // to avoid the intersection between screen and objects.
   this->mLowLeftCorner = 
-      this->mOrigin - this->mForward * (mDistance)
-    + this->mSide * -arg.mScreenRatioXy * this->mSensorSize
-    + this->mUp * -1.0f * this->mSensorSize;
+      this->mOrigin 
+    - (this->mSide * (scaledHeight * 0.5f * arg.mScreenRatioXy) + this->mUp * (scaledHeight * 0.5f));
+    //+ (this->mForward * this->mDistance)
 
   // Setting up screen cell right (per pixel) and up (per pixel) vector.
-  const auto scaledHeight = defScrHeight * this->mSensorSize;
-  this->mCellRight  = mSide * (scaledHeight * arg.mScreenRatioXy / TReal(this->mScreenSize.X) );
-  this->mCellUp     = mUp * (scaledHeight / TReal(this->mScreenSize.Y) );
+  this->mCellRight = this->mSide * (scaledHeight * arg.mScreenRatioXy / TReal(this->mScreenSize.X) );
+  this->mCellUp    = this->mUp * (scaledHeight / TReal(this->mScreenSize.Y) );
 }
 
 const DUVec2& FCamera::GetImageSize() const noexcept
@@ -163,6 +163,7 @@ std::vector<DRay> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
   
   const auto screenPos = this->mLowLeftCorner + (this->mCellRight * TReal(x)) + (this->mCellUp * TReal(y));
   const std::vector<DVec3> offsets = GetSampleOffsetsOf(this->mCellRight, this->mCellUp, this->mSamples);
+  const auto hole = this->mOrigin + (this->mForward * this->mDistance);
 
   std::vector<DRay> rayList;
   if (this->IsUsingDepthOfField() == false)
@@ -171,8 +172,8 @@ std::vector<DRay> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
     for (const auto& offset : offsets)
     {
       const auto orig = screenPos + offset;
-      const auto dir = this->mOrigin - orig;
-      rayList.emplace_back(this->mOrigin, dir);
+      const auto dir  = (hole - orig).Normalize();
+      rayList.emplace_back(hole, dir);
     }
   }
   else
@@ -186,14 +187,15 @@ std::vector<DRay> FCamera::CreateRay(TIndex x, TIndex y) const noexcept
     // We need to get positive focal plane's focal point.
     for (const auto& offset : offsets)
     {
-      const auto origDir    = (this->mOrigin - (screenPos + offset)).Normalize();
-      const auto rayFocalCos= Dot(origDir, this->mForward);
-      const auto focalPoint = this->mOrigin + (origDir * (this->mDistance / rayFocalCos));
+      const auto orig         = screenPos + offset;
+      const auto origDir      = (hole - orig).Normalize();
+      const auto rayFocalCos  = Dot(origDir, this->mForward);
+      const auto focalPoint   = hole + (origDir * (this->mDistance / rayFocalCos));
       
       // And get uniform random arbitary point of lens with this->mCellRight and this->mCellUp.
       const auto xyPoint = RandomVector2Range<TReal>(ERandomPolicy::Uniform, 0, this->mSensorSize * 0.0625f);
       const auto aperturePoint = 
-          this->mOrigin
+          hole
         + this->mSide * xyPoint[0]
         + this->mUp * xyPoint[1];
       // Finally get actual direction and insert it as a ray.
@@ -355,7 +357,7 @@ std::string FCamera::ToString() const noexcept
 
   buffer << "  ScreenSize : " << this->mScreenSize << '\n';
   buffer << "  Aperture : " << this->mAperture << '\n';
-  buffer << "  Distance : " << this->mDistance << '\n';
+  buffer << "  Distance (Focal Distance) : " << this->mDistance << '\n';
   buffer << "  Sensor size : " << this->mSensorSize << '\n';
   buffer << "  Gamma : " << this->mGamma << '\n';
   buffer << "  Repeat : " << this->mRepeat << '\n';
