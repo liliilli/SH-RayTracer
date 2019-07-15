@@ -18,6 +18,7 @@
 #include <thread>
 #include <chrono>
 #include <sstream>
+#include <functional>
 
 #include <Expr/MTimeChecker.h>
 #include <Math/Type/Micellanous/DDynamicGrid2D.h>
@@ -28,6 +29,7 @@
 #include <XCommon.hpp>
 #include <FRenderWorker.hpp>
 #include <Helper/XHelperRegex.hpp>
+#include <Task/FJobEngine.h>
 
 int main(int argc, char* argv[])
 {
@@ -122,6 +124,7 @@ int main(int argc, char* argv[])
     std::vector<std::vector<DUVec2>> indexes(numThreads);
     const auto indexCount = imageSize.X * imageSize.Y;
     const auto workCount  = indexCount / numThreads;
+
     for (auto y = imageSize.Y, t = 0u, c = 0u; y > 0; --y)
     {
       for (auto x = 0u; x < imageSize.X; ++x)
@@ -131,8 +134,8 @@ int main(int argc, char* argv[])
         if (++c; c >= workCount && t + 1 < numThreads) { ++t; c = 0; }
       }
     }
-
-    // Print Thread Work list -v mode.
+     
+    // Print Potential Thread Work list -v mode.
     RAY_IF_VERBOSE_MODE() 
     {
       std::cout << pCamera->ToString();
@@ -145,30 +148,62 @@ int main(int argc, char* argv[])
             << indexes[tId].front() << " ~ " << indexes[tId].back() << '\n';
       }
     }
-    
+     
+    // Make Job Tasking Engine
+    using namespace dy::expr;
     DDynamicGrid2D<DVec3> colorContainer = {imageSize.X, imageSize.Y};
-    std::vector<std::pair<FRenderWorker, std::thread>> threads(numThreads);
-    std::cout << "* Start Rendering of [" << cameraId + 1 << "/" << size << "] Camera." << "\n";
 
+    task::FJobEngine engine = { numThreads, indexCount + 1 /* Root Job */ };
+    task::FJob* pRootJob = engine.InsertFunctionInto(0, [](task::FJob&) { /* NOP */ }, nullptr);
+
+    // Submit Actual Thread Tasks.
+    for (TIndex tId = 0; tId < numThreads; ++tId)
+    {
+      const auto& itemIndexes = indexes[tId];
+      task::FJobWorker* pWorker = engine.GetWorker(tId);
+      for (const auto& index : itemIndexes)
+      {
+        // Allocate Task.
+        task::FJob* pChild = engine.InsertFunctionInto(tId, 
+          [pCamera, index, imageSize, &colorContainer](task::FJob&)
+          {
+            const auto rayList = pCamera->CreateRay(index.X, index.Y - 1);
+            const auto repeat = pCamera->GetRepeat();
+
+            // Do Path tracing
+            DVec3 colorSum = { 0 };
+            for (TU32 r = 0; r < repeat; ++r)
+            {
+              for (const auto& ray : rayList)
+              {
+                colorSum += EXPR_SGT(MScene).ProceedRay(ray, 0, 32);
+              }
+            }
+            colorSum /= (TReal(rayList.size()) * repeat);
+
+            // If there is -nan, change value into 0. (I suggest this is a bug.)
+            for (TIndex i = 0; i < 3; ++i)
+            {
+              if (std::isnan(colorSum[i]) == true) { colorSum[i] = 0; }
+            }
+            colorContainer.Set(index.X, imageSize.Y - index.Y, colorSum);
+          }, pRootJob);
+        // Submit Child Task.
+        pWorker->Submit(pChild);
+      }
+    }
+
+    // Submit `END TASK`.
+    engine.GetThisThreadWorker()->Submit(pRootJob);
+    engine.InsertWaitConditionJob(pRootJob);
+
+    std::cout << "* Start Rendering of [" << cameraId + 1 << "/" << size << "] Camera." << "\n";
     { // Check time...
       EXPR_TIMER_CHECK_CPU("RenderTime");
-
-      for (TIndex tId = 0; tId < numThreads; ++tId)
-      {
-        // Returned colorContainer values are on linear color space.
-        auto& [instance, thread] = threads[tId];
-        thread = std::thread{
-          &FRenderWorker::Execute, &instance,
-          std::cref(*pCamera),
-          std::cref(indexes[tId]), imageSize, std::ref(colorContainer)};
-      }
-
-      for (auto& [instance, thread] : threads) 
-      { 
-        assert(thread.joinable() == true);
-        thread.join(); 
-      }
-    } // Release time...
+      engine.Start();
+    } 
+    engine.Stop();
+    engine.Terminate();
 
     // After process...
     // Make full output name using variables.
