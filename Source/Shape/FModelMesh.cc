@@ -190,8 +190,8 @@ std::optional<IHitable::TValueResults> FModelMesh::GetRayIntersectedTValues(cons
   if (IsRayIntersected(ray, *this->GetAABB()) == false) { return std::nullopt; }
   
    // Convert world-space ray into local space.
-  const auto matLocalToWorld = this->mRotQuat.ToMatrix3();
-  const auto matWorldToLocal = this->mRotQuat.ToMatrix3().Transpose();
+  const auto matLocalToWorld = this->mRotQuat.ToMatrix3<dy::math::EMatMajor::Column>();
+  const auto matWorldToLocal = matLocalToWorld.Transpose();
   const auto offsetedRay = DRay
   {
     (matWorldToLocal * (ray.GetOrigin() - this->mOrigin)) / this->mScale,
@@ -228,7 +228,7 @@ std::optional<PScatterResult> FModelMesh::TryScatter(const DRay& ray, TReal t, c
   if (this->GetMaterial() == nullptr) { return std::nullopt; }
 
   // Convert world-space ray into local space.
-  const auto matLocalToWorld = this->mRotQuat.ToMatrix3();
+  const auto matLocalToWorld = this->mRotQuat.ToMatrix3<dy::math::EMatMajor::Column>();
   const auto matWorldToLocal = matLocalToWorld.Transpose();
   const auto offsetedRay = DRay
   {

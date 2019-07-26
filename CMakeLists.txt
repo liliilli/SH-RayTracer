@@ -28,6 +28,9 @@ set(ASSIMP_BUILD_TESTS "OFF")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 add_subdirectory(DyUtils)
+if (MATH_BUILD_WITH_BOOST)
+	add_compile_definitions(MATH_ENABLE_UUID)
+endif()
 
 set(SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 set(SOURCE
@@ -71,7 +74,6 @@ set(SOURCE
 
     "${SOURCE_DIRECTORY}/Object/FCamera.cc"
 
-    "${SOURCE_DIRECTORY}/FRenderWorker.cc"
     "${SOURCE_DIRECTORY}/XMain.cc"
     "${SOURCE_DIRECTORY}/XCommon.cc"
 

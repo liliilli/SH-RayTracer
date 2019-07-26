@@ -27,7 +27,6 @@
 #include <Manager/MMaterial.hpp>
 #include <Manager/MModel.hpp>
 #include <XCommon.hpp>
-#include <FRenderWorker.hpp>
 #include <Helper/XHelperRegex.hpp>
 #include <Task/FJobEngine.h>
 
